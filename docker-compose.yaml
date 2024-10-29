@@ -1,0 +1,22 @@
+version: "3"
+services:
+  attendance:
+    build: .
+    platform: linux/amd64
+    restart: always
+    ports:
+      - "3000:3000"
+  db:
+    image: "mysql:latest"
+    container_name: mysql
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: neoinsp100
+      MYSQL_USERNAME: admin
+      MYSQL_PASSWORD: neoinsp100
+      TZ: Asia/Seoul
+    volumes:
+      - /var/lib/mysql:/var/lib/mysql
+    platform: linux/amd64
