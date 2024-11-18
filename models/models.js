@@ -2,8 +2,8 @@ const { Sequelize } = require("sequelize")
 const env = require("../config/environment")
 
 // 📚 데이터베이스 연결 설정
-const sequelize = new Sequelize(env.mysqlDB, env.mysqlUser, env.mysqlPassword, {
-	host: env.mysqlHost,
+const sequelize = new Sequelize(env.DB_NAME, env.DB_USER, env.DB_PASSWORD, {
+	host: env.DB_HOST,
 	dialect: "mysql",
 })
 
