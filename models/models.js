@@ -90,6 +90,12 @@ const Season = require("./model_archive/season/Season.Model")(
 	Sequelize
 )
 
+// 🔗 Service 모델 그룹
+const Service = require("./model_archive/service/Service.Model")(
+	sequelize,
+	Sequelize
+)
+
 // 🔗 모델 간 관계 설정
 User.hasMany(UserHasRole, { foreignKey: "user_id" })
 UserHasRole.belongsTo(User, { foreignKey: "user_id" })
@@ -210,6 +216,7 @@ module.exports = {
 	ActivityInstanceHasFile,
 	Visitation,
 	Season,
+	Service,
 }
 
 // Add the following relationships
@@ -226,3 +233,7 @@ File.belongsToMany(ActivityInstance, {
 	otherKey: "activity_instance_id",
 	as: "ActivityInstances",
 })
+
+// Organization과 Service 관계 설정
+Organization.hasMany(Service, { foreignKey: "organization_id" })
+Service.belongsTo(Organization, { foreignKey: "organization_id" })
