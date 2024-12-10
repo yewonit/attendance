@@ -244,3 +244,43 @@ File.belongsToMany(ActivityInstance, {
 // Organization과 Service 관계 설정
 Organization.hasMany(Service, { foreignKey: "organization_id" })
 Service.belongsTo(Organization, { foreignKey: "organization_id" })
+
+// 🏢 ChurchOffice 모델 그룹
+const UserHasChurchOffice =
+	require("./model_archive/churchOffice/UserHasChurchOffice.Model")(
+		sequelize,
+		Sequelize
+	)
+
+// User와 UserHasChurchOffice 관계 설정
+User.hasMany(UserHasChurchOffice, { foreignKey: "user_id" })
+UserHasChurchOffice.belongsTo(User, { foreignKey: "user_id" })
+
+// ChurchOffice와 UserHasChurchOffice 관계 설정
+ChurchOffice.hasMany(UserHasChurchOffice, { foreignKey: "church_office_id" })
+UserHasChurchOffice.belongsTo(ChurchOffice, { foreignKey: "church_office_id" })
+
+// 📦 모듈 내보내기에 UserHasChurchOffice 추가
+module.exports = {
+	sequelize,
+	User,
+	Organization,
+	Role,
+	UserHasRole,
+	ActivityCategory,
+	Activity,
+	ActivityRecurrence,
+	ActivityInstance,
+	AttendanceStatus,
+	Attendance,
+	ActivityChangeHistory,
+	ActivityStatistics,
+	File,
+	ActivityHasFile,
+	ActivityInstanceHasFile,
+	Visitation,
+	Season,
+	Service,
+	ChurchOffice,
+	UserHasChurchOffice,
+}
