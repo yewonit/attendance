@@ -1,47 +1,21 @@
+// File: Season.Model.js
+// Created: 2024-03-19
+// Description: 시즌 모델 정의
+
 module.exports = (sequelize, Sequelize) => {
-	return sequelize.define(
-		"Organization",
+	const Season = sequelize.define(
+		"Season",
 		{
 			id: {
 				type: Sequelize.INTEGER,
 				primaryKey: true,
 				autoIncrement: true,
-				comment: "조직 고유 식별자",
+				comment: "시즌 고유 식별자",
 			},
-			season_id: {
-				type: Sequelize.INTEGER,
-				allowNull: true,
-				comment: "회기 ID",
-			},
-			organization_code: {
-				type: Sequelize.STRING(30),
-				allowNull: false,
-				comment: "조직의 고유 코드. 조직의 연속성 추적에 사용",
-			},
-			organization_name: {
+			season_name: {
 				type: Sequelize.STRING(20),
 				allowNull: false,
-				comment: "조직 이름",
-			},
-			organization_description: {
-				type: Sequelize.STRING(100),
-				allowNull: true,
-				comment: "조직에 대한 설명",
-			},
-			upper_organization_id: {
-				type: Sequelize.INTEGER,
-				allowNull: true,
-				comment: "상위 조직 아이디, 조직간 계층구조를 나타냄",
-			},
-			start_date: {
-				type: Sequelize.DATEONLY,
-				allowNull: true,
-				comment: "세션 시작 날짜",
-			},
-			end_date: {
-				type: Sequelize.DATEONLY,
-				allowNull: true,
-				comment: "세션 종료 날짜",
+				comment: "시즌 이름",
 			},
 			is_deleted: {
 				type: Sequelize.CHAR(1),
@@ -88,9 +62,20 @@ module.exports = (sequelize, Sequelize) => {
 			},
 		},
 		{
-			tableName: "organization",
+			tableName: "season",
 			timestamps: false,
-			comment: "조직 정보를 관리하는 테이블",
+			comment: "시즌 정보를 관리하는 테이블",
 		}
 	)
+
+	// 필요한 경우 관계 설정을 위한 associate 메서드 추가
+	Season.associate = (models) => {
+		// 예시: Season과 다른 모델과의 관계 설정
+		// Season.hasMany(models.SomeModel, {
+		//   foreignKey: "season_id",
+		//   as: "SomeModels",
+		// });
+	}
+
+	return Season
 }
