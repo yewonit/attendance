@@ -84,6 +84,12 @@ const Visitation = require("./model_archive/visitation/Visitation.Model")(
 	Sequelize
 )
 
+// 🔗️ Season 모델 그룹
+const Season = require("./model_archive/season/Season.Model")(
+	sequelize,
+	Sequelize
+)
+
 // 🔗 모델 간 관계 설정
 User.hasMany(UserHasRole, { foreignKey: "user_id" })
 UserHasRole.belongsTo(User, { foreignKey: "user_id" })
@@ -203,6 +209,7 @@ module.exports = {
 	ActivityHasFile,
 	ActivityInstanceHasFile,
 	Visitation,
+	Season,
 }
 
 // Add the following relationships
