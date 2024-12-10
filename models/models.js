@@ -96,6 +96,12 @@ const Service = require("./model_archive/service/Service.Model")(
 	Sequelize
 )
 
+// 🏢 ChurchOffice 모델 그룹
+const ChurchOffice = require("./model_archive/churchOffice/ChurchOffice.Model")(
+	sequelize,
+	Sequelize
+)
+
 // 🔗 모델 간 관계 설정
 User.hasMany(UserHasRole, { foreignKey: "user_id" })
 UserHasRole.belongsTo(User, { foreignKey: "user_id" })
@@ -217,6 +223,7 @@ module.exports = {
 	Visitation,
 	Season,
 	Service,
+	ChurchOffice,
 }
 
 // Add the following relationships
