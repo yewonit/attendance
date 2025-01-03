@@ -1,4 +1,5 @@
-const { sequelize } = require("./models/models");
+const { sequelize } = require("../models/models");
+const logger = require("./logger");
 
 const initDatabase = async () => {
 	try {
