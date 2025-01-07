@@ -286,7 +286,7 @@ const updateCoramdeoMemberController = {
 				let user = await models.User.findOne({
 					where: {
 						name: name,
-						phone_number: phone.replace("-", ""),
+						phone_number: phone.replaceAll("-", ""),
 						is_deleted: "N",
 					},
 				});
@@ -294,7 +294,7 @@ const updateCoramdeoMemberController = {
 				if (!user) {
 					user = await models.User.create({
 						name: name,
-						phone_number: phone.replace("-", ""),
+						phone_number: phone.replaceAll("-", ""),
 						is_deleted: "N",
 						name_suffix: "",
 						email: "",
