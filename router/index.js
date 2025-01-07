@@ -54,6 +54,9 @@ const ServiceCtrl = require("../controllers/modelCRUDCtrl/service/Service.Ctrl")
 // Season 관련 기능을 담당하는 컨트롤러입니다.
 const SeasonCtrl = require("../controllers/modelCRUDCtrl/season/Season.Ctrl");
 
+// UpdateCoramdeoMember 라우트
+const UpdateCoramdeoMemberCtrl = require("../controllers/domainCtrl/UpdateCoramdeoMember.Ctrl");
+
 // 라우트
 // User 관련 라우트
 // 이름으로 사용자를 조회하는 GET 요청을 처리합니다. (다른 :id 라우트보다 먼저 정의)
@@ -431,6 +434,12 @@ router.get("/seasons", SeasonCtrl.readSeasons);
 router.get("/seasons/:id", SeasonCtrl.readSeason);
 router.put("/seasons", SeasonCtrl.updateSeason);
 router.delete("/seasons", SeasonCtrl.deleteSeason);
+
+// UpdateCoramdeoMember 라우트
+router.post(
+	"/update-coramdeo-members",
+	UpdateCoramdeoMemberCtrl.bulkUpdateMembers
+);
 
 // 설정된 라우터 모듈을 내보냅니다.
 module.exports = router;

@@ -16,7 +16,7 @@ const app = express();
 
 // bodyParser: req.body 변수 생성 & 손쉬운 데이터 파싱을 지원
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: "50mb" }));
 
 // compression: 데이터 압축
 app.use(compression());
