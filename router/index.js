@@ -46,6 +46,14 @@ const ActivityInstanceHasFileCtrl = require("../controllers/modelCRUDCtrl/file/A
 // Visitation 관련 기능을 담당하는 컨트롤러입니다.
 const VisitationCtrl = require("../controllers/modelCRUDCtrl/visitation/visitation.Ctrl.js");
 
+// ChurchOffice
+const ChurchOfficeCtrl = require("../controllers/modelCRUDCtrl/churchOffice/ChurchOffice.Ctrl");
+const UserHasChurchOfficeCtrl = require("../controllers/modelCRUDCtrl/churchOffice/UserHasChurchOffice.Ctrl");
+const ServiceCtrl = require("../controllers/modelCRUDCtrl/service/Service.Ctrl");
+
+// Season 관련 기능을 담당하는 컨트롤러입니다.
+const SeasonCtrl = require("../controllers/modelCRUDCtrl/season/Season.Ctrl");
+
 // 라우트
 // User 관련 라우트
 // 이름으로 사용자를 조회하는 GET 요청을 처리합니다. (다른 :id 라우트보다 먼저 정의)
@@ -78,8 +86,8 @@ router.put("/organizations", OrganizationCtrl.updateOrganization);
 router.delete("/organizations", OrganizationCtrl.deleteOrganization);
 // 조직의 모든 활동 정보를 조회하는 GET 요청을 처리합니다.
 router.get(
-  "/organizations/:id/activities",
-  OrganizationCtrl.getOrganizationActivities
+	"/organizations/:id/activities",
+	OrganizationCtrl.getOrganizationActivities
 );
 
 // Role 관련 라우트
@@ -109,22 +117,22 @@ router.delete("/user-has-roles", UserHasRoleCtrl.deleteUserHasRole);
 // ActivityCategory 관련 라우트
 // 새로운 활동 카테고리를 생성하는 POST 요청을 처리합니다.
 router.post(
-  "/activity-categories",
-  ActivityCategoryCtrl.createActivityCategory
+	"/activity-categories",
+	ActivityCategoryCtrl.createActivityCategory
 );
 // 모든 활동 카테고리를 조회하는 GET 요청을 처리합니다.
 router.get("/activity-categories", ActivityCategoryCtrl.readActivityCategories);
 // 특정 활동 카테고리를 조회하는 GET 요청을 처리합니다.
 router.get(
-  "/activity-categories/:id",
-  ActivityCategoryCtrl.readActivityCategory
+	"/activity-categories/:id",
+	ActivityCategoryCtrl.readActivityCategory
 );
 // 특정 활동 카테고리 정보를 업데이트하는 PUT 요청을 처리합니다.
 router.put("/activity-categories", ActivityCategoryCtrl.updateActivityCategory);
 // 특정 활동 카테고리를 삭제하는 DELETE 요청을 처리합니다.
 router.delete(
-  "/activity-categories",
-  ActivityCategoryCtrl.deleteActivityCategory
+	"/activity-categories",
+	ActivityCategoryCtrl.deleteActivityCategory
 );
 
 // Activity 관련 라우트
@@ -146,15 +154,15 @@ router.post("/activity-instances", ActivityInstanceCtrl.createActivityInstance);
 router.get("/activity-instances", ActivityInstanceCtrl.readActivityInstances);
 // 특정 활동 인스턴스를 조회하는 GET 요청을 처리합니다.
 router.get(
-  "/activity-instances/:id",
-  ActivityInstanceCtrl.readActivityInstance
+	"/activity-instances/:id",
+	ActivityInstanceCtrl.readActivityInstance
 );
 // 특정 활동 인스턴스 정보를 업데이트하는 PUT 요청을 처리합니다.
 router.put("/activity-instances", ActivityInstanceCtrl.updateActivityInstance);
 // 특정 활동 인스턴스를 삭제하는 DELETE 요청을 처리합니다.
 router.delete(
-  "/activity-instances",
-  ActivityInstanceCtrl.deleteActivityInstance
+	"/activity-instances",
+	ActivityInstanceCtrl.deleteActivityInstance
 );
 
 // Attendance 관련 라우트
@@ -172,103 +180,103 @@ router.delete("/attendances", AttendanceCtrl.deleteAttendance);
 // AttendanceStatus 관련 라우트
 // 새로운 출석 상태를 생성하는 POST 요청을 처리합니다.
 router.post(
-  "/attendance-statuses",
-  AttendanceStatusCtrl.createAttendanceStatus
+	"/attendance-statuses",
+	AttendanceStatusCtrl.createAttendanceStatus
 );
 // 모든 출석 상태를 조회하는 GET 요청을 처리합니다.
 router.get("/attendance-statuses", AttendanceStatusCtrl.readAttendanceStatuses);
 // 특정 출석 상태를 조회하는 GET 요청을 처리합니다.
 router.get(
-  "/attendance-statuses/:id",
-  AttendanceStatusCtrl.readAttendanceStatus
+	"/attendance-statuses/:id",
+	AttendanceStatusCtrl.readAttendanceStatus
 );
 // 특정 출석 상태 정보를 업데이트하는 PUT 요청을 처리합니다.
 router.put("/attendance-statuses", AttendanceStatusCtrl.updateAttendanceStatus);
 // 특정 출석 상태를 삭제하는 DELETE 요청을 처리합니다.
 router.delete(
-  "/attendance-statuses",
-  AttendanceStatusCtrl.deleteAttendanceStatus
+	"/attendance-statuses",
+	AttendanceStatusCtrl.deleteAttendanceStatus
 );
 
 // ActivityRecurrence 관련 라우트
 // 새로운 활동 반복 정보를 생성하는 POST 요청을 처리합니다.
 router.post(
-  "/activity-recurrences",
-  ActivityRecurrenceCtrl.createActivityRecurrence
+	"/activity-recurrences",
+	ActivityRecurrenceCtrl.createActivityRecurrence
 );
 // 모든 활동 반복 정보를 조회하는 GET 요청을 처리합니다.
 router.get(
-  "/activity-recurrences",
-  ActivityRecurrenceCtrl.readActivityRecurrences
+	"/activity-recurrences",
+	ActivityRecurrenceCtrl.readActivityRecurrences
 );
 // 특정 활동 반복 정보를 조회하는 GET 요청을 처리합니다.
 router.get(
-  "/activity-recurrences/:id",
-  ActivityRecurrenceCtrl.readActivityRecurrence
+	"/activity-recurrences/:id",
+	ActivityRecurrenceCtrl.readActivityRecurrence
 );
 // 특정 활동 반복 정보를 업데이트하는 PUT 요청을 처리합니다.
 router.put(
-  "/activity-recurrences",
-  ActivityRecurrenceCtrl.updateActivityRecurrence
+	"/activity-recurrences",
+	ActivityRecurrenceCtrl.updateActivityRecurrence
 );
 // 특정 활동 반복 정보를 삭제하는 DELETE 요청을 처리합니다.
 router.delete(
-  "/activity-recurrences",
-  ActivityRecurrenceCtrl.deleteActivityRecurrence
+	"/activity-recurrences",
+	ActivityRecurrenceCtrl.deleteActivityRecurrence
 );
 
 // ActivityChangeHistory 관련 라우트
 // 새로운 활동 변경 이력을 생성하는 POST 요청을 처리합니다.
 router.post(
-  "/activity-change-histories",
-  ActivityChangeHistoryCtrl.createActivityChangeHistory
+	"/activity-change-histories",
+	ActivityChangeHistoryCtrl.createActivityChangeHistory
 );
 // 모든 활동 변경 이력을 조회하는 GET 요청을 처리합니다.
 router.get(
-  "/activity-change-histories",
-  ActivityChangeHistoryCtrl.readActivityChangeHistories
+	"/activity-change-histories",
+	ActivityChangeHistoryCtrl.readActivityChangeHistories
 );
 // 특정 활동 변경 이력을 조회하는 GET 요청을 처리합니다.
 router.get(
-  "/activity-change-histories/:id",
-  ActivityChangeHistoryCtrl.readActivityChangeHistory
+	"/activity-change-histories/:id",
+	ActivityChangeHistoryCtrl.readActivityChangeHistory
 );
 // 특정 활동 변경 이력을 업데이트하는 PUT 요청을 처리합니다.
 router.put(
-  "/activity-change-histories",
-  ActivityChangeHistoryCtrl.updateActivityChangeHistory
+	"/activity-change-histories",
+	ActivityChangeHistoryCtrl.updateActivityChangeHistory
 );
 // 특정 활동 변경 이력을 삭제하는 DELETE 요청을 처리합니다.
 router.delete(
-  "/activity-change-histories",
-  ActivityChangeHistoryCtrl.deleteActivityChangeHistory
+	"/activity-change-histories",
+	ActivityChangeHistoryCtrl.deleteActivityChangeHistory
 );
 
 // ActivityStatistics 관련 라우트
 // 새로운 활동 통계를 생성하는 POST 요청을 처리합니다.
 router.post(
-  "/activity-statistics",
-  ActivityStatisticsCtrl.createActivityStatistics
+	"/activity-statistics",
+	ActivityStatisticsCtrl.createActivityStatistics
 );
 // 모든 활동 통계를 조회하는 GET 요청을 처리합니다.
 router.get(
-  "/activity-statistics",
-  ActivityStatisticsCtrl.readActivityStatistics
+	"/activity-statistics",
+	ActivityStatisticsCtrl.readActivityStatistics
 );
 // 특정 활동 통계를 조회하는 GET 요청을 처리합니다.
 router.get(
-  "/activity-statistics/:id",
-  ActivityStatisticsCtrl.readActivityStatistics
+	"/activity-statistics/:id",
+	ActivityStatisticsCtrl.readActivityStatistics
 );
 // 특정 활동 통계를 업데이트하는 PUT 요청을 처리합니다.
 router.put(
-  "/activity-statistics",
-  ActivityStatisticsCtrl.updateActivityStatistics
+	"/activity-statistics",
+	ActivityStatisticsCtrl.updateActivityStatistics
 );
 // 특정 활동 통계를 삭제하는 DELETE 요청을 처리합니다.
 router.delete(
-  "/activity-statistics",
-  ActivityStatisticsCtrl.deleteActivityStatistics
+	"/activity-statistics",
+	ActivityStatisticsCtrl.deleteActivityStatistics
 );
 
 // File 관련 라우트
@@ -298,28 +306,28 @@ router.delete("/activity-has-files", ActivityHasFileCtrl.deleteActivityHasFile);
 // ActivityInstanceHasFile 관련 라우트
 // 활동 인스턴스와 파일을 연결하는 POST 요청 처리합니다.
 router.post(
-  "/activity-instance-has-files",
-  ActivityInstanceHasFileCtrl.createActivityInstanceHasFile
+	"/activity-instance-has-files",
+	ActivityInstanceHasFileCtrl.createActivityInstanceHasFile
 );
 // 모든 활동 인스턴스와 파일 연결 정보를 조회하는 GET 요청을 처리합니다.
 router.get(
-  "/activity-instance-has-files",
-  ActivityInstanceHasFileCtrl.readActivityInstanceHasFiles
+	"/activity-instance-has-files",
+	ActivityInstanceHasFileCtrl.readActivityInstanceHasFiles
 );
 // 특정 활동 인스턴스와 파일 연결 정보를 조회하는 GET 요청을 처리합니다.
 router.get(
-  "/activity-instance-has-files/:id",
-  ActivityInstanceHasFileCtrl.readActivityInstanceHasFile
+	"/activity-instance-has-files/:id",
+	ActivityInstanceHasFileCtrl.readActivityInstanceHasFile
 );
 // 특정 활동 인스턴스와 파일 연결 정보를 업데이트하는 PUT 요청을 처리합니다.
 router.put(
-  "/activity-instance-has-files",
-  ActivityInstanceHasFileCtrl.updateActivityInstanceHasFile
+	"/activity-instance-has-files",
+	ActivityInstanceHasFileCtrl.updateActivityInstanceHasFile
 );
 // 특정 활동 인스턴스와 파일 연결 정보를 삭제하는 DELETE 요청을 처리합니다.
 router.delete(
-  "/activity-instance-has-files",
-  ActivityInstanceHasFileCtrl.deleteActivityInstanceHasFile
+	"/activity-instance-has-files",
+	ActivityInstanceHasFileCtrl.deleteActivityInstanceHasFile
 );
 
 // Visitation 관련 라우트
@@ -353,33 +361,76 @@ router.post("/current-members", CurrentMemberCtrl.createMember);
 router.get("/get-visit-post/:id", VisitManagementCtrl.getVisitPost);
 
 router.post(
-  "/organizations/:organizationId/activities/:activityId/attendance",
-  DomainAttendanceCtrl.recordAttendance
+	"/organizations/:organizationId/activities/:activityId/attendance",
+	DomainAttendanceCtrl.recordAttendance
 );
 
 // 새로운 삭제 라우트 추가
 router.delete(
-  "/organizations/:organizationId/activities/:activityId/instances/:activityInstanceId",
-  DomainAttendanceCtrl.deleteActivityInstance
+	"/organizations/:organizationId/activities/:activityId/instances/:activityInstanceId",
+	DomainAttendanceCtrl.deleteActivityInstance
 );
 
 // 출석 기록 수정 라우트 추가
 router.put(
-  "/organizations/:organizationId/activities/:activityId/instances/:activityInstanceId/attendance",
-  DomainAttendanceCtrl.updateAttendance
+	"/organizations/:organizationId/activities/:activityId/instances/:activityInstanceId/attendance",
+	DomainAttendanceCtrl.updateAttendance
 );
 
 // 활동 인스턴스 상세 정보 조회
 router.get(
-  "/organizations/:organizationId/activities/:activityId/instances/:activityInstanceId",
-  DomainAttendanceCtrl.getActivityInstanceDetails
+	"/organizations/:organizationId/activities/:activityId/instances/:activityInstanceId",
+	DomainAttendanceCtrl.getActivityInstanceDetails
 );
 
 // 조직 멤버 목록 조회
 router.get(
-  "/organizations/:organizationId/members",
-  DomainAttendanceCtrl.getOrganizationMembers
+	"/organizations/:organizationId/members",
+	DomainAttendanceCtrl.getOrganizationMembers
 );
+
+// ChurchOffice 라우트
+router.post("/church-offices", ChurchOfficeCtrl.createChurchOffice);
+router.get("/church-offices", ChurchOfficeCtrl.readChurchOffices);
+router.get("/church-offices/:id", ChurchOfficeCtrl.readChurchOffice);
+router.put("/church-offices", ChurchOfficeCtrl.updateChurchOffice);
+router.delete("/church-offices", ChurchOfficeCtrl.deleteChurchOffice);
+
+// UserHasChurchOffice 라우트
+router.post(
+	"/user-has-church-offices",
+	UserHasChurchOfficeCtrl.createUserHasChurchOffice
+);
+router.get(
+	"/user-has-church-offices",
+	UserHasChurchOfficeCtrl.readUserHasChurchOffices
+);
+router.get(
+	"/user-has-church-offices/:id",
+	UserHasChurchOfficeCtrl.readUserHasChurchOffice
+);
+router.put(
+	"/user-has-church-offices",
+	UserHasChurchOfficeCtrl.updateUserHasChurchOffice
+);
+router.delete(
+	"/user-has-church-offices",
+	UserHasChurchOfficeCtrl.deleteUserHasChurchOffice
+);
+
+// Service 라우트
+router.post("/services", ServiceCtrl.createService);
+router.get("/services", ServiceCtrl.readServices);
+router.get("/services/:id", ServiceCtrl.readService);
+router.put("/services", ServiceCtrl.updateService);
+router.delete("/services", ServiceCtrl.deleteService);
+
+// Season 라우트
+router.post("/seasons", SeasonCtrl.createSeason);
+router.get("/seasons", SeasonCtrl.readSeasons);
+router.get("/seasons/:id", SeasonCtrl.readSeason);
+router.put("/seasons", SeasonCtrl.updateSeason);
+router.delete("/seasons", SeasonCtrl.deleteSeason);
 
 // 설정된 라우터 모듈을 내보냅니다.
 module.exports = router;
