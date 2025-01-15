@@ -154,8 +154,10 @@ const activityInstanceController = {
 			const body = req.body;
 			await validateActivityInstanceData(body);
 			Object.assign(modelDto, body);
-			modelDto.creator_id = body.user_id;
-			modelDto.updater_id = body.user_id;
+			if (body.user_id) {
+				modelDto.creator_id = body.user_id;
+				modelDto.updater_id = body.user_id;
+			}
 
 			const data = await models.ActivityInstance.create(modelDto);
 
@@ -177,7 +179,10 @@ const activityInstanceController = {
 					.json({ message: "활동 인스턴스를 찾을 수 없습니다." });
 			}
 
-			body.updater_id = body.user_id;
+			if (body.user_id) {
+				body.updater_id = body.user_id;
+			}
+
 			const data = await instance.update(body);
 			res.json({ data, message: "업데이트되었습니다." });
 		} catch (error) {
