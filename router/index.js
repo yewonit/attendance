@@ -167,6 +167,14 @@ router.delete(
 	"/activity-instances",
 	ActivityInstanceCtrl.deleteActivityInstance
 );
+router.post(
+	"/activity-instances/necessary",
+	ActivityInstanceCtrl.createActivityInstanceByNecessary
+);
+router.patch(
+	"/activity-instances/necessary/:id",
+	ActivityInstanceCtrl.updateActivityInstanceByNecessary
+);
 
 // Attendance 관련 라우트
 // 새로운 출석 정보를 생성하는 POST 요청을 처리합니다.
