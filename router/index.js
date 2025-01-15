@@ -54,8 +54,8 @@ const ServiceCtrl = require("../controllers/modelCRUDCtrl/service/Service.Ctrl")
 // Season 관련 기능을 담당하는 컨트롤러입니다.
 const SeasonCtrl = require("../controllers/modelCRUDCtrl/season/Season.Ctrl");
 
-// UpdateCoramdeoMember 라우트
-const UpdateCoramdeoMemberCtrl = require("../controllers/domainCtrl/UpdateCoramdeoMember.Ctrl");
+// CoramdeoController 라우트
+const CoramdeoController = require("../controllers/domainCtrl/Coramdeo.Ctrl");
 
 // 라우트
 // User 관련 라우트
@@ -443,11 +443,9 @@ router.get("/seasons/:id", SeasonCtrl.readSeason);
 router.put("/seasons", SeasonCtrl.updateSeason);
 router.delete("/seasons", SeasonCtrl.deleteSeason);
 
-// UpdateCoramdeoMember 라우트
-router.post(
-	"/update-coramdeo-members",
-	UpdateCoramdeoMemberCtrl.bulkUpdateMembers
-);
+router.post("/coramdeo/members", CoramdeoController.updateCoramdeoMember);
+
+router.post("/coramdeo/activities", CoramdeoController.initCoramdeoActivities);
 
 // 설정된 라우터 모듈을 내보냅니다.
 module.exports = router;
