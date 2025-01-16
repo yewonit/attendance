@@ -1,11 +1,171 @@
-const { where } = require("sequelize");
 const models = require("../../models/models");
+const { Op } = require("sequelize");
 
-const YEAR = 2025;
-const ORGANIZATION_CODE = "CORAMDEO";
+const coramdeoController = {
+	initCoramdeoActivities: async (req, res, next) => {
+		try {
+			const seasonName = req.body.season_name;
+			const season = await models.Season.findOne({
+				where: {
+					season_name: seasonName,
+				},
+			});
 
-const updateCoramdeoMemberController = {
-	bulkUpdateMembers: async (req, res) => {
+			const organizations = await models.Organization.findAll({
+				where: {
+					[Op.and]: [
+						{ season_id: season.id },
+						{ organization_code: { [Op.like]: "CORAMDEO_SOON_%" } },
+					],
+				},
+			});
+
+			organizations.map(async (organization) => {
+				await models.Activity.findOrCreate({
+					where: {
+						name: "주일2부예배",
+						organization_id: organization.id,
+					},
+					defaults: {
+						description: `${organization.organization_name}의 주일 2부 예배`,
+						activity_category_id: 101,
+						is_recurring: 1,
+						location_type: "OFFLINE",
+						default_start_time: "00:00:00",
+						default_end_time: "00:00:00",
+						creator_id: 1,
+						updater_id: 1,
+						creator_ip: "127.0.0.1",
+						updater_ip: "127.0.0.1",
+						access_service_id: "SYSTEM",
+					},
+				});
+				await models.Activity.findOrCreate({
+					where: {
+						name: "주일3부예배",
+						organization_id: organization.id,
+					},
+					defaults: {
+						description: `${organization.organization_name}의 주일 3부 예배`,
+						activity_category_id: 101,
+						is_recurring: 1,
+						location_type: "OFFLINE",
+						default_start_time: "00:00:00",
+						default_end_time: "00:00:00",
+						creator_id: 1,
+						updater_id: 1,
+						creator_ip: "127.0.0.1",
+						updater_ip: "127.0.0.1",
+						access_service_id: "SYSTEM",
+					},
+				});
+				await models.Activity.findOrCreate({
+					where: {
+						name: "청년예배",
+						organization_id: organization.id,
+					},
+					defaults: {
+						description: `${organization.organization_name}의 청년 예배`,
+						activity_category_id: 101,
+						is_recurring: 1,
+						location_type: "OFFLINE",
+						default_start_time: "00:00:00",
+						default_end_time: "00:00:00",
+						creator_id: 1,
+						updater_id: 1,
+						creator_ip: "127.0.0.1",
+						updater_ip: "127.0.0.1",
+						access_service_id: "SYSTEM",
+					},
+				});
+				await models.Activity.findOrCreate({
+					where: {
+						name: "수요예배",
+						organization_id: organization.id,
+					},
+					defaults: {
+						description: `${organization.organization_name}의 수요 예배`,
+						activity_category_id: 101,
+						is_recurring: 1,
+						location_type: "OFFLINE",
+						default_start_time: "00:00:00",
+						default_end_time: "00:00:00",
+						creator_id: 1,
+						updater_id: 1,
+						creator_ip: "127.0.0.1",
+						updater_ip: "127.0.0.1",
+						access_service_id: "SYSTEM",
+					},
+				});
+				await models.Activity.findOrCreate({
+					where: {
+						name: "금요예배",
+						organization_id: organization.id,
+					},
+					defaults: {
+						description: `${organization.organization_name}의 금요 예배`,
+						activity_category_id: 101,
+						is_recurring: 1,
+						location_type: "OFFLINE",
+						default_start_time: "00:00:00",
+						default_end_time: "00:00:00",
+						creator_id: 1,
+						updater_id: 1,
+						creator_ip: "127.0.0.1",
+						updater_ip: "127.0.0.1",
+						access_service_id: "SYSTEM",
+					},
+				});
+				await models.Activity.findOrCreate({
+					where: {
+						name: "수요제자기도회",
+						organization_id: organization.id,
+					},
+					defaults: {
+						description: `${organization.organization_name}의 수요 제자 기도회`,
+						activity_category_id: 101,
+						is_recurring: 1,
+						location_type: "OFFLINE",
+						default_start_time: "00:00:00",
+						default_end_time: "00:00:00",
+						creator_id: 1,
+						updater_id: 1,
+						creator_ip: "127.0.0.1",
+						updater_ip: "127.0.0.1",
+						access_service_id: "SYSTEM",
+					},
+				});
+				await models.Activity.findOrCreate({
+					where: {
+						name: "현장치유팀사역",
+						organization_id: organization.id,
+					},
+					defaults: {
+						description: `${organization.organization_name}의 현장 치유 팀사역`,
+						activity_category_id: 101,
+						is_recurring: 1,
+						location_type: "OFFLINE",
+						default_start_time: "00:00:00",
+						default_end_time: "00:00:00",
+						creator_id: 1,
+						updater_id: 1,
+						creator_ip: "127.0.0.1",
+						updater_ip: "127.0.0.1",
+						access_service_id: "SYSTEM",
+					},
+				});
+			});
+
+			res
+				.status(201)
+				.json({ created: organizations.length, message: "생성 완료" });
+		} catch (error) {
+			next(error);
+		}
+	},
+	updateCoramdeoMember: async (req, res, next) => {
+		const YEAR = 2025;
+		const ORGANIZATION_CODE = "CORAMDEO";
 		try {
 			const memberList = req.body;
 
@@ -353,4 +513,4 @@ const updateCoramdeoMemberController = {
 	},
 };
 
-module.exports = updateCoramdeoMemberController;
+module.exports = coramdeoController;
