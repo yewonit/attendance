@@ -131,3 +131,5 @@ dist
 
 .DS_Store
 package-lock.json
+.gitsecret/keys/random_seed
+!*.secret
