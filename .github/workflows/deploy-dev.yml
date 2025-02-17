@@ -1,0 +1,56 @@
+name: Build and Deploy to Docker Swarm
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Git Secret
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-secret
+
+      - name: Import GPG Key for Git Secret
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import --batch --yes
+          gpg --list-secret-keys  # GPG 키 확인
+
+      - name: Decrypt .env.secret using git-secret
+        run: |
+          git secret reveal -p "${{ secrets.GPG_PASSPHRASE }}"
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Build Docker Image with .env
+        run: |
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/attendance-dev:latest .
+
+      - name: Push Docker Image to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/attendance-dev:latest
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to Docker Swarm on AWS EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.AWS_SSH_USER }}@${{ secrets.AWS_SSH_HOST }} << 'EOF'
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/attendance-dev:latest
+            docker stack deploy -c /deploy/attendance-svc-dev.yml attendance-dev
+          EOF
