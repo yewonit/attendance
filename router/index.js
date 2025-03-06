@@ -447,5 +447,10 @@ router.post("/coramdeo/members", CoramdeoController.updateCoramdeoMember);
 
 router.post("/coramdeo/activities", CoramdeoController.initCoramdeoActivities);
 
+// /health-check API 추가
+router.get('/health-check', (req, res) => {
+    res.status(200).send('OK');
+});
+
 // 설정된 라우터 모듈을 내보냅니다.
 module.exports = router;
