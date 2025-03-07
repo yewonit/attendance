@@ -3,7 +3,7 @@ name: Build and Deploy to Docker Swarm
 on:
   push:
     branches:
-      - dev
+      - main
 
 jobs:
   build-and-push:
@@ -35,11 +35,11 @@ jobs:
 
       - name: Build Docker Image with .env
         run: |
-          docker buildx build -t ${{ secrets.DOCKER_HUB_USERNAME }}/attendance:dev --platform linux/amd64 .
+          docker buildx build -t ${{ secrets.DOCKER_HUB_USERNAME }}/attendance:prod --platform linux/amd64 .
 
       - name: Push Docker Image to Docker Hub
         run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/attendance:dev
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/attendance:prod
 
       - name: Setup SSH Key
         run: |
@@ -51,9 +51,9 @@ jobs:
       - name: Deploy to Docker Swarm on AWS EC2
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.AWS_SSH_USER }}@${{ secrets.AWS_SSH_HOST }} << 'EOF'
-            docker stop attendance-dev
-            docker rm attendance-dev
-            docker rmi coramdeoyouth/attendance:dev
-            docker pull coramdeoyouth/attendance:dev
-            docker run -d -p 3001:3000 --name attendance-dev -e NODE_ENV=development --restart unless-stopped coramdeoyouth/attendance:dev
+            docker stop attendance
+            docker rm attendance
+            docker rmi coramdeoyouth/attendance:prod
+            docker pull coramdeoyouth/attendance:prod
+            docker run -d -p 3000:3000 --name attendance -e NODE_ENV=production --restart unless-stopped coramdeoyouth/attendance:prod
           EOF
