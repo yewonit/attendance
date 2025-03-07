@@ -94,7 +94,7 @@ const CurrentMemberCtrl = {
 				updater_ip: req.ip,
 			});
 
-			const role = await models.Role.findOne({
+			const role = await Role.findOne({
 				where: {
 					organization_id: organizationId,
 					role_name: "순원",
