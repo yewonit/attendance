@@ -164,7 +164,10 @@ const coramdeoController = {
 		}
 	},
 	updateCoramdeoMember: async (req, res, next) => {
-		const YEAR = 2025;
+		if (!req.query.year) {
+			res.status(400).json({ message: "year 입력값이 없습니다." });
+		}
+		const YEAR = req.query.year;
 		const ORGANIZATION_CODE = "CORAMDEO";
 		try {
 			const memberList = req.body;
@@ -242,10 +245,21 @@ const coramdeoController = {
 				let group = member["그룹"];
 				let soon = member["순"];
 				let name = member["이름"];
+				let suffix = member["구분"];
 				let gender = member["성별"];
 				let ageYear = member["기수"];
 				let phone = member["연락처"];
 				let role = member["직분"];
+
+				if (ageYear == null || ageYear == "") {
+					ageYear = "";
+				} else if (!isNaN(ageYear) && ageYear.length == 4) {
+					ageYear = ageYear.slice(2);
+				} else if (ageYear === "0") {
+					ageYear = "00";
+				} else {
+					ageYear = ageYear.slice(0, 2);
+				}
 
 				console.log(name, "등록 시작");
 
@@ -456,7 +470,7 @@ const coramdeoController = {
 						name: name,
 						phone_number: phone.replaceAll("-", ""),
 						is_deleted: "N",
-						name_suffix: "",
+						name_suffix: suffix,
 						email: "",
 						password: "",
 						gender_type: gender === "남" ? "M" : "F",
