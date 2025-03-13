@@ -1,16 +1,9 @@
-const { Sequelize } = require("sequelize");
-const env = require("../config/environment");
+import { Sequelize } from "sequelize";
+import sequelize from "../utils/database.js"
+import User from "./model_archive/user/User.Model.js"
+import Organization from "./model_archive/organizationAndRole/Organization.Model.js"
 
-// 📚 데이터베이스 연결 설정
-const sequelize = new Sequelize(env.DB_NAME, env.DB_USER, env.DB_PASSWORD, {
-	host: env.DB_HOST,
-	dialect: "mysql",
-});
-
-// 🙋‍♂️ User 모델 그룹
-const User = require("./model_archive/user/User.Model")(sequelize, Sequelize);
-
-// 🏢 Organization 모델 그룹
+const User = User(sequelize, Sequelize);
 const Organization =
 	require("./model_archive/organizationAndRole/Organization.Model")(
 		sequelize,
@@ -232,8 +225,7 @@ ChurchOffice.hasMany(UserHasChurchOffice, { foreignKey: "church_office_id" });
 UserHasChurchOffice.belongsTo(ChurchOffice, { foreignKey: "church_office_id" });
 
 // 📦 모듈 내보내기
-module.exports = {
-	sequelize,
+export {
 	User,
 	Organization,
 	Role,

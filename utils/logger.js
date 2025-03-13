@@ -1,4 +1,4 @@
-const winston = require("winston");
+import winston from "winston/lib/winston/config";
 const { format } = winston;
 
 // 로그 레벨 정의
@@ -35,4 +35,4 @@ const logger = winston.createLogger({
 	transports: [new winston.transports.Console()],
 });
 
-module.exports = logger;
+export default logger;
