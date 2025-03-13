@@ -1,5 +1,11 @@
-const { sequelize } = require("../models/models");
-const logger = require("./logger");
+import { Sequelize } from "sequelize";
+import logger from "./logger.js"
+
+// 📚 데이터베이스 연결 설정
+const sequelize = new Sequelize(env.DB_NAME, env.DB_USER, env.DB_PASSWORD, {
+	host: env.DB_HOST,
+	dialect: "mysql",
+});
 
 const initDatabase = async () => {
 	try {
@@ -20,6 +26,7 @@ const initDatabase = async () => {
 	}
 };
 
-module.exports = {
+export {
+	sequelize,
 	initDatabase,
 };
