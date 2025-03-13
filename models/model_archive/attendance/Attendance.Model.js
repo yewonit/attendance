@@ -2,8 +2,8 @@
 // Created: 2023-08-07
 // Description: 출석 모델 정의
 
-module.exports = (sequelize, Sequelize) => {
-  const Attendance = sequelize.define(
+export default (sequelize, Sequelize) => {
+  return sequelize.define(
     "Attendance",
     {
       id: {
@@ -76,21 +76,4 @@ module.exports = (sequelize, Sequelize) => {
       comment: "출석 정보를 관리하는 테이블",
     }
   );
-
-  Attendance.associate = (models) => {
-    Attendance.belongsTo(models.User, {
-      foreignKey: "user_id",
-      as: "User",
-    });
-    Attendance.belongsTo(models.ActivityInstance, {
-      foreignKey: "activity_instance_id",
-      as: "ActivityInstance",
-    });
-    Attendance.belongsTo(models.AttendanceStatus, {
-      foreignKey: "attendance_status_id",
-      as: "AttendanceStatus",
-    });
-  };
-
-  return Attendance;
 };

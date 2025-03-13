@@ -2,8 +2,8 @@
 // Created: 2023-08-07
 // Description: 활동 인스턴스 모델 정의 (기존의 activity_child를 대체)
 
-module.exports = (sequelize, Sequelize) => {
-  const ActivityInstance = sequelize.define(
+export default (sequelize, Sequelize) => {
+  return sequelize.define(
     "ActivityInstance",
     {
       id: {
@@ -87,25 +87,4 @@ module.exports = (sequelize, Sequelize) => {
       comment: "활동 인스턴스 정보를 관리하는 테이블",
     }
   );
-
-  ActivityInstance.associate = (models) => {
-    ActivityInstance.belongsTo(models.Activity, {
-      foreignKey: "activity_id",
-      as: "Activity",
-    });
-    ActivityInstance.belongsTo(ActivityInstance, {
-      foreignKey: "parent_instance_id",
-      as: "ParentInstance",
-    });
-    ActivityInstance.hasMany(ActivityInstance, {
-      foreignKey: "parent_instance_id",
-      as: "ChildInstances",
-    });
-    ActivityInstance.hasMany(models.Attendance, {
-      foreignKey: "activity_instance_id",
-      as: "Attendances",
-    });
-  };
-
-  return ActivityInstance;
 };

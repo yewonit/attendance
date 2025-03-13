@@ -1,5 +1,7 @@
-module.exports = (sequelize, Sequelize) => {
-  const Organization = require("./Organization.Model")(sequelize, Sequelize);
+import OrganizationModel from "./Organization.Model.js";
+
+export default (sequelize, Sequelize) => {
+  const Organization = OrganizationModel(sequelize, Sequelize);
 
   return sequelize.define(
     "Role",

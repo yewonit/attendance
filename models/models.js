@@ -1,23 +1,14 @@
 import { Sequelize } from "sequelize";
 import sequelize from "../utils/database.js"
-import User from "./model_archive/user/User.Model.js"
-import Organization from "./model_archive/organizationAndRole/Organization.Model.js"
+import UserModel from "./model_archive/user/User.Model.js"
+import OrganizationModel from "./model_archive/organizationAndRole/Organization.Model.js"
+import RoleModel from "./model_archive/organizationAndRole/Role.Model.js"
+import UserHasRoleModel from "./model_archive/organizationAndRole/UserHasRole.Model.js"
 
-const User = User(sequelize, Sequelize);
-const Organization =
-	require("./model_archive/organizationAndRole/Organization.Model")(
-		sequelize,
-		Sequelize
-	);
-const Role = require("./model_archive/organizationAndRole/Role.Model")(
-	sequelize,
-	Sequelize
-);
-const UserHasRole =
-	require("./model_archive/organizationAndRole/UserHasRole.Model")(
-		sequelize,
-		Sequelize
-	);
+const User = UserModel(sequelize, Sequelize);
+const Organization = OrganizationModel(sequelize, Sequelize);
+const Role = RoleModel(sequelize, Sequelize);
+const UserHasRole = UserHasRoleModel(sequelize, Sequelize);
 
 // 📅 Attendance 모델 그룹
 const ActivityCategory =
@@ -223,6 +214,8 @@ UserHasChurchOffice.belongsTo(User, { foreignKey: "user_id" });
 
 ChurchOffice.hasMany(UserHasChurchOffice, { foreignKey: "church_office_id" });
 UserHasChurchOffice.belongsTo(ChurchOffice, { foreignKey: "church_office_id" });
+UserHasChurchOffice.belongsTo(User, { foreignKey: "user_id" })
+
 
 // 📦 모듈 내보내기
 export {

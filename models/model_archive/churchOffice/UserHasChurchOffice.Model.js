@@ -2,8 +2,8 @@
 // Created: 2024-03-19
 // Description: 사용자-교회직분 연결 모델 정의
 
-module.exports = (sequelize, Sequelize) => {
-	const UserHasChurchOffice = sequelize.define(
+export default (sequelize, Sequelize) => {
+	return sequelize.define(
 		"UserHasChurchOffice",
 		{
 			id: {
@@ -80,17 +80,4 @@ module.exports = (sequelize, Sequelize) => {
 			comment: "사용자와 교회 직분 간의 관계를 관리하는 테이블",
 		}
 	)
-
-	UserHasChurchOffice.associate = (models) => {
-		UserHasChurchOffice.belongsTo(models.User, {
-			foreignKey: "user_id",
-			as: "User",
-		})
-		UserHasChurchOffice.belongsTo(models.ChurchOffice, {
-			foreignKey: "church_office_id",
-			as: "ChurchOffice",
-		})
-	}
-
-	return UserHasChurchOffice
 }

@@ -2,8 +2,8 @@
 // Created: 2024-03-19
 // Description: 교회 직분 모델 정의
 
-module.exports = (sequelize, Sequelize) => {
-	const ChurchOffice = sequelize.define(
+export default (sequelize, Sequelize) => {
+	return sequelize.define(
 		"ChurchOffice",
 		{
 			id: {
@@ -67,15 +67,4 @@ module.exports = (sequelize, Sequelize) => {
 			comment: "교회 직분 정보를 관리하는 테이블",
 		}
 	)
-
-	// 필요한 경우 관계 설정을 위한 associate 메서드 추가
-	ChurchOffice.associate = (models) => {
-		// 예시: User와의 관계 설정이 필요한 경우
-		// ChurchOffice.hasMany(models.User, {
-		//   foreignKey: "church_office_id",
-		//   as: "Users",
-		// });
-	}
-
-	return ChurchOffice
 }

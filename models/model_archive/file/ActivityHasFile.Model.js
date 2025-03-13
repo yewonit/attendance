@@ -1,9 +1,9 @@
-module.exports = (sequelize, Sequelize) => {
-  const Activity = require("../attendance/Activity.Model")(
-    sequelize,
-    Sequelize
-  );
-  const File = require("./File.Model")(sequelize, Sequelize);
+import ActivityModel from "../attendance/Activity.Model.js";
+import FileModel from "./File.Model.js";
+
+export default (sequelize, Sequelize) => {
+  const Activity = ActivityModel(sequelize, Sequelize)
+  const File = FileModel(sequelize, Sequelize);
 
   return sequelize.define(
     "ActivityHasFile",

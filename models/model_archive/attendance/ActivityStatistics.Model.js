@@ -2,8 +2,8 @@
 // Created: 2023-08-07
 // Description: 활동 통계 모델 정의
 
-module.exports = (sequelize, Sequelize) => {
-  const ActivityStatistics = sequelize.define(
+export default (sequelize, Sequelize) => {
+  return sequelize.define(
     "ActivityStatistics",
     {
       id: {
@@ -56,13 +56,4 @@ module.exports = (sequelize, Sequelize) => {
       comment: "활동 통계 정보를 관리하는 테이블",
     }
   );
-
-  ActivityStatistics.associate = (models) => {
-    ActivityStatistics.belongsTo(models.Activity, {
-      foreignKey: "activity_id",
-      as: "Activity",
-    });
-  };
-
-  return ActivityStatistics;
 };

@@ -2,8 +2,8 @@
 // Created: 2023-08-07
 // Description: 활동 모델 정의
 
-module.exports = (sequelize, Sequelize) => {
-  const Activity = sequelize.define(
+export default (sequelize, Sequelize) => {
+  return sequelize.define(
     "Activity",
     {
       id: {
@@ -113,33 +113,4 @@ module.exports = (sequelize, Sequelize) => {
       comment: "활동 정보를 관리하는 테이블",
     }
   );
-
-  Activity.associate = (models) => {
-    Activity.belongsTo(models.ActivityCategory, {
-      foreignKey: "activity_category_id",
-      as: "Category",
-    });
-    Activity.belongsTo(models.Organization, {
-      foreignKey: "organization_id",
-      as: "Organization",
-    });
-    Activity.hasMany(models.ActivityRecurrence, {
-      foreignKey: "activity_id",
-      as: "Recurrences",
-    });
-    Activity.hasMany(models.ActivityInstance, {
-      foreignKey: "activity_id",
-      as: "Instances",
-    });
-    Activity.hasMany(models.ActivityChangeHistory, {
-      foreignKey: "activity_id",
-      as: "ChangeHistory",
-    });
-    Activity.hasMany(models.ActivityStatistics, {
-      foreignKey: "activity_id",
-      as: "Statistics",
-    });
-  };
-
-  return Activity;
 };

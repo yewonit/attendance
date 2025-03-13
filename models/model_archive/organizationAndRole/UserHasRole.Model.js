@@ -1,7 +1,11 @@
-module.exports = (sequelize, Sequelize) => {
-  const User = require("../user/User.Model")(sequelize, Sequelize);
-  const Role = require("./Role.Model")(sequelize, Sequelize);
-  const Organization = require("./Organization.Model")(sequelize, Sequelize);
+import UserModel from "../user/User.Model.js";
+import RoleModel from "./Role.Model.js";
+import OrganizationModel from "./Organization.Model.js";
+
+export default (sequelize, Sequelize) => {
+  const User = UserModel(sequelize, Sequelize);
+  const Role = RoleModel(sequelize, Sequelize);
+  const Organization = OrganizationModel(sequelize, Sequelize);
 
   return sequelize.define(
     "UserHasRole",

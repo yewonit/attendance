@@ -2,8 +2,8 @@
 // Created: 2023-08-07
 // Description: 활동 반복 패턴 모델 정의
 
-module.exports = (sequelize, Sequelize) => {
-  const ActivityRecurrence = sequelize.define(
+export default (sequelize, Sequelize) => {
+  return sequelize.define(
     "ActivityRecurrence",
     {
       id: {
@@ -82,13 +82,4 @@ module.exports = (sequelize, Sequelize) => {
       comment: "활동 반복 패턴 정보를 관리하는 테이블",
     }
   );
-
-  ActivityRecurrence.associate = (models) => {
-    ActivityRecurrence.belongsTo(models.Activity, {
-      foreignKey: "activity_id",
-      as: "Activity",
-    });
-  };
-
-  return ActivityRecurrence;
 };
