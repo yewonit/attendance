@@ -4,96 +4,45 @@ import UserModel from "./model_archive/user/User.Model.js"
 import OrganizationModel from "./model_archive/organizationAndRole/Organization.Model.js"
 import RoleModel from "./model_archive/organizationAndRole/Role.Model.js"
 import UserHasRoleModel from "./model_archive/organizationAndRole/UserHasRole.Model.js"
+import ActivityCategoryModel from "./model_archive/attendance/ActivityCategory.Model.js";
+import ActivityModel from "./model_archive/attendance/Activity.Model.js";
+import ActivityChangeHistoryModel from "./model_archive/attendance/ActivityChangeHistory.Model.js";
+import ActivityHasFileModel from "./model_archive/file/ActivityHasFile.Model.js";
+import ActivityInstanceHasFileModel from "./model_archive/file/ActivityInstanceHasFile.Model.js";
+import ActivityInstanceModel from "./model_archive/attendance/ActivityInstance.Model.js";
+import ActivityRecurrenceModel from "./model_archive/attendance/ActivityRecurrence.Model.js";
+import ActivityStatisticsModel from "./model_archive/attendance/ActivityStatistics.Model.js";
+import AttendanceStatusModel from "./model_archive/attendance/AttendanceStatus.Model.js";
+import AttendanceModel from "./model_archive/attendance/Attendance.Model.js";
+import FileModel from "./model_archive/file/File.Model.js";
+import VisitationModel from "./model_archive/visitation/Visitation.Model.js";
+import SeasonModel from "./model_archive/season/Season.Model.js";
+import ServiceModel from "./model_archive/service/Service.Model.js";
+import ChurchOfficeModel from "./model_archive/churchOffice/ChurchOffice.Model.js";
+import UserHasChurchOfficeModel from "./model_archive/churchOffice/UserHasChurchOffice.Model.js";
 
 const User = UserModel(sequelize, Sequelize);
 const Organization = OrganizationModel(sequelize, Sequelize);
 const Role = RoleModel(sequelize, Sequelize);
 const UserHasRole = UserHasRoleModel(sequelize, Sequelize);
+const ActivityCategory = ActivityCategoryModel(sequelize, Sequelize);
+const Activity = ActivityModel(sequelize, Sequelize);
+const ActivityRecurrence = ActivityRecurrenceModel(sequelize, Sequelize);
+const ActivityInstance = ActivityInstanceModel(sequelize, Sequelize); 
+const AttendanceStatus = AttendanceStatusModel(sequelize, Sequelize);
+const Attendance = AttendanceModel(sequelize, Sequelize);
+const ActivityChangeHistory = ActivityChangeHistoryModel(sequelize, Sequelize);
+const ActivityStatistics = ActivityStatisticsModel(sequelize, Sequelize);
+const File = FileModel(sequelize, Sequelize);
+const ActivityHasFile = ActivityHasFileModel(sequelize, Sequelize);
+const ActivityInstanceHasFile = ActivityInstanceHasFileModel(sequelize, Sequelize);
+const Visitation = VisitationModel(sequelize, Sequelize);
+const Season = SeasonModel(sequelize, Sequelize);
+const Service = ServiceModel(sequelize, Sequelize);
+const ChurchOffice = ChurchOfficeModel(sequelize, Sequelize);
+const UserHasChurchOffice = UserHasChurchOfficeModel(sequelize, Sequelize);
 
-// 📅 Attendance 모델 그룹
-const ActivityCategory =
-	require("./model_archive/attendance/ActivityCategory.Model")(
-		sequelize,
-		Sequelize
-	);
-const Activity = require("./model_archive/attendance/Activity.Model")(
-	sequelize,
-	Sequelize
-);
-const ActivityRecurrence =
-	require("./model_archive/attendance/ActivityRecurrence.Model")(
-		sequelize,
-		Sequelize
-	);
-const ActivityInstance =
-	require("./model_archive/attendance/ActivityInstance.Model")(
-		sequelize,
-		Sequelize
-	);
-const AttendanceStatus =
-	require("./model_archive/attendance/AttendanceStatus.Model")(
-		sequelize,
-		Sequelize
-	);
-const Attendance = require("./model_archive/attendance/Attendance.Model")(
-	sequelize,
-	Sequelize
-);
-const ActivityChangeHistory =
-	require("./model_archive/attendance/ActivityChangeHistory.Model")(
-		sequelize,
-		Sequelize
-	);
-const ActivityStatistics =
-	require("./model_archive/attendance/ActivityStatistics.Model")(
-		sequelize,
-		Sequelize
-	);
-
-// 📁 File 모델 그룹
-const File = require("./model_archive/file/File.Model")(sequelize, Sequelize);
-const ActivityHasFile = require("./model_archive/file/ActivityHasFile.Model")(
-	sequelize,
-	Sequelize
-);
-const ActivityInstanceHasFile =
-	require("./model_archive/file/ActivityInstanceHasFile.Model")(
-		sequelize,
-		Sequelize
-	);
-
-// 🙋🏻‍♂️ Visitation 모델 그룹
-const Visitation = require("./model_archive/visitation/Visitation.Model")(
-	sequelize,
-	Sequelize
-);
-
-// 🔗️ Season 모델 그룹
-const Season = require("./model_archive/season/Season.Model")(
-	sequelize,
-	Sequelize
-);
-
-// 🔗 Service 모델 그룹
-const Service = require("./model_archive/service/Service.Model")(
-	sequelize,
-	Sequelize
-);
-
-// 🏢 ChurchOffice 모델 그룹
-const ChurchOffice = require("./model_archive/churchOffice/ChurchOffice.Model")(
-	sequelize,
-	Sequelize
-);
-
-// 🏢 ChurchOffice 모델 그룹
-const UserHasChurchOffice =
-	require("./model_archive/churchOffice/UserHasChurchOffice.Model")(
-		sequelize,
-		Sequelize
-	);
-
-// 🔗 모델 간 관계 설정
+// 모델 간 관계 설정
 User.hasMany(UserHasRole, { foreignKey: "user_id" });
 UserHasRole.belongsTo(User, { foreignKey: "user_id" });
 
