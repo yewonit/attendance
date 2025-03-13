@@ -1,17 +1,18 @@
-const express = require("express");
-const compression = require("compression");
-const cors = require("cors");
-const logger = require("./utils/logger");
-const {
-	requestLogger,
+import bodyParser from "body-parser";
+import compression from "compression";
+import cors from "cors";
+import express from "express";
+
+import healthCheck from "./healthcheck.js";
+import {
 	errorLogger,
+	requestLogger,
 	setupGlobalLogging,
-} = require("./middleware/logging");
-const { NotFoundError } = require("./utils/errors");
-const router = require("./router");
-const bodyParser = require("body-parser");
-const { initDatabase } = require("./utils/database");
-const healthCheck = require("./healthcheck");
+} from "./middleware/logging.js";
+import router from "./router/apigateway.js";
+import { initDatabase } from "./utils/database.js";
+import { NotFoundError } from "./utils/errors.js";
+import logger from "./utils/logger.js";
 
 const app = express();
 
@@ -65,5 +66,3 @@ const startServer = async () => {
 };
 
 startServer();
-
-module.exports = app;

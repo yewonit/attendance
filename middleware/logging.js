@@ -1,4 +1,4 @@
-const logger = require("../utils/logger");
+import logger from "../utils/logger.js";
 
 // HTTP 요청 로깅 미들웨어
 const requestLogger = (req, res, next) => {
@@ -146,7 +146,7 @@ const setupGlobalLogging = () => {
 	});
 };
 
-module.exports = {
+export {
 	requestLogger,
 	errorLogger,
 	setupGlobalLogging,

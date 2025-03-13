@@ -1,8 +1,5 @@
-// .env 파일에서 환경 변수를 로드합니다.
-require("dotenv").config();
-
-const express = require("express");
-const router = express.Router();
+import { Router } from "express"
+const router = Router();
 
 // User
 // User 관련 기능을 담당하는 컨트롤러입니다.
@@ -10,11 +7,11 @@ const UserCtrl = require("../controllers/modelCRUDCtrl/user/User.Ctrl.js");
 
 // Organization
 // Organization 관련 기능을 담당하는 컨트롤러입니다.
-const OrganizationCtrl = require("../controllers/modelCRUDCtrl/organizationAndRole/Organization.Ctrl");
+const OrganizationCtrl = require("../controllers/modelCRUDCtrl/organizationAndRole/Organization.Ctrl.js");
 // Role 관련 기능을 담당하는 컨트롤러입니다.
-const RoleCtrl = require("../controllers/modelCRUDCtrl/organizationAndRole/Role.Ctrl.js");
+const RoleCtrl = require("../controllers/modelCRUDCtrl/organizationAndRole/Role.Ctrl.js.js");
 // UserHasRole 관련 기능을 담당하는 컨트롤러입니다.
-const UserHasRoleCtrl = require("../controllers/modelCRUDCtrl/organizationAndRole/UserHasRole.Ctrl");
+const UserHasRoleCtrl = require("../controllers/modelCRUDCtrl/organizationAndRole/UserHasRole.Ctrl.js");
 
 // Attendance
 // ActivityCategory 관련 기능을 담당하는 컨트롤러입니다.
@@ -36,26 +33,26 @@ const ActivityStatisticsCtrl = require("../controllers/modelCRUDCtrl/attendance/
 
 // File
 // File 관련 기능을 담당하는 컨트롤러입니다.
-const FileCtrl = require("../controllers/modelCRUDCtrl/file/File.Ctrl");
+const FileCtrl = require("../controllers/modelCRUDCtrl/file/File.Ctrl.js");
 // ActivityHasFile 관련 기능을 담당하는 컨트롤러입니다.
-const ActivityHasFileCtrl = require("../controllers/modelCRUDCtrl/file/ActivityHasFile.Ctrl");
+const ActivityHasFileCtrl = require("../controllers/modelCRUDCtrl/file/ActivityHasFile.Ctrl.js");
 // ActivityInstanceHasFile 관련 기능을 담당하는 컨트롤러입니다.
-const ActivityInstanceHasFileCtrl = require("../controllers/modelCRUDCtrl/file/ActivityInstanceHasFile.Ctrl");
+const ActivityInstanceHasFileCtrl = require("../controllers/modelCRUDCtrl/file/ActivityInstanceHasFile.Ctrl.js");
 
 // Visitation
 // Visitation 관련 기능을 담당하는 컨트롤러입니다.
 const VisitationCtrl = require("../controllers/modelCRUDCtrl/visitation/visitation.Ctrl.js");
 
 // ChurchOffice
-const ChurchOfficeCtrl = require("../controllers/modelCRUDCtrl/churchOffice/ChurchOffice.Ctrl");
-const UserHasChurchOfficeCtrl = require("../controllers/modelCRUDCtrl/churchOffice/UserHasChurchOffice.Ctrl");
-const ServiceCtrl = require("../controllers/modelCRUDCtrl/service/Service.Ctrl");
+const ChurchOfficeCtrl = require("../controllers/modelCRUDCtrl/churchOffice/ChurchOffice.Ctrl.js");
+const UserHasChurchOfficeCtrl = require("../controllers/modelCRUDCtrl/churchOffice/UserHasChurchOffice.Ctrl.js");
+const ServiceCtrl = require("../controllers/modelCRUDCtrl/service/Service.Ctrl.js");
 
 // Season 관련 기능을 담당하는 컨트롤러입니다.
-const SeasonCtrl = require("../controllers/modelCRUDCtrl/season/Season.Ctrl");
+const SeasonCtrl = require("../controllers/modelCRUDCtrl/season/Season.Ctrl.js");
 
 // CoramdeoController 라우트
-const CoramdeoController = require("../controllers/domainCtrl/Coramdeo.Ctrl");
+const CoramdeoController = require("../controllers/domainCtrl/Coramdeo.Ctrl.js");
 
 // 라우트
 // User 관련 라우트
@@ -453,4 +450,4 @@ router.get('/health-check', (req, res) => {
 });
 
 // 설정된 라우터 모듈을 내보냅니다.
-module.exports = router;
+export default router;
