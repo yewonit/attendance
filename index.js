@@ -11,6 +11,7 @@ const { NotFoundError } = require("./utils/errors");
 const router = require("./router");
 const bodyParser = require("body-parser");
 const { initDatabase } = require("./utils/database");
+const healthCheck = require("./healthcheck");
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use(requestLogger);
 app.use(errorLogger);
 
 // router 적용
+app.use(healthCheck);
 app.use("/api", router);
 
 // 404 에러 핸들러
