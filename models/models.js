@@ -1,9 +1,9 @@
 import { Sequelize } from "sequelize";
 import sequelize from "../utils/database.js"
 import UserModel from "./model_archive/user/User.Model.js"
-import OrganizationModel from "./model_archive/organizationAndRole/Organization.Model.js"
-import RoleModel from "./model_archive/organizationAndRole/Role.Model.js"
-import UserHasRoleModel from "./model_archive/organizationAndRole/UserHasRole.Model.js"
+import OrganizationModel from "./model_archive/organization/Organization.Model.js"
+import RoleModel from "./model_archive/organization/Role.Model.js"
+import UserHasRoleModel from "./model_archive/role/UserHasRole.Model.js"
 import ActivityCategoryModel from "./model_archive/attendance/ActivityCategory.Model.js";
 import ActivityModel from "./model_archive/attendance/Activity.Model.js";
 import ActivityChangeHistoryModel from "./model_archive/attendance/ActivityChangeHistory.Model.js";
