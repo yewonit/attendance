@@ -2,7 +2,7 @@
 // Created: 2024-03-19
 // Description: 시즌 모델 정의
 
-module.exports = (sequelize, Sequelize) => {
+export default (sequelize, Sequelize) => {
 	const Season = sequelize.define(
 		"Season",
 		{

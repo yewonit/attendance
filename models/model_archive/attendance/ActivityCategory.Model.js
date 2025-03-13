@@ -2,8 +2,8 @@
 // Created: 2023-08-07
 // Description: 활동 카테고리 모델 정의
 
-module.exports = (sequelize, Sequelize) => {
-  const ActivityCategory = sequelize.define(
+export default (sequelize, Sequelize) => {
+  return sequelize.define(
     "ActivityCategory",
     {
       id: {
@@ -77,20 +77,4 @@ module.exports = (sequelize, Sequelize) => {
       comment: "활동 카테고리 정보를 관리하는 테이블",
     }
   );
-
-  ActivityCategory.associate = (models) => {
-    ActivityCategory.hasMany(models.ActivityCategory, {
-      as: "Children",
-      foreignKey: "parent_id",
-    });
-    ActivityCategory.belongsTo(models.ActivityCategory, {
-      as: "Parent",
-      foreignKey: "parent_id",
-    });
-    ActivityCategory.hasMany(models.Activity, {
-      foreignKey: "activity_category_id",
-    });
-  };
-
-  return ActivityCategory;
 };

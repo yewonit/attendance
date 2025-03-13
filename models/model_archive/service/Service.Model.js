@@ -2,7 +2,7 @@
 // Created: 2024-03-19
 // Description: 서비스 모델 정의
 
-module.exports = (sequelize, Sequelize) => {
+export default (sequelize, Sequelize) => {
 	const Service = sequelize.define(
 		"Service",
 		{

@@ -2,8 +2,8 @@
 // Created: 2023-08-07
 // Description: 출석 상태 모델 정의
 
-module.exports = (sequelize, Sequelize) => {
-  const AttendanceStatus = sequelize.define(
+export default (sequelize, Sequelize) => {
+  return sequelize.define(
     "AttendanceStatus",
     {
       id: {
@@ -46,13 +46,4 @@ module.exports = (sequelize, Sequelize) => {
       comment: "출석 상태 정보를 관리하는 테이블",
     }
   );
-
-  AttendanceStatus.associate = (models) => {
-    AttendanceStatus.hasMany(models.Attendance, {
-      foreignKey: "attendance_status_id",
-      as: "Attendances",
-    });
-  };
-
-  return AttendanceStatus;
 };
