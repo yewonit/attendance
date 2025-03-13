@@ -1,58 +1,32 @@
 import { Router } from "express"
 const router = Router();
 
-// User
-// User 관련 기능을 담당하는 컨트롤러입니다.
-const UserCtrl = require("../controllers/modelCRUDCtrl/user/User.Ctrl.js");
 
-// Organization
-// Organization 관련 기능을 담당하는 컨트롤러입니다.
-const OrganizationCtrl = require("../controllers/modelCRUDCtrl/organizationAndRole/Organization.Ctrl.js");
-// Role 관련 기능을 담당하는 컨트롤러입니다.
-const RoleCtrl = require("../controllers/modelCRUDCtrl/organizationAndRole/Role.Ctrl.js.js");
-// UserHasRole 관련 기능을 담당하는 컨트롤러입니다.
-const UserHasRoleCtrl = require("../controllers/modelCRUDCtrl/organizationAndRole/UserHasRole.Ctrl.js");
+const UserCtrl = require("./user/User.Ctrl.js");
+const OrganizationCtrl = require("./organization/Organization.Ctrl.js");
+const RoleCtrl = require("./role/Role.Ctrl.js.js");
+const UserHasRoleCtrl = require("./role/UserHasRole.Ctrl.js");
+const ActivityCategoryCtrl = require("./attendance/ActivityCategory.Ctrl.js");
+const ActivityCtrl = require("./attendance/Activity.Ctrl.js");
+const ActivityInstanceCtrl = require("./attendance/ActivityInstance.Ctrl.js");
+const AttendanceCtrl = require("./attendance/Attendance.Ctrl.js");
+const AttendanceStatusCtrl = require("./attendance/AttendanceStatus.Ctrl.js");
+const ActivityRecurrenceCtrl = require("./attendance/ActivityRecurrence.Ctrl.js");
+const ActivityChangeHistoryCtrl = require("./attendance/ActivityChangeHistory.Ctrl.js");
+const ActivityStatisticsCtrl = require("./attendance/ActivityStatistics.Ctrl.js");
+const FileCtrl = require("./file/File.Ctrl.js");
+const ActivityHasFileCtrl = require("./file/ActivityHasFile.Ctrl.js");
+const ActivityInstanceHasFileCtrl = require("./file/ActivityInstanceHasFile.Ctrl.js");
+const VisitationCtrl = require("./visitation/visitation.Ctrl.js");
+const ChurchOfficeCtrl = require("./churchOffice/ChurchOffice.Ctrl.js");
+const UserHasChurchOfficeCtrl = require("./churchOffice/UserHasChurchOffice.Ctrl.js");
+const ServiceCtrl = require("./service/Service.Ctrl.js");
+const SeasonCtrl = require("./season/Season.Ctrl.js");
 
-// Attendance
-// ActivityCategory 관련 기능을 담당하는 컨트롤러입니다.
-const ActivityCategoryCtrl = require("../controllers/modelCRUDCtrl/attendance/ActivityCategory.Ctrl.js");
-// Activity 관련 기능을 담당하는 컨트롤러입니다.
-const ActivityCtrl = require("../controllers/modelCRUDCtrl/attendance/Activity.Ctrl.js");
-// ActivityInstance 관련 기능 담당하는 컨트롤러입니다.
-const ActivityInstanceCtrl = require("../controllers/modelCRUDCtrl/attendance/ActivityInstance.Ctrl.js");
-// Attendance 관련 기능을 담당하는 컨트롤러입니다.
-const AttendanceCtrl = require("../controllers/modelCRUDCtrl/attendance/Attendance.Ctrl.js");
-// AttendanceStatus 관련 기능을 담당하는 컨트롤러입니다.
-const AttendanceStatusCtrl = require("../controllers/modelCRUDCtrl/attendance/AttendanceStatus.Ctrl.js");
-// ActivityRecurrence 관련 기능을 담당하는 컨트롤러입니다.
-const ActivityRecurrenceCtrl = require("../controllers/modelCRUDCtrl/attendance/ActivityRecurrence.Ctrl.js");
-// ActivityChangeHistory 관련 기능을 담당하는 컨트롤러입니다.
-const ActivityChangeHistoryCtrl = require("../controllers/modelCRUDCtrl/attendance/ActivityChangeHistory.Ctrl.js");
-// ActivityStatistics 관련 기능을 담당하는 컨트롤러입니다.
-const ActivityStatisticsCtrl = require("../controllers/modelCRUDCtrl/attendance/ActivityStatistics.Ctrl.js");
-
-// File
-// File 관련 기능을 담당하는 컨트롤러입니다.
-const FileCtrl = require("../controllers/modelCRUDCtrl/file/File.Ctrl.js");
-// ActivityHasFile 관련 기능을 담당하는 컨트롤러입니다.
-const ActivityHasFileCtrl = require("../controllers/modelCRUDCtrl/file/ActivityHasFile.Ctrl.js");
-// ActivityInstanceHasFile 관련 기능을 담당하는 컨트롤러입니다.
-const ActivityInstanceHasFileCtrl = require("../controllers/modelCRUDCtrl/file/ActivityInstanceHasFile.Ctrl.js");
-
-// Visitation
-// Visitation 관련 기능을 담당하는 컨트롤러입니다.
-const VisitationCtrl = require("../controllers/modelCRUDCtrl/visitation/visitation.Ctrl.js");
-
-// ChurchOffice
-const ChurchOfficeCtrl = require("../controllers/modelCRUDCtrl/churchOffice/ChurchOffice.Ctrl.js");
-const UserHasChurchOfficeCtrl = require("../controllers/modelCRUDCtrl/churchOffice/UserHasChurchOffice.Ctrl.js");
-const ServiceCtrl = require("../controllers/modelCRUDCtrl/service/Service.Ctrl.js");
-
-// Season 관련 기능을 담당하는 컨트롤러입니다.
-const SeasonCtrl = require("../controllers/modelCRUDCtrl/season/Season.Ctrl.js");
-
-// CoramdeoController 라우트
 const CoramdeoController = require("../controllers/domainCtrl/Coramdeo.Ctrl.js");
+const CurrentMemberCtrl = require("../controllers/domainCtrl/CurrentMember.Ctrl.js");
+const VisitManagementCtrl = require("../controllers/domainCtrl/VisitManagement.Ctrl.js");
+const DomainAttendanceCtrl = require("../controllers/domainCtrl/DomainAttendance.Ctrl.js");
 
 // 라우트
 // User 관련 라우트
@@ -350,53 +324,6 @@ router.put("/visitations", VisitationCtrl.updateVisitation);
 // 특정 방문 기록을 삭제하는 DELETE 요청을 처리합니다.
 router.delete("/visitations", VisitationCtrl.deleteVisitation);
 
-// Domain Controllers
-// CurrentMember 관련 기능을 담당하는 컨트롤러입니다.
-const CurrentMemberCtrl = require("../controllers/domainCtrl/CurrentMember.Ctrl.js");
-// VisitManagement 관련 기능을 담당하는 컨트롤러입니다.
-const VisitManagementCtrl = require("../controllers/domainCtrl/VisitManagement.Ctrl.js");
-
-// DomainAttendance 관련 라우트
-const DomainAttendanceCtrl = require("../controllers/domainCtrl/DomainAttendance.Ctrl.js");
-
-// CurrentMember 관련 라우트
-// 현재 회원 정보를 조회하는 GET 요청을 처리합니다.
-router.get("/current-members", CurrentMemberCtrl.getMembersWithRoles);
-router.post("/current-members", CurrentMemberCtrl.createMember);
-
-// VisitManagement 관련 라우트
-// 특정 인원에 대한 심방정보를 가져오는 GET 요청을 처리합니다.
-router.get("/get-visit-post/:id", VisitManagementCtrl.getVisitPost);
-
-router.post(
-	"/organizations/:organizationId/activities/:activityId/attendance",
-	DomainAttendanceCtrl.recordAttendance
-);
-
-// 새로운 삭제 라우트 추가
-router.delete(
-	"/organizations/:organizationId/activities/:activityId/instances/:activityInstanceId",
-	DomainAttendanceCtrl.deleteActivityInstance
-);
-
-// 출석 기록 수정 라우트 추가
-router.put(
-	"/organizations/:organizationId/activities/:activityId/instances/:activityInstanceId/attendance",
-	DomainAttendanceCtrl.updateAttendance
-);
-
-// 활동 인스턴스 상세 정보 조회
-router.get(
-	"/organizations/:organizationId/activities/:activityId/instances/:activityInstanceId",
-	DomainAttendanceCtrl.getActivityInstanceDetails
-);
-
-// 조직 멤버 목록 조회
-router.get(
-	"/organizations/:organizationId/members",
-	DomainAttendanceCtrl.getOrganizationMembers
-);
-
 // ChurchOffice 라우트
 router.post("/church-offices", ChurchOfficeCtrl.createChurchOffice);
 router.get("/church-offices", ChurchOfficeCtrl.readChurchOffices);
@@ -439,6 +366,44 @@ router.get("/seasons", SeasonCtrl.readSeasons);
 router.get("/seasons/:id", SeasonCtrl.readSeason);
 router.put("/seasons", SeasonCtrl.updateSeason);
 router.delete("/seasons", SeasonCtrl.deleteSeason);
+
+// CurrentMember 관련 라우트
+// 현재 회원 정보를 조회하는 GET 요청을 처리합니다.
+router.get("/current-members", CurrentMemberCtrl.getMembersWithRoles);
+router.post("/current-members", CurrentMemberCtrl.createMember);
+
+// VisitManagement 관련 라우트
+// 특정 인원에 대한 심방정보를 가져오는 GET 요청을 처리합니다.
+router.get("/get-visit-post/:id", VisitManagementCtrl.getVisitPost);
+
+router.post(
+	"/organizations/:organizationId/activities/:activityId/attendance",
+	DomainAttendanceCtrl.recordAttendance
+);
+
+// 새로운 삭제 라우트 추가
+router.delete(
+	"/organizations/:organizationId/activities/:activityId/instances/:activityInstanceId",
+	DomainAttendanceCtrl.deleteActivityInstance
+);
+
+// 출석 기록 수정 라우트 추가
+router.put(
+	"/organizations/:organizationId/activities/:activityId/instances/:activityInstanceId/attendance",
+	DomainAttendanceCtrl.updateAttendance
+);
+
+// 활동 인스턴스 상세 정보 조회
+router.get(
+	"/organizations/:organizationId/activities/:activityId/instances/:activityInstanceId",
+	DomainAttendanceCtrl.getActivityInstanceDetails
+);
+
+// 조직 멤버 목록 조회
+router.get(
+	"/organizations/:organizationId/members",
+	DomainAttendanceCtrl.getOrganizationMembers
+);
 
 router.post("/coramdeo/members", CoramdeoController.updateCoramdeoMember);
 
