@@ -1,22 +1,22 @@
 import { Sequelize } from "sequelize";
 import sequelize from "../utils/database.js"
-import UserModel from "./model_archive/user/User.Model.js"
-import OrganizationModel from "./model_archive/organization/Organization.Model.js"
+import UserModel from "./model_archive/user/user.js"
+import OrganizationModel from "./model_archive/organization/organization.js"
 import RoleModel from "./model_archive/organization/Role.Model.js"
-import UserHasRoleModel from "./model_archive/role/UserHasRole.Model.js"
-import ActivityCategoryModel from "./model_archive/attendance/ActivityCategory.Model.js";
-import ActivityModel from "./model_archive/attendance/Activity.Model.js";
-import ActivityChangeHistoryModel from "./model_archive/attendance/ActivityChangeHistory.Model.js";
-import ActivityHasFileModel from "./model_archive/file/ActivityHasFile.Model.js";
-import ActivityInstanceHasFileModel from "./model_archive/file/ActivityInstanceHasFile.Model.js";
-import ActivityInstanceModel from "./model_archive/attendance/ActivityInstance.Model.js";
-import AttendanceStatusModel from "./model_archive/attendance/AttendanceStatus.Model.js";
-import AttendanceModel from "./model_archive/attendance/Attendance.Model.js";
-import FileModel from "./model_archive/file/File.Model.js";
-import VisitationModel from "./model_archive/visitation/Visitation.Model.js";
-import SeasonModel from "./model_archive/season/Season.Model.js";
-import ChurchOfficeModel from "./model_archive/churchOffice/ChurchOffice.Model.js";
-import UserHasChurchOfficeModel from "./model_archive/churchOffice/UserHasChurchOffice.Model.js";
+import UserHasRoleModel from "./model_archive/role/user_has_role.js"
+import ActivityCategoryModel from "./model_archive/attendance/activity_category.js";
+import ActivityModel from "./model_archive/attendance/activity.js";
+import ActivityChangeHistoryModel from "./model_archive/attendance/activity_change_history.js";
+import ActivityHasFileModel from "./model_archive/file/activity_has_file.js";
+import ActivityInstanceHasFileModel from "./model_archive/file/activity_instance_has_file.js";
+import ActivityInstanceModel from "./model_archive/attendance/activity_instance.js";
+import AttendanceStatusModel from "./model_archive/attendance/attendance_status.js";
+import AttendanceModel from "./model_archive/attendance/attendance.js";
+import FileModel from "./model_archive/file/file.js";
+import VisitationModel from "./model_archive/visitation/visitation.js";
+import SeasonModel from "./model_archive/season/season.js";
+import ChurchOfficeModel from "./model_archive/churchOffice/church_office.js";
+import UserHasChurchOfficeModel from "./model_archive/churchOffice/user_has_church_office.js";
 
 const User = UserModel(sequelize, Sequelize);
 const Organization = OrganizationModel(sequelize, Sequelize);

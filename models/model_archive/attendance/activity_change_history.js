@@ -1,7 +1,3 @@
-// File: ActivityChangeHistory.Model.js
-// Created: 2023-08-07
-// Description: 활동 변경 이력 모델 정의
-
 export default (sequelize, Sequelize) => {
   return sequelize.define(
     "ActivityChangeHistory",

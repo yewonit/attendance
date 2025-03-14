@@ -1,31 +1,63 @@
-// File: ActivityCategory.Model.js
-// Created: 2023-08-07
-// Description: 활동 카테고리 모델 정의
-
 export default (sequelize, Sequelize) => {
   return sequelize.define(
-    "ActivityCategory",
+    "Activity",
     {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true,
-        comment: "활동 카테고리 고유 식별자",
+        comment: "활동 고유 식별자",
       },
       name: {
-        type: Sequelize.STRING(50),
+        type: Sequelize.STRING(100),
         allowNull: false,
-        comment: "활동 카테고리 이름, 예: 예배, 모임",
+        comment: "활동 명칭, 예: 주일1부예배, 원네스 모임",
       },
       description: {
         type: Sequelize.TEXT,
         allowNull: true,
-        comment: "활동 카테고리 설명",
+        comment: "활동 상세 설명",
       },
-      parent_id: {
+      activity_category_id: {
         type: Sequelize.INTEGER,
+        allowNull: false,
+        comment: "활동 카테고리 ID",
+      },
+      organization_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        comment: "주최 조직 ID",
+      },
+      is_recurring: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        comment: "반복 여부",
+      },
+      location_type: {
+        type: Sequelize.ENUM("OFFLINE", "ONLINE", "HYBRID"),
+        allowNull: false,
+        comment: "활동 장소 유형",
+      },
+      location: {
+        type: Sequelize.STRING(100),
         allowNull: true,
-        comment: "상위 카테고리 ID, 계층 구조 표현을 위함",
+        comment: "활동 장소 (오프라인인 경우)",
+      },
+      online_link: {
+        type: Sequelize.STRING(255),
+        allowNull: true,
+        comment: "온라인 링크 (온라인 또는 하이브리드인 경우)",
+      },
+      default_start_time: {
+        type: Sequelize.TIME,
+        allowNull: false,
+        comment: "기본 시작 시간",
+      },
+      default_end_time: {
+        type: Sequelize.TIME,
+        allowNull: false,
+        comment: "기본 종료 시간",
       },
       is_deleted: {
         type: Sequelize.CHAR(1),
@@ -72,9 +104,9 @@ export default (sequelize, Sequelize) => {
       },
     },
     {
-      tableName: "activity_category",
+      tableName: "activity",
       timestamps: false,
-      comment: "활동 카테고리 정보를 관리하는 테이블",
+      comment: "활동 정보를 관리하는 테이블",
     }
   );
 };

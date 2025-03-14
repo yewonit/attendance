@@ -1,5 +1,5 @@
-import ActivityModel from "../attendance/Activity.Model.js";
-import FileModel from "./File.Model.js";
+import ActivityModel from "../attendance/activity.js";
+import FileModel from "./file.js";
 
 export default (sequelize, Sequelize) => {
   const Activity = ActivityModel(sequelize, Sequelize)
