@@ -2,23 +2,23 @@ import { Router } from "express"
 const router = Router();
 
 
-const UserCtrl = require("../services/user/User.Ctrl.js");
-const OrganizationCtrl = require("../services/organization/Organization.Ctrl.js");
-const RoleCtrl = require("../services/role/Role.Ctrl.js.js");
-const UserHasRoleCtrl = require("../services/role/UserHasRole.Ctrl.js");
-const ActivityCategoryCtrl = require("../services/attendance/ActivityCategory.Ctrl.js");
-const ActivityCtrl = require("../services/attendance/Activity.Ctrl.js");
-const ActivityInstanceCtrl = require("../services/attendance/ActivityInstance.Ctrl.js");
-const AttendanceCtrl = require("../services/attendance/Attendance.Ctrl.js");
-const AttendanceStatusCtrl = require("../services/attendance/AttendanceStatus.Ctrl.js");
-const ActivityChangeHistoryCtrl = require("../services/attendance/ActivityChangeHistory.Ctrl.js");
-const FileCtrl = require("../services/file/File.Ctrl.js");
-const ActivityHasFileCtrl = require("../services/file/ActivityHasFile.Ctrl.js");
-const ActivityInstanceHasFileCtrl = require("../services/file/ActivityInstanceHasFile.Ctrl.js");
-const VisitationCtrl = require("../services/visitation/visitation.Ctrl.js");
-const ChurchOfficeCtrl = require("../services/churchOffice/ChurchOffice.Ctrl.js");
-const UserHasChurchOfficeCtrl = require("../services/churchOffice/UserHasChurchOffice.Ctrl.js");
-const SeasonCtrl = require("../services/season/Season.Ctrl.js");
+const UserCtrl = require("../services/user/user.js");
+const OrganizationCtrl = require("../services/organization/organization.js");
+const RoleCtrl = require("../services/role/role.js");
+const UserHasRoleCtrl = require("../services/role/user_has_role.js");
+const ActivityCategoryCtrl = require("../services/attendance/activity_category.js");
+const ActivityCtrl = require("../services/attendance/activity.js");
+const ActivityInstanceCtrl = require("../services/attendance/activity_instance.js");
+const AttendanceCtrl = require("../services/attendance/attendance.js");
+const AttendanceStatusCtrl = require("../services/attendance/attendance_status.js");
+const ActivityChangeHistoryCtrl = require("../services/attendance/activity_change_history.js");
+const FileCtrl = require("../services/file/file.js");
+const ActivityHasFileCtrl = require("../services/file/activity_has_file.js");
+const ActivityInstanceHasFileCtrl = require("../services/file/activity_instance_has_file.js");
+const VisitationCtrl = require("../services/visitation/visitation.js");
+const ChurchOfficeCtrl = require("../services/churchOffice/church_office.js");
+const UserHasChurchOfficeCtrl = require("../services/churchOffice/user_has_church_office.js");
+const SeasonCtrl = require("../services/season/season.js");
 
 const CoramdeoController = require("../controllers/domainCtrl/Coramdeo.Ctrl.js");
 const CurrentMemberCtrl = require("../controllers/domainCtrl/CurrentMember.Ctrl.js");
