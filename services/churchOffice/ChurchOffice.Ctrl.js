@@ -1,5 +1,5 @@
 const models = require("../../../models/models");
-const crudController = require("../../services/common/crud.Ctrl");
+const crudController = require("../common/crud.Ctrl");
 
 const validateChurchOfficeData = async (data) => {
 	if (!data.office_name) {

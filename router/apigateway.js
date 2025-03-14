@@ -2,23 +2,23 @@ import { Router } from "express"
 const router = Router();
 
 
-const UserCtrl = require("./user/User.Ctrl.js");
-const OrganizationCtrl = require("./organization/Organization.Ctrl.js");
-const RoleCtrl = require("./role/Role.Ctrl.js.js");
-const UserHasRoleCtrl = require("./role/UserHasRole.Ctrl.js");
-const ActivityCategoryCtrl = require("./attendance/ActivityCategory.Ctrl.js");
-const ActivityCtrl = require("./attendance/Activity.Ctrl.js");
-const ActivityInstanceCtrl = require("./attendance/ActivityInstance.Ctrl.js");
-const AttendanceCtrl = require("./attendance/Attendance.Ctrl.js");
-const AttendanceStatusCtrl = require("./attendance/AttendanceStatus.Ctrl.js");
-const ActivityChangeHistoryCtrl = require("./attendance/ActivityChangeHistory.Ctrl.js");
-const FileCtrl = require("./file/File.Ctrl.js");
-const ActivityHasFileCtrl = require("./file/ActivityHasFile.Ctrl.js");
-const ActivityInstanceHasFileCtrl = require("./file/ActivityInstanceHasFile.Ctrl.js");
-const VisitationCtrl = require("./visitation/visitation.Ctrl.js");
-const ChurchOfficeCtrl = require("./churchOffice/ChurchOffice.Ctrl.js");
-const UserHasChurchOfficeCtrl = require("./churchOffice/UserHasChurchOffice.Ctrl.js");
-const SeasonCtrl = require("./season/Season.Ctrl.js");
+const UserCtrl = require("../services/user/User.Ctrl.js");
+const OrganizationCtrl = require("../services/organization/Organization.Ctrl.js");
+const RoleCtrl = require("../services/role/Role.Ctrl.js.js");
+const UserHasRoleCtrl = require("../services/role/UserHasRole.Ctrl.js");
+const ActivityCategoryCtrl = require("../services/attendance/ActivityCategory.Ctrl.js");
+const ActivityCtrl = require("../services/attendance/Activity.Ctrl.js");
+const ActivityInstanceCtrl = require("../services/attendance/ActivityInstance.Ctrl.js");
+const AttendanceCtrl = require("../services/attendance/Attendance.Ctrl.js");
+const AttendanceStatusCtrl = require("../services/attendance/AttendanceStatus.Ctrl.js");
+const ActivityChangeHistoryCtrl = require("../services/attendance/ActivityChangeHistory.Ctrl.js");
+const FileCtrl = require("../services/file/File.Ctrl.js");
+const ActivityHasFileCtrl = require("../services/file/ActivityHasFile.Ctrl.js");
+const ActivityInstanceHasFileCtrl = require("../services/file/ActivityInstanceHasFile.Ctrl.js");
+const VisitationCtrl = require("../services/visitation/visitation.Ctrl.js");
+const ChurchOfficeCtrl = require("../services/churchOffice/ChurchOffice.Ctrl.js");
+const UserHasChurchOfficeCtrl = require("../services/churchOffice/UserHasChurchOffice.Ctrl.js");
+const SeasonCtrl = require("../services/season/Season.Ctrl.js");
 
 const CoramdeoController = require("../controllers/domainCtrl/Coramdeo.Ctrl.js");
 const CurrentMemberCtrl = require("../controllers/domainCtrl/CurrentMember.Ctrl.js");
