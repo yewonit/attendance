@@ -1,5 +1,5 @@
 const models = require("../../../models/models");
-const crudController = require("../../services/common/crud.Ctrl");
+const crudController = require("../../services/common/crud");
 
 const validateSeasonData = async (data) => {
 	if (!data.season_name) {

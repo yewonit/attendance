@@ -2,7 +2,7 @@
 
 // 필요한 모델과 컨트롤러 유틸리티를 임포트합니다.
 const models = require("../../../models/models"); // 실제 경로에 맞게 수정해야 합니다.
-const crudController = require("../common/crud.Ctrl");
+const crudController = require("../common/crud");
 
 /**
  * AttendanceStatus 데이터를 검증하기 위한 함수입니다.
