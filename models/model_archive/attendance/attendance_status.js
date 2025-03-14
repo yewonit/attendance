@@ -1,7 +1,3 @@
-// File: AttendanceStatus.Model.js
-// Created: 2023-08-07
-// Description: 출석 상태 모델 정의
-
 export default (sequelize, Sequelize) => {
   return sequelize.define(
     "AttendanceStatus",

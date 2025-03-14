@@ -1,6 +1,6 @@
-import UserModel from "../user/User.Model.js";
-import RoleModel from "./Role.Model.js";
-import OrganizationModel from "../organization/Organization.Model.js";
+import UserModel from "../user/user.js";
+import RoleModel from "./role.js";
+import OrganizationModel from "../organization/organization.js";
 
 export default (sequelize, Sequelize) => {
   const User = UserModel(sequelize, Sequelize);

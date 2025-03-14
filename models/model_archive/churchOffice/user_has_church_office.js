@@ -1,7 +1,3 @@
-// File: UserHasChurchOffice.Model.js
-// Created: 2024-03-19
-// Description: 사용자-교회직분 연결 모델 정의
-
 export default (sequelize, Sequelize) => {
 	return sequelize.define(
 		"UserHasChurchOffice",

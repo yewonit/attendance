@@ -1,7 +1,3 @@
-// File: ChurchOffice.Model.js
-// Created: 2024-03-19
-// Description: 교회 직분 모델 정의
-
 export default (sequelize, Sequelize) => {
 	return sequelize.define(
 		"ChurchOffice",

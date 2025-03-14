@@ -1,7 +1,3 @@
-// File: ActivityInstance.Model.js
-// Created: 2023-08-07
-// Description: 활동 인스턴스 모델 정의 (기존의 activity_child를 대체)
-
 export default (sequelize, Sequelize) => {
   return sequelize.define(
     "ActivityInstance",
