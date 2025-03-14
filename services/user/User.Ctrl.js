@@ -1,6 +1,6 @@
 // User.Ctrl.js
 const models = require("../../../models/models"); // 실제 경로에 맞게 수정해야 합니다.
-const crudController = require("../../services/common/crud.Ctrl");
+const crudController = require("../common/crud.Ctrl");
 
 // 📝 사용자 정보 유효성 검사 함수
 const validateUserInfo = async (data) => {
