@@ -146,18 +146,6 @@ const activityController = {
     }
   },
 
-  getRecurringActivities: async (req, res, next) => {
-    try {
-      const activities = await models.Activity.findAll({
-        where: { is_recurring: true, is_deleted: "N" },
-        include: [{ model: models.ActivityRecurrence, as: "Recurrences" }],
-      });
-      res.json(activities);
-    } catch (error) {
-      next(error);
-    }
-  },
-
   getActivityInstances: async (req, res, next) => {
     try {
       const { activityId } = req.params;

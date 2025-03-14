@@ -11,16 +11,13 @@ const ActivityCtrl = require("./attendance/Activity.Ctrl.js");
 const ActivityInstanceCtrl = require("./attendance/ActivityInstance.Ctrl.js");
 const AttendanceCtrl = require("./attendance/Attendance.Ctrl.js");
 const AttendanceStatusCtrl = require("./attendance/AttendanceStatus.Ctrl.js");
-const ActivityRecurrenceCtrl = require("./attendance/ActivityRecurrence.Ctrl.js");
 const ActivityChangeHistoryCtrl = require("./attendance/ActivityChangeHistory.Ctrl.js");
-const ActivityStatisticsCtrl = require("./attendance/ActivityStatistics.Ctrl.js");
 const FileCtrl = require("./file/File.Ctrl.js");
 const ActivityHasFileCtrl = require("./file/ActivityHasFile.Ctrl.js");
 const ActivityInstanceHasFileCtrl = require("./file/ActivityInstanceHasFile.Ctrl.js");
 const VisitationCtrl = require("./visitation/visitation.Ctrl.js");
 const ChurchOfficeCtrl = require("./churchOffice/ChurchOffice.Ctrl.js");
 const UserHasChurchOfficeCtrl = require("./churchOffice/UserHasChurchOffice.Ctrl.js");
-const ServiceCtrl = require("./service/Service.Ctrl.js");
 const SeasonCtrl = require("./season/Season.Ctrl.js");
 
 const CoramdeoController = require("../controllers/domainCtrl/Coramdeo.Ctrl.js");
@@ -180,33 +177,6 @@ router.delete(
 	AttendanceStatusCtrl.deleteAttendanceStatus
 );
 
-// ActivityRecurrence 관련 라우트
-// 새로운 활동 반복 정보를 생성하는 POST 요청을 처리합니다.
-router.post(
-	"/activity-recurrences",
-	ActivityRecurrenceCtrl.createActivityRecurrence
-);
-// 모든 활동 반복 정보를 조회하는 GET 요청을 처리합니다.
-router.get(
-	"/activity-recurrences",
-	ActivityRecurrenceCtrl.readActivityRecurrences
-);
-// 특정 활동 반복 정보를 조회하는 GET 요청을 처리합니다.
-router.get(
-	"/activity-recurrences/:id",
-	ActivityRecurrenceCtrl.readActivityRecurrence
-);
-// 특정 활동 반복 정보를 업데이트하는 PUT 요청을 처리합니다.
-router.put(
-	"/activity-recurrences",
-	ActivityRecurrenceCtrl.updateActivityRecurrence
-);
-// 특정 활동 반복 정보를 삭제하는 DELETE 요청을 처리합니다.
-router.delete(
-	"/activity-recurrences",
-	ActivityRecurrenceCtrl.deleteActivityRecurrence
-);
-
 // ActivityChangeHistory 관련 라우트
 // 새로운 활동 변경 이력을 생성하는 POST 요청을 처리합니다.
 router.post(
@@ -232,33 +202,6 @@ router.put(
 router.delete(
 	"/activity-change-histories",
 	ActivityChangeHistoryCtrl.deleteActivityChangeHistory
-);
-
-// ActivityStatistics 관련 라우트
-// 새로운 활동 통계를 생성하는 POST 요청을 처리합니다.
-router.post(
-	"/activity-statistics",
-	ActivityStatisticsCtrl.createActivityStatistics
-);
-// 모든 활동 통계를 조회하는 GET 요청을 처리합니다.
-router.get(
-	"/activity-statistics",
-	ActivityStatisticsCtrl.readActivityStatistics
-);
-// 특정 활동 통계를 조회하는 GET 요청을 처리합니다.
-router.get(
-	"/activity-statistics/:id",
-	ActivityStatisticsCtrl.readActivityStatistics
-);
-// 특정 활동 통계를 업데이트하는 PUT 요청을 처리합니다.
-router.put(
-	"/activity-statistics",
-	ActivityStatisticsCtrl.updateActivityStatistics
-);
-// 특정 활동 통계를 삭제하는 DELETE 요청을 처리합니다.
-router.delete(
-	"/activity-statistics",
-	ActivityStatisticsCtrl.deleteActivityStatistics
 );
 
 // File 관련 라우트
@@ -352,13 +295,6 @@ router.delete(
 	"/user-has-church-offices",
 	UserHasChurchOfficeCtrl.deleteUserHasChurchOffice
 );
-
-// Service 라우트
-router.post("/services", ServiceCtrl.createService);
-router.get("/services", ServiceCtrl.readServices);
-router.get("/services/:id", ServiceCtrl.readService);
-router.put("/services", ServiceCtrl.updateService);
-router.delete("/services", ServiceCtrl.deleteService);
 
 // Season 라우트
 router.post("/seasons", SeasonCtrl.createSeason);
