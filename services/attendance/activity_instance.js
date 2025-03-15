@@ -1,8 +1,8 @@
 // ActivityInstance.Ctrl.js
 
 // 필요한 모델과 컨트롤러 유틸리티를 임포트합니다.
-const models = require("../../../models/models"); // 실제 경로에 맞게 수정해야 합니다.
-const crudController = require("../common/crud");
+import models from "../../../models/models";
+import crudController from "../common/crud";
 
 /**
  * ActivityInstance 데이터를 검증하기 위한 함수입니다.
@@ -30,7 +30,7 @@ const validateActivityInstanceData = async (data) => {
 };
 
 // 컨트롤러 객체를 정의하여 CRUD 연산을 캡슐화합니다.
-const activityInstanceController = {
+const activityInstanceService = {
 	/**
 	 * 새로운 활동 인스턴스를 생성합니다. 데이터는 validateActivityInstanceData 함수를 통해 유효성을 검증받습니다.
 	 * @param {Object} req - 요청 객체, 활동 인스턴스 데이터를 포함합니다.
@@ -192,4 +192,4 @@ const activityInstanceController = {
 };
 
 // 모듈을 내보내어 라우트 등 다른 파트에서 사용할 수 있도록 합니다.
-module.exports = activityInstanceController;
+export default activityInstanceService;

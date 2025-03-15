@@ -1,5 +1,5 @@
-const models = require("../../../models/models");
-const crudController = require("../common/crud");
+import models from "../../../models/models";
+import crudController from "../common/crud";
 
 const validateChurchOfficeData = async (data) => {
 	if (!data.office_name) {
@@ -10,7 +10,7 @@ const validateChurchOfficeData = async (data) => {
 	// 추가 유효성 검사 로직이 필요한 경우 여기에 구현
 };
 
-const churchOfficeController = {
+const churchOfficeService = {
 	createChurchOffice: crudController.create(
 		models.ChurchOffice,
 		validateChurchOfficeData
@@ -24,4 +24,4 @@ const churchOfficeController = {
 	deleteChurchOffice: crudController.delete(models.ChurchOffice),
 };
 
-module.exports = churchOfficeController;
+export default churchOfficeService;
