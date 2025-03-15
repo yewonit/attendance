@@ -1,5 +1,5 @@
-const models = require("../../../models/models");
-const crudController = require("../common/crud");
+import models from "../../../models/models";
+import crudController from "../common/crud";
 
 const validateSeasonData = async (data) => {
 	if (!data.season_name) {
@@ -10,7 +10,7 @@ const validateSeasonData = async (data) => {
 	// 추가 유효성 검사 로직이 필요한 경우 여기에 구현
 };
 
-const seasonController = {
+const seasonService = {
 	createSeason: crudController.create(models.Season, validateSeasonData),
 	readSeasons: crudController.readAll(models.Season),
 	readSeason: crudController.readOne(models.Season),
@@ -18,4 +18,4 @@ const seasonController = {
 	deleteSeason: crudController.delete(models.Season),
 };
 
-module.exports = seasonController;
+export default seasonService;
