@@ -2,7 +2,7 @@ const { Router } = require("express");
 
 const router = Router();
 
-router.get("/", (req, res) => {
+router.get("/health-check", (req, res) => {
 	return res.status(200).json("OK");
 });
 
