@@ -20,10 +20,9 @@ const router = Router();
 
 import OrganizationCtrl from "../services/organization/organization.js";
 
-import CoramdeoController from "../controllers/domainCtrl/Coramdeo.Ctrl.js";
-import CurrentMemberCtrl from "../controllers/domainCtrl/CurrentMember.Ctrl.js";
-import DomainAttendanceCtrl from "../controllers/domainCtrl/DomainAttendance.Ctrl.js";
-import VisitManagementCtrl from "../controllers/domainCtrl/VisitManagement.Ctrl.js";
+import CoramdeoController from "./domainCtrl/Coramdeo.Ctrl.js";
+import CurrentMemberCtrl from "./domainCtrl/CurrentMember.Ctrl.js";
+import DomainAttendanceCtrl from "./domainCtrl/DomainAttendance.Ctrl.js";
 
 router.use("/users", userRouter);
 router.use("/activity-categories", activityCategoryRouter);
@@ -52,10 +51,6 @@ router.get(
 // 현재 회원 정보를 조회하는 GET 요청을 처리합니다.
 router.get("/current-members", CurrentMemberCtrl.getMembersWithRoles);
 router.post("/current-members", CurrentMemberCtrl.createMember);
-
-// VisitManagement 관련 라우트
-// 특정 인원에 대한 심방정보를 가져오는 GET 요청을 처리합니다.
-router.get("/get-visit-post/:id", VisitManagementCtrl.getVisitPost);
 
 router.post(
 	"/organizations/:organizationId/activities/:activityId/attendance",

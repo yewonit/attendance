@@ -1,6 +1,5 @@
-const models = require("../../models/models");
-const Sequelize = require("sequelize");
-const crudController = require("../modelCRUDCtrl/common/crud.Ctrl");
+import { col, fn, where } from "sequelize";
+import models from "../../models/models.js";
 
 // 기존의 attendanceController 객체
 const attendanceController = {
@@ -115,9 +114,9 @@ const attendanceController = {
 			const updatedAttendances = await Promise.all(
 				attendances.map(async (attendance) => {
 					const attendanceStatus = await models.AttendanceStatus.findOne({
-						where: Sequelize.where(
-							Sequelize.fn("LOWER", Sequelize.col("name")),
-							Sequelize.fn("LOWER", attendance.status)
+						where: where(
+							fn("LOWER", col("name")),
+							fn("LOWER", attendance.status)
 						),
 					});
 					if (!attendanceStatus) {
@@ -409,9 +408,9 @@ const attendanceController = {
 					// 출석 상태 확인 (대소문자 구분 없이)
 					// AttendanceStatus 테이블에서 해당하는 상태 조회
 					const attendanceStatus = await models.AttendanceStatus.findOne({
-						where: Sequelize.where(
-							Sequelize.fn("LOWER", Sequelize.col("name")),
-							Sequelize.fn("LOWER", attendance.status)
+						where: where(
+							fn("LOWER", col("name")),
+							fn("LOWER", attendance.status)
 						),
 					});
 					if (!attendanceStatus) {
@@ -659,4 +658,4 @@ const attendanceController = {
 	},
 };
 
-module.exports = attendanceController;
+export default attendanceController;

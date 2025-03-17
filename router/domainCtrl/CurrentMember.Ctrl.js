@@ -1,5 +1,4 @@
-// currentMember.Ctrl.js
-const { User, UserHasRole, Role } = require("../../models/models");
+import { Role, User, UserHasRole } from "../../models/models.js";
 
 const CurrentMemberCtrl = {
 	getMembersWithRoles: async (req, res) => {
@@ -124,4 +123,4 @@ const CurrentMemberCtrl = {
 	},
 };
 
-module.exports = CurrentMemberCtrl;
+export default CurrentMemberCtrl;

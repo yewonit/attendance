@@ -1,5 +1,5 @@
-const models = require("../../models/models");
-const { Op } = require("sequelize");
+import { Op } from "sequelize";
+import models from "../../models/models.js";
 
 const coramdeoController = {
 	initCoramdeoActivities: async (req, res, next) => {
@@ -527,4 +527,4 @@ const coramdeoController = {
 	},
 };
 
-module.exports = coramdeoController;
+export default coramdeoController;
