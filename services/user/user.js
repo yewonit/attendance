@@ -1,5 +1,5 @@
 // User.Ctrl.js
-import models from "../../../models/models.js";
+import models from "../../models/models.js";
 import crudService from "../common/crud.js";
 
 const validateUserInfo = async (data) => {
@@ -35,8 +35,8 @@ const userService = {
 		// name = req.query.name
 
 		if (!name) {
-			const error = new Error({ message: "이름이 제공되지 않았습니다." })
-			error.status = 400
+			const error = new Error({ message: "이름이 제공되지 않았습니다." });
+			error.status = 400;
 			throw error;
 		}
 
@@ -53,12 +53,11 @@ const userService = {
 		}
 	},
 
-
 	checkUserPhoneNumber: async (name, phoneNumber) => {
 		// const { name, phoneNumber } = req.body;
 
 		if (!name || !phoneNumber) {
-			throw new Error({ message: "이름 또는 전화번호가 제공되지 않았습니다." })
+			throw new Error({ message: "이름 또는 전화번호가 제공되지 않았습니다." });
 		}
 
 		const user = await models.User.findOne({

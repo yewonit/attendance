@@ -1,4 +1,4 @@
-import { Role, User, UserHasRole } from "../../models/models.js";
+import models from "../../models/models.js";
 
 const CurrentMemberCtrl = {
 	getMembersWithRoles: async (req, res) => {
@@ -12,15 +12,15 @@ const CurrentMemberCtrl = {
 			}
 
 			// UserHasRole 모델을 사용하여 조직 ID로 필터링합니다.
-			const userHasRoles = await UserHasRole.findAll({
+			const userHasRoles = await models.UserHasRole.findAll({
 				where: { organization_id: organizationId },
 				include: [
 					{
-						model: User,
+						model: models.User,
 						attributes: { exclude: ["password"] },
 					},
 					{
-						model: Role,
+						model: models.Role,
 					},
 				],
 			});
@@ -85,7 +85,7 @@ const CurrentMemberCtrl = {
 			}
 
 			// 사용자 생성
-			const user = await User.create({
+			const user = await models.User.create({
 				...userData,
 				creator_id: idOfCreatingUser,
 				updater_id: idOfCreatingUser,
@@ -93,7 +93,7 @@ const CurrentMemberCtrl = {
 				updater_ip: req.ip,
 			});
 
-			const role = await Role.findOne({
+			const role = await models.Role.findOne({
 				where: {
 					organization_id: organizationId,
 					role_name: "순원",
@@ -101,7 +101,7 @@ const CurrentMemberCtrl = {
 			});
 
 			// 사용자와 역할 연결
-			await UserHasRole.create({
+			await models.UserHasRole.create({
 				user_id: user.id,
 				role_id: role.id,
 				organization_id: organizationId,

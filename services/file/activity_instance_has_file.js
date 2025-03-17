@@ -1,7 +1,7 @@
 // ActivityInstanceHasFile.Ctrl.js
 
 // 필요한 모델과 컨트롤러 유틸리티를 임포트합니다.
-import models from "../../../models/models.js";
+import models from "../../models/models.js";
 import crudService from "../common/crud.js";
 
 /**

@@ -1,5 +1,6 @@
 import { Sequelize } from "sequelize";
-import logger from "./logger.js"
+import env from "../config/environment.js";
+import logger from "./logger.js";
 
 // 📚 데이터베이스 연결 설정
 const sequelize = new Sequelize(env.DB_NAME, env.DB_USER, env.DB_PASSWORD, {
@@ -26,7 +27,4 @@ const initDatabase = async () => {
 	}
 };
 
-export {
-	sequelize,
-	initDatabase,
-};
+export { initDatabase, sequelize };

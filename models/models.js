@@ -1,22 +1,22 @@
 import { Sequelize } from "sequelize";
-import sequelize from "../utils/database.js"
-import UserModel from "./model_archive/user/user.js"
-import OrganizationModel from "./model_archive/organization/organization.js"
-import RoleModel from "./model_archive/organization/Role.Model.js"
-import UserHasRoleModel from "./model_archive/role/user_has_role.js"
-import ActivityCategoryModel from "./model_archive/attendance/activity_category.js";
+import { sequelize } from "../utils/database.js";
 import ActivityModel from "./model_archive/attendance/activity.js";
+import ActivityCategoryModel from "./model_archive/attendance/activity_category.js";
 import ActivityChangeHistoryModel from "./model_archive/attendance/activity_change_history.js";
-import ActivityHasFileModel from "./model_archive/file/activity_has_file.js";
-import ActivityInstanceHasFileModel from "./model_archive/file/activity_instance_has_file.js";
 import ActivityInstanceModel from "./model_archive/attendance/activity_instance.js";
-import AttendanceStatusModel from "./model_archive/attendance/attendance_status.js";
 import AttendanceModel from "./model_archive/attendance/attendance.js";
-import FileModel from "./model_archive/file/file.js";
-import VisitationModel from "./model_archive/visitation/visitation.js";
-import SeasonModel from "./model_archive/season/season.js";
+import AttendanceStatusModel from "./model_archive/attendance/attendance_status.js";
 import ChurchOfficeModel from "./model_archive/churchOffice/church_office.js";
 import UserHasChurchOfficeModel from "./model_archive/churchOffice/user_has_church_office.js";
+import ActivityHasFileModel from "./model_archive/file/activity_has_file.js";
+import ActivityInstanceHasFileModel from "./model_archive/file/activity_instance_has_file.js";
+import FileModel from "./model_archive/file/file.js";
+import OrganizationModel from "./model_archive/organization/organization.js";
+import RoleModel from "./model_archive/role/role.js";
+import UserHasRoleModel from "./model_archive/role/user_has_role.js";
+import SeasonModel from "./model_archive/season/season.js";
+import UserModel from "./model_archive/user/user.js";
+import VisitationModel from "./model_archive/visitation/visitation.js";
 
 const User = UserModel(sequelize, Sequelize);
 const Organization = OrganizationModel(sequelize, Sequelize);
@@ -24,13 +24,16 @@ const Role = RoleModel(sequelize, Sequelize);
 const UserHasRole = UserHasRoleModel(sequelize, Sequelize);
 const ActivityCategory = ActivityCategoryModel(sequelize, Sequelize);
 const Activity = ActivityModel(sequelize, Sequelize);
-const ActivityInstance = ActivityInstanceModel(sequelize, Sequelize); 
+const ActivityInstance = ActivityInstanceModel(sequelize, Sequelize);
 const AttendanceStatus = AttendanceStatusModel(sequelize, Sequelize);
 const Attendance = AttendanceModel(sequelize, Sequelize);
 const ActivityChangeHistory = ActivityChangeHistoryModel(sequelize, Sequelize);
 const File = FileModel(sequelize, Sequelize);
 const ActivityHasFile = ActivityHasFileModel(sequelize, Sequelize);
-const ActivityInstanceHasFile = ActivityInstanceHasFileModel(sequelize, Sequelize);
+const ActivityInstanceHasFile = ActivityInstanceHasFileModel(
+	sequelize,
+	Sequelize
+);
 const Visitation = VisitationModel(sequelize, Sequelize);
 const Season = SeasonModel(sequelize, Sequelize);
 const ChurchOffice = ChurchOfficeModel(sequelize, Sequelize);
@@ -140,26 +143,25 @@ UserHasChurchOffice.belongsTo(User, { foreignKey: "user_id" });
 
 ChurchOffice.hasMany(UserHasChurchOffice, { foreignKey: "church_office_id" });
 UserHasChurchOffice.belongsTo(ChurchOffice, { foreignKey: "church_office_id" });
-UserHasChurchOffice.belongsTo(User, { foreignKey: "user_id" })
-
+UserHasChurchOffice.belongsTo(User, { foreignKey: "user_id" });
 
 // 📦 모듈 내보내기
-export {
-	User,
+export default {
+	Activity,
+	ActivityCategory,
+	ActivityChangeHistory,
+	ActivityHasFile,
+	ActivityInstance,
+	ActivityInstanceHasFile,
+	Attendance,
+	AttendanceStatus,
+	ChurchOffice,
+	File,
 	Organization,
 	Role,
-	UserHasRole,
-	ActivityCategory,
-	Activity,
-	ActivityInstance,
-	AttendanceStatus,
-	Attendance,
-	ActivityChangeHistory,
-	File,
-	ActivityHasFile,
-	ActivityInstanceHasFile,
-	Visitation,
 	Season,
-	ChurchOffice,
+	User,
 	UserHasChurchOffice,
+	UserHasRole,
+	Visitation,
 };

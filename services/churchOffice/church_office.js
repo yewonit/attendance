@@ -1,4 +1,4 @@
-import models from "../../../models/models.js";
+import models from "../../models/models.js";
 import crudService from "../common/crud.js";
 
 const validateChurchOfficeData = async (data) => {

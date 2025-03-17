@@ -1,4 +1,4 @@
-import winston from "winston/lib/winston/config";
+import winston from "winston";
 const { format } = winston;
 
 // 로그 레벨 정의
