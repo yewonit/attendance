@@ -1,5 +1,5 @@
 import models from "../../../models/models";
-import crudController from "../common/crud";
+import crudService from "../common/crud.js";
 
 const validateUserHasChurchOfficeData = async (data) => {
 	if (!data.user_id) {
@@ -16,17 +16,17 @@ const validateUserHasChurchOfficeData = async (data) => {
 };
 
 const userHasChurchOfficeService = {
-	createUserHasChurchOffice: crudController.create(
+	createUserHasChurchOffice: crudService.create(
 		models.UserHasChurchOffice,
 		validateUserHasChurchOfficeData
 	),
-	readUserHasChurchOffices: crudController.readAll(models.UserHasChurchOffice),
-	readUserHasChurchOffice: crudController.readOne(models.UserHasChurchOffice),
-	updateUserHasChurchOffice: crudController.update(
+	findUserHasChurchOffices: crudService.findAll(models.UserHasChurchOffice),
+	findUserHasChurchOffice: crudService.findOne(models.UserHasChurchOffice),
+	updateUserHasChurchOffice: crudService.update(
 		models.UserHasChurchOffice,
 		validateUserHasChurchOfficeData
 	),
-	deleteUserHasChurchOffice: crudController.delete(models.UserHasChurchOffice),
+	deleteUserHasChurchOffice: crudService.delete(models.UserHasChurchOffice),
 };
 
 export default userHasChurchOfficeService;

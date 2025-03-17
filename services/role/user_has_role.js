@@ -2,7 +2,7 @@
 
 // 필요한 모델과 컨트롤러 유틸리티를 임포트합니다.
 import models from "../../../models/models";
-import crudController from "../common/crud";
+import crudService from "../common/crud.js";
 
 /**
  * UserHasRole 데이터를 검증하기 위한 함수입니다.
@@ -37,7 +37,7 @@ const userHasRoleService = {
 	 * @param {Object} res - 응답 객체, 생성된 역할 할당 정보를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	createUserHasRole: crudController.create(
+	createUserHasRole: crudService.create(
 		models.UserHasRole,
 		validateUserHasRoleData
 	),
@@ -48,7 +48,7 @@ const userHasRoleService = {
 	 * @param {Object} res - 응답 객체, 조회된 모든 역할 할당 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readUserHasRoles: crudController.readAll(models.UserHasRole),
+	findUserHasRoles: crudService.findAll(models.UserHasRole),
 
 	/**
 	 * 주어진 ID로 단일 역할 할당을 조회합니다.
@@ -56,7 +56,7 @@ const userHasRoleService = {
 	 * @param {Object} res - 응답 객체, 요청된 역할 할당 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readUserHasRole: crudController.readOne(models.UserHasRole),
+	findUserHasRole: crudService.findOne(models.UserHasRole),
 
 	/**
 	 * 지정된 ID의 역할 할당을 업데이트합니다. 업데이트 전 데이터는 validateUserHasRoleData를 통해 검증됩니다.
@@ -64,7 +64,7 @@ const userHasRoleService = {
 	 * @param {Object} res - 응답 객체, 업데이트 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	updateUserHasRole: crudController.update(
+	updateUserHasRole: crudService.update(
 		models.UserHasRole,
 		validateUserHasRoleData
 	),
@@ -75,7 +75,7 @@ const userHasRoleService = {
 	 * @param {Object} res - 응답 객체, 삭제 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	deleteUserHasRole: crudController.delete(models.UserHasRole),
+	deleteUserHasRole: crudService.delete(models.UserHasRole),
 
 	// ✨ 커스텀 기능 추가 영역
 	// 🌟 여기에 추가적인 역할 할당 관련 커스텀 기능들을 구현할 수 있습니다.

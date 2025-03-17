@@ -2,7 +2,7 @@
 
 // 필요한 모델과 컨트롤러 유틸리티를 임포트합니다.
 import models from "../../../models/models";
-import crudController from "../common/crud";
+import crudService from "../common/crud.js";
 
 /**
  * ActivityChangeHistory 데이터를 검증하기 위한 함수입니다.
@@ -37,7 +37,7 @@ const activityChangeHistoryService = {
 	 * @param {Object} res - 응답 객체, 생성된 활동 변경 이력 정보를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	createActivityChangeHistory: crudController.create(
+	createActivityChangeHistory: crudService.create(
 		models.ActivityChangeHistory,
 		validateActivityChangeHistoryData
 	),
@@ -48,7 +48,7 @@ const activityChangeHistoryService = {
 	 * @param {Object} res - 응답 객체, 조회된 모든 활동 변경 이력 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readActivityChangeHistories: crudController.readAll(
+	findActivityChangeHistories: crudService.findAll(
 		models.ActivityChangeHistory
 	),
 
@@ -58,9 +58,7 @@ const activityChangeHistoryService = {
 	 * @param {Object} res - 응답 객체, 요청된 활동 변경 이력 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readActivityChangeHistory: crudController.readOne(
-		models.ActivityChangeHistory
-	),
+	findActivityChangeHistory: crudService.findOne(models.ActivityChangeHistory),
 
 	/**
 	 * 지정된 ID의 활동 변경 이력을 업데이트합니다. 업데이트 전 데이터는 validateActivityChangeHistoryData를 통해 검증됩니다.
@@ -68,7 +66,7 @@ const activityChangeHistoryService = {
 	 * @param {Object} res - 응답 객체, 업데이트 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	updateActivityChangeHistory: crudController.update(
+	updateActivityChangeHistory: crudService.update(
 		models.ActivityChangeHistory,
 		validateActivityChangeHistoryData
 	),
@@ -79,9 +77,7 @@ const activityChangeHistoryService = {
 	 * @param {Object} res - 응답 객체, 삭제 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	deleteActivityChangeHistory: crudController.delete(
-		models.ActivityChangeHistory
-	),
+	deleteActivityChangeHistory: crudService.delete(models.ActivityChangeHistory),
 
 	// ✨ 커스텀 기능 추가 영역
 	// 🌟 여기에 추가적인 활동 변경 이력 관련 커스텀 기능들을 구현할 수 있습니다.

@@ -2,7 +2,7 @@
 
 // 필요한 모델과 컨트롤러 유틸리티를 임포트합니다.
 import models from "../../../models/models";
-import crudController from "../common/crud";
+import crudService from "../common/crud.js";
 
 /**
  * Attendance 데이터를 검증하기 위한 함수입니다.
@@ -47,7 +47,7 @@ const attendanceService = {
 	 * @param {Object} res - 응답 객체, 생성된 출석 정보를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	createAttendance: crudController.create(
+	createAttendance: crudService.create(
 		models.Attendance,
 		validateAttendanceData
 	),
@@ -58,7 +58,7 @@ const attendanceService = {
 	 * @param {Object} res - 응답 객체, 조회된 모든 출석 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readAttendances: crudController.readAll(models.Attendance),
+	findAttendances: crudService.findAll(models.Attendance),
 
 	/**
 	 * 주어진 ID로 단일 출석 기록을 조회합니다.
@@ -66,7 +66,7 @@ const attendanceService = {
 	 * @param {Object} res - 응답 객체, 요청된 출석 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readAttendance: crudController.readOne(models.Attendance),
+	findAttendance: crudService.findOne(models.Attendance),
 
 	/**
 	 * 지정된 ID의 출석 기록을 업데이트합니다. 업데이트 전 데이터는 validateAttendanceData를 통해 검증됩니다.
@@ -74,7 +74,7 @@ const attendanceService = {
 	 * @param {Object} res - 응답 객체, 업데이트 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	updateAttendance: crudController.update(
+	updateAttendance: crudService.update(
 		models.Attendance,
 		validateAttendanceData
 	),
@@ -85,12 +85,11 @@ const attendanceService = {
 	 * @param {Object} res - 응답 객체, 삭제 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	deleteAttendance: crudController.delete(models.Attendance),
+	deleteAttendance: crudService.delete(models.Attendance),
 
 	// ✨ 커스텀 기능 추가 영역
-	getAttendanceByActivityInstance: async (req, res, next) => {
+	getAttendanceByActivityInstance: async (activityInstanceId) => {
 		try {
-			const { activityInstanceId } = req.params;
 			const attendances = await models.Attendance.findAll({
 				where: { activity_instance_id: activityInstanceId },
 				include: [
@@ -98,15 +97,14 @@ const attendanceService = {
 					{ model: models.AttendanceStatus, as: "AttendanceStatus" },
 				],
 			});
-			res.json(attendances);
+			return attendances;
 		} catch (error) {
-			next(error);
+			throw error;
 		}
 	},
 
-	getAttendanceByUser: async (req, res, next) => {
+	getAttendanceByUser: async (userId) => {
 		try {
-			const { userId } = req.params;
 			const attendances = await models.Attendance.findAll({
 				where: { user_id: userId },
 				include: [
@@ -114,9 +112,9 @@ const attendanceService = {
 					{ model: models.AttendanceStatus, as: "AttendanceStatus" },
 				],
 			});
-			res.json(attendances);
+			return attendances;
 		} catch (error) {
-			next(error);
+			throw error;
 		}
 	},
 

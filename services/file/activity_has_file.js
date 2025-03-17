@@ -2,7 +2,7 @@
 
 // 필요한 모델과 컨트롤러 유틸리티를 임포트합니다.
 import models from "../../../models/models";
-import crudController from "../common/crud";
+import crudService from "../common/crud.js";
 
 /**
  * ActivityHasFile 데이터를 검증하기 위한 함수입니다.
@@ -32,7 +32,7 @@ const activityHasFileService = {
 	 * @param {Object} res - 응답 객체, 생성된 연결 정보를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	createActivityHasFile: crudController.create(
+	createActivityHasFile: crudService.create(
 		models.ActivityHasFile,
 		validateActivityHasFileData
 	),
@@ -43,7 +43,7 @@ const activityHasFileService = {
 	 * @param {Object} res - 응답 객체, 조회된 모든 연결 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readActivityHasFiles: crudController.readAll(models.ActivityHasFile),
+	findActivityHasFiles: crudService.findAll(models.ActivityHasFile),
 
 	/**
 	 * 주어진 ID로 단일 활동-파일 연결을 조회합니다.
@@ -51,7 +51,7 @@ const activityHasFileService = {
 	 * @param {Object} res - 응답 객체, 요청된 연결 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readActivityHasFile: crudController.readOne(models.ActivityHasFile),
+	findActivityHasFile: crudService.findOne(models.ActivityHasFile),
 
 	/**
 	 * 지정된 ID의 활동-파일 연결을 업데이트합니다. 업데이트 전 데이터는 validateActivityHasFileData를 통해 검증됩니다.
@@ -59,7 +59,7 @@ const activityHasFileService = {
 	 * @param {Object} res - 응답 객체, 업데이트 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	updateActivityHasFile: crudController.update(
+	updateActivityHasFile: crudService.update(
 		models.ActivityHasFile,
 		validateActivityHasFileData
 	),
@@ -70,7 +70,7 @@ const activityHasFileService = {
 	 * @param {Object} res - 응답 객체, 삭제 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	deleteActivityHasFile: crudController.delete(models.ActivityHasFile),
+	deleteActivityHasFile: crudService.delete(models.ActivityHasFile),
 
 	// ✨ 커스텀 기능 추가 영역
 	// 🌟 여기에 추가적인 활동-파일 연결 관련 커스텀 기능들을 구현할 수 있습니다.

@@ -2,7 +2,7 @@
 
 // 필요한 모델과 컨트롤러 유틸리티를 임포트합니다.
 import models from "../../../models/models"; // 실제 경로에 맞게 수정해야 합니다.
-import crudController from "../common/crud";
+import crudService from "../common/crud.js";
 
 /**
  * Activity 데이터를 검증하기 위한 함수입니다.
@@ -70,32 +70,17 @@ const validateActivityData = async (data) => {
 		error.status = 400;
 		throw error;
 	}
-
-	// IP 주소 형식 검증 (간단한 정규식 사용)
-	const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
-	if (data.creator_ip && !ipRegex.test(data.creator_ip)) {
-		const error = new Error("유효하지 않은 생성자 IP 주소 형식입니다.");
-		error.status = 400;
-		throw error;
-	}
-	if (data.updater_ip && !ipRegex.test(data.updater_ip)) {
-		const error = new Error("유효하지 않은 수정자 IP 주소 형식입니다.");
-		error.status = 400;
-		throw error;
-	}
-
-	// 여기에 추가 데이터 검증 로직을 구현할 수 있습니다.
 };
 
 // 컨트롤러 객체를 정의하여 CRUD 연산을 캡슐화합니다.
 const activityService = {
 	/**
-	 * 새로운 활동을 생성합니다. 데이터는 validateActivityData 함수를 통해 유효��을 검증받습니다.
+	 * 새로운 활동을 생성합니다. 데이터는 validateActivityData 함수를 통해 유효성을 검증받습니다.
 	 * @param {Object} req - 요청 객체, 활동 데이터를 포함합니다.
 	 * @param {Object} res - 응답 객체, 생성된 활동 정보를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	createActivity: crudController.create(models.Activity, validateActivityData),
+	createActivity: crudService.create(models.Activity, validateActivityData),
 
 	/**
 	 * 모든 활동을 조회합니다.
@@ -103,7 +88,7 @@ const activityService = {
 	 * @param {Object} res - 응답 객체, 조회된 모든 활동 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readActivities: crudController.readAll(models.Activity),
+	findActivities: crudService.findAll(models.Activity),
 
 	/**
 	 * 주어진 ID로 단일 활동을 조회합니다.
@@ -111,15 +96,15 @@ const activityService = {
 	 * @param {Object} res - 응답 객체, 요청된 활동 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readActivity: crudController.readOne(models.Activity),
+	findActivity: crudService.findOne(models.Activity),
 
 	/**
-	 * 지정된 ID의 활동을 업데이트합니다. 업데이트 전 데이터는 validateActivityData를 통 검증됩니다.
+	 * 지정된 ID의 활동을 업데이트합니다. 업데이트 전 데이터는 validateActivityData를 통해 검증됩니다.
 	 * @param {Object} req - 요청 객체, 업데이트할 데이터와 활동 ID를 포함합니다.
 	 * @param {Object} res - 응답 객체, 업데이트 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	updateActivity: crudController.update(models.Activity, validateActivityData),
+	updateActivity: crudService.update(models.Activity, validateActivityData),
 
 	/**
 	 * 지정된 ID의 활동을 삭제합니다.
@@ -127,7 +112,7 @@ const activityService = {
 	 * @param {Object} res - 응답 객체, 삭제 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	deleteActivity: crudController.delete(models.Activity),
+	deleteActivity: crudService.delete(models.Activity),
 
 	// ✨ 핵심 커스텀 기능 추가 영역
 	getActivitiesByCategory: async (req, res, next) => {

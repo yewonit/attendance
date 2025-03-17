@@ -1,11 +1,10 @@
 // Organization.Ctrl.js
 
 import models from "../../../models/models";
-import crudController from "../common/crud";
+import crudService from "../common/crud.js";
 
 // 📝 조직 정보 유효성 검사 함수
-const validateOrganizationInfo = async (data) => {
-	// 🔒 필수 필드 검증
+const validateOrganizationData = async (data) => {
 	if (!data.organization_name) {
 		const error = new Error("조직 이름이 누락되었습니다.");
 		error.status = 400;
@@ -23,25 +22,25 @@ const validateOrganizationInfo = async (data) => {
 // 📦 조직 관련 컨트롤러 모듈
 const organizationService = {
 	// ✨ 조직 생성
-	createOrganization: crudController.create(
+	createOrganization: crudService.create(
 		models.Organization,
-		validateOrganizationInfo
+		validateOrganizationData
 	),
 
 	// 📖 전체 조직 조회
-	readOrganizations: crudController.readAll(models.Organization),
+	findOrganizations: crudService.findAll(models.Organization),
 
 	// 🔍 특정 조직 조회
-	readOrganization: crudController.readOne(models.Organization),
+	findOrganization: crudService.findOne(models.Organization),
 
 	// ✏️ 조직 정보 업데이트
-	updateOrganization: crudController.update(
+	updateOrganization: crudService.update(
 		models.Organization,
-		validateOrganizationInfo
+		validateOrganizationData
 	),
 
 	// 🗑️ 조직 삭제
-	deleteOrganization: crudController.delete(models.Organization),
+	deleteOrganization: crudService.delete(models.Organization),
 
 	// 🎨 추가 조직 관련 기능 예시
 	// 여기에 추가적인 조직 관련 기능을 구현할 수 있습니다.

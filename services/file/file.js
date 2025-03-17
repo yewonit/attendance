@@ -2,7 +2,7 @@
 
 // 필요한 모델과 컨트롤러 유틸리티를 임포트합니다.
 import models from "../../../models/models";
-import crudController from "../common/crud";
+import crudService from "../common/crud.js";
 
 /**
  * File 데이터를 검증하기 위한 함수입니다.
@@ -42,7 +42,7 @@ const fileService = {
 	 * @param {Object} res - 응답 객체, 생성된 파일 정보를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	createFile: crudController.create(models.File, validateFileData),
+	createFile: crudService.create(models.File, validateFileData),
 
 	/**
 	 * 모든 파일을 조회합니다.
@@ -50,7 +50,7 @@ const fileService = {
 	 * @param {Object} res - 응답 객체, 조회된 모든 파일 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readFiles: crudController.readAll(models.File),
+	findFiles: crudService.findAll(models.File),
 
 	/**
 	 * 주어진 ID로 단일 파일을 조회합니다.
@@ -58,7 +58,7 @@ const fileService = {
 	 * @param {Object} res - 응답 객체, 요청된 파일 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readFile: crudController.readOne(models.File),
+	findFile: crudService.findOne(models.File),
 
 	/**
 	 * 지정된 ID의 파일을 업데이트합니다. 업데이트 전 데이터는 validateFileData를 통해 검증됩니다.
@@ -66,7 +66,7 @@ const fileService = {
 	 * @param {Object} res - 응답 객체, 업데이트 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	updateFile: crudController.update(models.File, validateFileData),
+	updateFile: crudService.update(models.File, validateFileData),
 
 	/**
 	 * 지정된 ID의 파일을 삭제합니다.
@@ -74,7 +74,7 @@ const fileService = {
 	 * @param {Object} res - 응답 객체, 삭제 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	deleteFile: crudController.delete(models.File),
+	deleteFile: crudService.delete(models.File),
 
 	// ✨ 커스텀 기능 추가 영역
 	// 🌟 여기에 추가적인 파일 관련 커스텀 기능들을 구현할 수 있습니다.

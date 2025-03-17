@@ -1,5 +1,5 @@
 import models from "../../../models/models";
-import crudController from "../common/crud";
+import crudService from "../common/crud.js";
 
 const validateSeasonData = async (data) => {
 	if (!data.season_name) {
@@ -11,11 +11,11 @@ const validateSeasonData = async (data) => {
 };
 
 const seasonService = {
-	createSeason: crudController.create(models.Season, validateSeasonData),
-	readSeasons: crudController.readAll(models.Season),
-	readSeason: crudController.readOne(models.Season),
-	updateSeason: crudController.update(models.Season, validateSeasonData),
-	deleteSeason: crudController.delete(models.Season),
+	createSeason: crudService.create(models.Season, validateSeasonData),
+	findSeasons: crudService.findAll(models.Season),
+	findSeason: crudService.findOne(models.Season),
+	updateSeason: crudService.update(models.Season, validateSeasonData),
+	deleteSeason: crudService.delete(models.Season),
 };
 
 export default seasonService;

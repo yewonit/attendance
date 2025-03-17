@@ -2,7 +2,7 @@
 
 // 필요한 모델과 컨트롤러 유틸리티를 임포트합니다.
 import models from "../../../models/models";
-import crudController from "../common/crud";
+import crudService from "../common/crud.js";
 
 /**
  * 방문 데이터를 검증하기 위한 함수입니다.
@@ -31,21 +31,21 @@ const validateVisitationData = async (data) => {
 
 // 컨트롤러 객체를 정의하여 CRUD 연산을 캡슐화합니다.
 const visitationService = {
-	createVisitation: crudController.create(
+	createVisitation: crudService.create(
 		models.Visitation,
 		validateVisitationData
 	),
 
-	readVisitations: crudController.readAll(models.Visitation),
+	findVisitations: crudService.findAll(models.Visitation),
 
-	readVisitation: crudController.readOne(models.Visitation),
+	findVisitation: crudService.findOne(models.Visitation),
 
-	updateVisitation: crudController.update(
+	updateVisitation: crudService.update(
 		models.Visitation,
 		validateVisitationData
 	),
 
-	deleteVisitation: crudController.delete(models.Visitation),
+	deleteVisitation: crudService.delete(models.Visitation),
 
 	// ✨ 커스텀 기능 추가 영역
 	// 🌟 추가적인 방문 관리 관련 커스텀 기능들을 구현할 수 있습니다.

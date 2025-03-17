@@ -2,7 +2,7 @@
 
 // 필요한 모델과 컨트롤러 유틸리티를 임포트합니다.
 import models from "../../../models/models";
-import crudController from "../common/crud";
+import crudService from "../common/crud.js";
 
 /**
  * ActivityInstanceHasFile 데이터를 검증하기 위한 함수입니다.
@@ -32,7 +32,7 @@ const activityInstanceHasFileService = {
 	 * @param {Object} res - 응답 객체, 생성된 연결 정보를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	createActivityInstanceHasFile: crudController.create(
+	createActivityInstanceHasFile: crudService.create(
 		models.ActivityInstanceHasFile,
 		validateActivityInstanceHasFileData
 	),
@@ -43,7 +43,7 @@ const activityInstanceHasFileService = {
 	 * @param {Object} res - 응답 객체, 조회된 모든 연결 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readActivityInstanceHasFiles: crudController.readAll(
+	findActivityInstanceHasFiles: crudService.findAll(
 		models.ActivityInstanceHasFile
 	),
 
@@ -53,7 +53,7 @@ const activityInstanceHasFileService = {
 	 * @param {Object} res - 응답 객체, 요청된 연결 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readActivityInstanceHasFile: crudController.readOne(
+	findActivityInstanceHasFile: crudService.findOne(
 		models.ActivityInstanceHasFile
 	),
 
@@ -63,7 +63,7 @@ const activityInstanceHasFileService = {
 	 * @param {Object} res - 응답 객체, 업데이트 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	updateActivityInstanceHasFile: crudController.update(
+	updateActivityInstanceHasFile: crudService.update(
 		models.ActivityInstanceHasFile,
 		validateActivityInstanceHasFileData
 	),
@@ -74,7 +74,7 @@ const activityInstanceHasFileService = {
 	 * @param {Object} res - 응답 객체, 삭제 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	deleteActivityInstanceHasFile: crudController.delete(
+	deleteActivityInstanceHasFile: crudService.delete(
 		models.ActivityInstanceHasFile
 	),
 

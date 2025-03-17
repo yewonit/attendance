@@ -2,7 +2,7 @@
 
 // 필요한 모델과 컨트롤러 유틸리티를 임포트합니다.
 import models from "../../../models/models";
-import crudController from "../common/crud";
+import crudService from "../common/crud.js";
 
 /**
  * AttendanceStatus 데이터를 검증하기 위한 함수입니다.
@@ -32,7 +32,7 @@ const attendanceStatusService = {
 	 * @param {Object} res - 응답 객체, 생성된 출석 상태 정보를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	createAttendanceStatus: crudController.create(
+	createAttendanceStatus: crudService.create(
 		models.AttendanceStatus,
 		validateAttendanceStatusData
 	),
@@ -43,7 +43,7 @@ const attendanceStatusService = {
 	 * @param {Object} res - 응답 객체, 조회된 모든 출석 상태 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readAttendanceStatuses: crudController.readAll(models.AttendanceStatus),
+	findAttendanceStatuses: crudService.findAll(models.AttendanceStatus),
 
 	/**
 	 * 주어진 ID로 단일 출석 상태를 조회합니다.
@@ -51,7 +51,7 @@ const attendanceStatusService = {
 	 * @param {Object} res - 응답 객체, 요청된 출석 상태 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readAttendanceStatus: crudController.readOne(models.AttendanceStatus),
+	findAttendanceStatus: crudService.findOne(models.AttendanceStatus),
 
 	/**
 	 * 지정된 ID의 출석 상태를 업데이트합니다. 업데이트 전 데이터는 validateAttendanceStatusData를 통해 검증됩니다.
@@ -59,7 +59,7 @@ const attendanceStatusService = {
 	 * @param {Object} res - 응답 객체, 업데이트 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	updateAttendanceStatus: crudController.update(
+	updateAttendanceStatus: crudService.update(
 		models.AttendanceStatus,
 		validateAttendanceStatusData
 	),
@@ -70,7 +70,7 @@ const attendanceStatusService = {
 	 * @param {Object} res - 응답 객체, 삭제 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	deleteAttendanceStatus: crudController.delete(models.AttendanceStatus),
+	deleteAttendanceStatus: crudService.delete(models.AttendanceStatus),
 
 	// ✨ 커스텀 기능 추가 영역
 	getAttendedStatuses: async (req, res, next) => {

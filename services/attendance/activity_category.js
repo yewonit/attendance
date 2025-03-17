@@ -1,7 +1,7 @@
 // ActivityCategory.Ctrl.js
 
 import models from "../../../models/models";
-import crudController from "../common/crud";
+import crudService from "../common/crud.js";
 
 /**
  * ActivityCategory 데이터를 검증하기 위한 함수입니다.
@@ -60,7 +60,7 @@ const activityCategoryService = {
 	 * @param {Object} res - 응답 객체, 생성된 활동 카테고리 정보를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	createActivityCategory: crudController.create(
+	createActivityCategory: crudService.create(
 		models.ActivityCategory,
 		validateActivityCategoryData
 	),
@@ -71,7 +71,7 @@ const activityCategoryService = {
 	 * @param {Object} res - 응답 객체, 조회된 모든 활동 카테고리 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readActivityCategories: crudController.readAll(models.ActivityCategory),
+	findActivityCategories: crudService.findAll(models.ActivityCategory),
 
 	/**
 	 * 주어진 ID로 단일 활동 카테고리를 조회합니다.
@@ -79,7 +79,7 @@ const activityCategoryService = {
 	 * @param {Object} res - 응답 객체, 요청된 활동 카테고리 데이터를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	readActivityCategory: crudController.readOne(models.ActivityCategory),
+	findActivityCategory: crudService.findOne(models.ActivityCategory),
 
 	/**
 	 * 지정된 ID의 활동 카테고리를 업데이트합니다. 업데이트 전 데이터는 validateActivityCategoryData를 통해 검증됩니다.
@@ -87,7 +87,7 @@ const activityCategoryService = {
 	 * @param {Object} res - 응답 객체, 업데이트 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	updateActivityCategory: crudController.update(
+	updateActivityCategory: crudService.update(
 		models.ActivityCategory,
 		validateActivityCategoryData
 	),
@@ -98,7 +98,7 @@ const activityCategoryService = {
 	 * @param {Object} res - 응답 객체, 삭제 성공 메시지를 반환합니다.
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
-	deleteActivityCategory: crudController.delete(models.ActivityCategory),
+	deleteActivityCategory: crudService.delete(models.ActivityCategory),
 
 	// ✨ 커스텀 기능 추가 영역
 	// 🌟 여기에 추가적인 활동 카테고리 관련 커스텀 기능들을 구현할 수 있습니다.
