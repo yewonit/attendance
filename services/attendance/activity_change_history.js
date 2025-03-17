@@ -78,42 +78,6 @@ const activityChangeHistoryService = {
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
 	deleteActivityChangeHistory: crudService.delete(models.ActivityChangeHistory),
-
-	// ✨ 커스텀 기능 추가 영역
-	// 🌟 여기에 추가적인 활동 변경 이력 관련 커스텀 기능들을 구현할 수 있습니다.
-	getChangeHistoryByActivity: async (req, res, next) => {
-		try {
-			const { activityId } = req.params;
-			const changeHistory = await models.ActivityChangeHistory.findAll({
-				where: { activity_id: activityId },
-				order: [["created_at", "DESC"]],
-				include: [
-					{ model: models.Activity, as: "Activity" },
-					{ model: models.User, as: "Creator" },
-				],
-			});
-			res.json(changeHistory);
-		} catch (error) {
-			next(error);
-		}
-	},
-
-	getRecentChanges: async (req, res, next) => {
-		try {
-			const { limit = 10 } = req.query;
-			const recentChanges = await models.ActivityChangeHistory.findAll({
-				order: [["created_at", "DESC"]],
-				limit: parseInt(limit),
-				include: [
-					{ model: models.Activity, as: "Activity" },
-					{ model: models.User, as: "Creator" },
-				],
-			});
-			res.json(recentChanges);
-		} catch (error) {
-			next(error);
-		}
-	},
 };
 
 // 모듈을 내보내어 라우트 등 다른 파트에서 사용할 수 있도록 합니다.

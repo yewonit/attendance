@@ -71,49 +71,6 @@ const attendanceStatusService = {
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
 	deleteAttendanceStatus: crudService.delete(models.AttendanceStatus),
-
-	// ✨ 커스텀 기능 추가 영역
-	getAttendedStatuses: async (req, res, next) => {
-		try {
-			const attendedStatuses = await models.AttendanceStatus.findAll({
-				where: { is_counted_as_attended: true },
-			});
-			res.json(attendedStatuses);
-		} catch (error) {
-			next(error);
-		}
-	},
-
-	getStatusWithAttendanceCount: async (req, res, next) => {
-		try {
-			const statusWithCount = await models.AttendanceStatus.findAll({
-				include: [
-					{
-						model: models.Attendance,
-						as: "Attendances",
-						attributes: [],
-					},
-				],
-				attributes: [
-					"id",
-					"name",
-					"description",
-					"is_counted_as_attended",
-					[
-						models.Sequelize.fn(
-							"COUNT",
-							models.Sequelize.col("Attendances.id")
-						),
-						"attendanceCount",
-					],
-				],
-				group: ["AttendanceStatus.id"],
-			});
-			res.json(statusWithCount);
-		} catch (error) {
-			next(error);
-		}
-	},
 };
 
 // 모듈을 내보내어 라우트 등 다른 파트에서 사용할 수 있도록 합니다.

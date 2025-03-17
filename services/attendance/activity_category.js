@@ -99,44 +99,6 @@ const activityCategoryService = {
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
 	deleteActivityCategory: crudService.delete(models.ActivityCategory),
-
-	// ✨ 커스텀 기능 추가 영역
-	// 🌟 여기에 추가적인 활동 카테고리 관련 커스텀 기능들을 구현할 수 있습니다.
-	// 예를 들어, 특정 카테고리로 분류된 모든 활동의 목록을 제공하는 기능 등을 추가할 수 있습니다.
-	getActivityCategoryHierarchy: async (req, res, next) => {
-		try {
-			const categories = await models.ActivityCategory.findAll({
-				where: { parent_id: null },
-				include: [
-					{
-						model: models.ActivityCategory,
-						as: "Children",
-						include: { all: true, nested: true },
-					},
-				],
-			});
-			res.json(categories);
-		} catch (error) {
-			next(error);
-		}
-	},
-
-	moveActivityCategory: async (req, res, next) => {
-		try {
-			const { id, newParentId } = req.body;
-			const category = await models.ActivityCategory.findByPk(id);
-			if (!category) {
-				return res
-					.status(404)
-					.json({ message: "카테고리를 찾을 수 없습니다." });
-			}
-			await category.update({ parent_id: newParentId });
-			res.json({ message: "카테고리가 성공적으로 이동되었습니다." });
-		} catch (error) {
-			next(error);
-		}
-	},
 };
 
-// 모듈을 내보내어 라우트 등 다른 파트에서 사용할 수 있도록 합니다.
 export default activityCategoryService;

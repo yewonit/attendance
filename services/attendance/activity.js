@@ -113,49 +113,6 @@ const activityService = {
 	 * @param {Function} next - 다음 미들웨어/에러 핸들러를 실행합니다.
 	 */
 	deleteActivity: crudService.delete(models.Activity),
-
-	// ✨ 핵심 커스텀 기능 추가 영역
-	getActivitiesByCategory: async (req, res, next) => {
-		try {
-			const { categoryId } = req.params;
-			const activities = await models.Activity.findAll({
-				where: { activity_category_id: categoryId, is_deleted: "N" },
-				include: [
-					{ model: models.ActivityCategory, as: "Category" },
-					{ model: models.Organization, as: "Organization" },
-				],
-			});
-			res.json(activities);
-		} catch (error) {
-			next(error);
-		}
-	},
-
-	getActivityInstances: async (req, res, next) => {
-		try {
-			const { activityId } = req.params;
-			const instances = await models.ActivityInstance.findAll({
-				where: { activity_id: activityId },
-				order: [["start_time", "ASC"]],
-			});
-			res.json(instances);
-		} catch (error) {
-			next(error);
-		}
-	},
-
-	getActivitiesByOrganization: async (req, res, next) => {
-		try {
-			const { organizationId } = req.params;
-			const activities = await models.Activity.findAll({
-				where: { organization_id: organizationId, is_deleted: "N" },
-				include: [{ model: models.ActivityCategory, as: "Category" }],
-			});
-			res.json(activities);
-		} catch (error) {
-			next(error);
-		}
-	},
 };
 
 // 모듈을 내보내어 라우트 등 다른 파트에서 사용할 수 있도록 합니다.
