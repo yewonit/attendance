@@ -1,6 +1,6 @@
 // Organization.Ctrl.js
 
-import models from "../../../models/models";
+import models from "../../../models/models.js";
 import crudService from "../common/crud.js";
 
 // 📝 조직 정보 유효성 검사 함수
