@@ -4,92 +4,87 @@ import {
 	ValidationError,
 } from "sequelize";
 
-const crudController = {
-	create: (model, validateData) => async (req, res, next) => {
+const crudService = {
+	create: (model, validateData) => async (newModel) => {
 		try {
 			if (validateData) {
-				await validateData(req.body);
+				await validateData(newModel);
 			}
 
-			const data = await model.create(req.body);
-
-			res.status(201).json({ data, message: "생성 완료" });
+			return await model.create(newModel);
 		} catch (error) {
-			await handleError(error, req, res, next);
+			await handleError(error);
 		}
 	},
 
-	readAll: (model) => async (req, res, next) => {
+	findAll: (model) => async () => {
 		try {
-			const data = await model.findAll();
-
-			res.status(200).json({ data, message: "조회 완료" });
+			return await model.findAll();
 		} catch (error) {
-			await handleError(error, req, res, next);
+			await handleError(error);
 		}
 	},
 
-	// 🔍 특정 데이터 조회 함수
-	readOne: (model) => async (req, res, next) => {
+	findOne: (model) => async (id) => {
 		try {
-			const data = await model.findByPk(req.params.id);
+			const data = await model.findByPk(id);
 
 			if (data) {
-				res.status(200).json({ data, message: "조회 완료" });
+				return data;
 			} else {
 				const error = new Error("리소스(DB데이터를)를 찾을 수 없음");
 				error.status = 404;
 				throw error;
 			}
 		} catch (error) {
-			await handleError(error, req, res, next);
+			await handleError(error);
 		}
 	},
 
-	update: (model, validateData) => async (req, res, next) => {
+	update: (model, validateData) => async (id, newModel) => {
 		try {
 			if (validateData) {
-				await validateData(req.body);
+				await validateData(newModel);
 			} else {
 				const error = new Error("유효성 검사 함수가 제공되지 않았습니다.");
 				error.status = 500;
 				throw error;
 			}
 
-			const [updated] = await model.update(req.body, {
-				where: { id: req.body.id },
+			const [updated] = await model.update(newModel, {
+				where: { id: id },
 			});
 
 			if (updated) {
-				res.status(200).json({ message: "업데이트 완료" });
+				return updated;
 			} else {
 				const error = new Error("리소스(해당 ID의 데이터)를 찾을 수 없음");
 				error.status = 404;
 				throw error;
 			}
 		} catch (error) {
-			await handleError(error, req, res, next);
+			await handleError(error);
 		}
 	},
 
-	delete: (model) => async (req, res, next) => {
+	delete: (model) => async (id) => {
 		try {
-			const deleted = await model.destroy({ where: { id: req.body.id } });
+			const deleted = await model.destroy({ where: { id: id } });
 
 			if (deleted) {
-				res.status(200).json({ message: "삭제 완료" });
+				return deleted;
 			} else {
 				const error = new Error("리소스(해당 ID의 데이터)를 찾을 수 없음");
 				error.status = 404;
 				throw error;
 			}
 		} catch (error) {
-			await handleError(error, req, res, next);
+			await handleError(error);
 		}
 	},
 };
 
-const handleError = async (err, req, res, next) => {
+const handleError = async (err) => {
 	let errorMessage = "서버 내부에서 처리할 수 없는 에러가 발생하였습니다.";
 	let statusCode = err.status || 500;
 
@@ -109,12 +104,12 @@ const handleError = async (err, req, res, next) => {
 	} else if (err.message) {
 		errorMessage = err.message;
 	}
-	res.status(statusCode).json({
+	return {
 		code: statusCode,
 		message: errorMessage,
 		error: err.name || "ServerError",
 		timestamp: new Date().toISOString(),
-	});
+	};
 };
 
-export default crudController;
+export default crudService;
