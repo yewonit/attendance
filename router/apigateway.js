@@ -1,8 +1,7 @@
-import { Router } from "express"
+import { Router } from "express";
 const router = Router();
 
-
-const UserCtrl = require("../services/user/user.js");
+import userController from ("./user/user.js");
 const OrganizationCtrl = require("../services/organization/organization.js");
 const RoleCtrl = require("../services/role/role.js");
 const UserHasRoleCtrl = require("../services/role/user_has_role.js");
@@ -25,24 +24,8 @@ const CurrentMemberCtrl = require("../controllers/domainCtrl/CurrentMember.Ctrl.
 const VisitManagementCtrl = require("../controllers/domainCtrl/VisitManagement.Ctrl.js");
 const DomainAttendanceCtrl = require("../controllers/domainCtrl/DomainAttendance.Ctrl.js");
 
-// 라우트
-// User 관련 라우트
-// 이름으로 사용자를 조회하는 GET 요청을 처리합니다. (다른 :id 라우트보다 먼저 정의)
-router.get("/users/name", UserCtrl.getUserByName);
 
-// 특정 사용자를 조회하는 GET 요청을 처리합니다.
-router.get("/users/:id", UserCtrl.readUser);
-
-// 새로운 사용자를 생성하는 POST 요청을 처리합니다.
-router.post("/users", UserCtrl.createUser);
-// 모든 사용자를 조회하는 GET 요청을 처리합니다.
-router.get("/users", UserCtrl.readUsers);
-// 특정 사용자 정보를 업데이트하는 PUT 요청을 처리합니다.
-router.put("/users", UserCtrl.updateUser);
-// 특정 사용자를 삭제하는 DELETE 요청을 처리합니다.
-router.delete("/users", UserCtrl.deleteUser);
-// 전화번호로 사용자 일치 여부를 확인하는 POST 요청을 처리합니다.
-router.post("/users/phone-number", UserCtrl.checkUserPhoneNumber);
+router.use("/users", userController);
 
 // Organization 관련 라우트
 // 새로운 조직을 생성하는 POST 요청을 처리합니다.
