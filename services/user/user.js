@@ -45,7 +45,7 @@ const userService = {
 
 		console.log("\x1b[31m%s\x1b[0m", `처리될 이름: ${decodedName}`);
 
-		const user = await models.User.findOne({ where: { decodedName } });
+		const user = await models.User.findOne({ where: { name: decodedName } });
 		if (user) {
 			return true;
 		} else {
