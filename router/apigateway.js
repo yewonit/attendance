@@ -18,11 +18,11 @@ import userRouter from "./user/user.js";
 import visitationRouter from "./visitation/visitation.js";
 const router = Router();
 
-import OrganizationCtrl from "../services/organization/organization.js";
+
 
 import CoramdeoController from "./domainCtrl/Coramdeo.Ctrl.js";
 import CurrentMemberCtrl from "./domainCtrl/CurrentMember.Ctrl.js";
-import DomainAttendanceCtrl from "./domainCtrl/DomainAttendance.Ctrl.js";
+
 
 router.use("/users", userRouter);
 router.use("/activity-categories", activityCategoryRouter);

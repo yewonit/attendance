@@ -1,6 +1,7 @@
 import { Router } from "express";
 import organizationCrudRouter from "./organization.crud.js";
 import organizationService from "../../services/organization/organization.js";
+import DomainAttendanceCtrl from "../domainCtrl/DomainAttendance.Ctrl.js"
 
 const router = Router();
 
