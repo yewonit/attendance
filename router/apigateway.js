@@ -42,44 +42,10 @@ router.use("/user-has-roles", userHasRoleRouter);
 router.use("/seasons", seasonRouter);
 router.use("/visitations", visitationRouter);
 
-router.get(
-	"/organizations/:id/activities",
-	OrganizationCtrl.getOrganizationActivities
-);
-
 // CurrentMember 관련 라우트
 // 현재 회원 정보를 조회하는 GET 요청을 처리합니다.
 router.get("/current-members", CurrentMemberCtrl.getMembersWithRoles);
 router.post("/current-members", CurrentMemberCtrl.createMember);
-
-router.post(
-	"/organizations/:organizationId/activities/:activityId/attendance",
-	DomainAttendanceCtrl.recordAttendance
-);
-
-// 새로운 삭제 라우트 추가
-router.delete(
-	"/organizations/:organizationId/activities/:activityId/instances/:activityInstanceId",
-	DomainAttendanceCtrl.deleteActivityInstance
-);
-
-// 출석 기록 수정 라우트 추가
-router.put(
-	"/organizations/:organizationId/activities/:activityId/instances/:activityInstanceId/attendance",
-	DomainAttendanceCtrl.updateAttendance
-);
-
-// 활동 인스턴스 상세 정보 조회
-router.get(
-	"/organizations/:organizationId/activities/:activityId/instances/:activityInstanceId",
-	DomainAttendanceCtrl.getActivityInstanceDetails
-);
-
-// 조직 멤버 목록 조회
-router.get(
-	"/organizations/:organizationId/members",
-	DomainAttendanceCtrl.getOrganizationMembers
-);
 
 router.post("/coramdeo/members", CoramdeoController.updateCoramdeoMember);
 
