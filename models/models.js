@@ -1,115 +1,45 @@
-const { Sequelize } = require("sequelize");
-const env = require("../config/environment");
+import { Sequelize } from "sequelize";
+import { sequelize } from "../utils/database.js";
+import ActivityModel from "./model_archive/attendance/activity.js";
+import ActivityCategoryModel from "./model_archive/attendance/activity_category.js";
+import ActivityChangeHistoryModel from "./model_archive/attendance/activity_change_history.js";
+import ActivityInstanceModel from "./model_archive/attendance/activity_instance.js";
+import AttendanceModel from "./model_archive/attendance/attendance.js";
+import AttendanceStatusModel from "./model_archive/attendance/attendance_status.js";
+import ChurchOfficeModel from "./model_archive/churchOffice/church_office.js";
+import UserHasChurchOfficeModel from "./model_archive/churchOffice/user_has_church_office.js";
+import ActivityHasFileModel from "./model_archive/file/activity_has_file.js";
+import ActivityInstanceHasFileModel from "./model_archive/file/activity_instance_has_file.js";
+import FileModel from "./model_archive/file/file.js";
+import OrganizationModel from "./model_archive/organization/organization.js";
+import RoleModel from "./model_archive/role/role.js";
+import UserHasRoleModel from "./model_archive/role/user_has_role.js";
+import SeasonModel from "./model_archive/season/season.js";
+import UserModel from "./model_archive/user/user.js";
+import VisitationModel from "./model_archive/visitation/visitation.js";
 
-// 📚 데이터베이스 연결 설정
-const sequelize = new Sequelize(env.DB_NAME, env.DB_USER, env.DB_PASSWORD, {
-	host: env.DB_HOST,
-	dialect: "mysql",
-});
-
-// 🙋‍♂️ User 모델 그룹
-const User = require("./model_archive/user/User.Model")(sequelize, Sequelize);
-
-// 🏢 Organization 모델 그룹
-const Organization =
-	require("./model_archive/organizationAndRole/Organization.Model")(
-		sequelize,
-		Sequelize
-	);
-const Role = require("./model_archive/organizationAndRole/Role.Model")(
+const User = UserModel(sequelize, Sequelize);
+const Organization = OrganizationModel(sequelize, Sequelize);
+const Role = RoleModel(sequelize, Sequelize);
+const UserHasRole = UserHasRoleModel(sequelize, Sequelize);
+const ActivityCategory = ActivityCategoryModel(sequelize, Sequelize);
+const Activity = ActivityModel(sequelize, Sequelize);
+const ActivityInstance = ActivityInstanceModel(sequelize, Sequelize);
+const AttendanceStatus = AttendanceStatusModel(sequelize, Sequelize);
+const Attendance = AttendanceModel(sequelize, Sequelize);
+const ActivityChangeHistory = ActivityChangeHistoryModel(sequelize, Sequelize);
+const File = FileModel(sequelize, Sequelize);
+const ActivityHasFile = ActivityHasFileModel(sequelize, Sequelize);
+const ActivityInstanceHasFile = ActivityInstanceHasFileModel(
 	sequelize,
 	Sequelize
 );
-const UserHasRole =
-	require("./model_archive/organizationAndRole/UserHasRole.Model")(
-		sequelize,
-		Sequelize
-	);
+const Visitation = VisitationModel(sequelize, Sequelize);
+const Season = SeasonModel(sequelize, Sequelize);
+const ChurchOffice = ChurchOfficeModel(sequelize, Sequelize);
+const UserHasChurchOffice = UserHasChurchOfficeModel(sequelize, Sequelize);
 
-// 📅 Attendance 모델 그룹
-const ActivityCategory =
-	require("./model_archive/attendance/ActivityCategory.Model")(
-		sequelize,
-		Sequelize
-	);
-const Activity = require("./model_archive/attendance/Activity.Model")(
-	sequelize,
-	Sequelize
-);
-const ActivityRecurrence =
-	require("./model_archive/attendance/ActivityRecurrence.Model")(
-		sequelize,
-		Sequelize
-	);
-const ActivityInstance =
-	require("./model_archive/attendance/ActivityInstance.Model")(
-		sequelize,
-		Sequelize
-	);
-const AttendanceStatus =
-	require("./model_archive/attendance/AttendanceStatus.Model")(
-		sequelize,
-		Sequelize
-	);
-const Attendance = require("./model_archive/attendance/Attendance.Model")(
-	sequelize,
-	Sequelize
-);
-const ActivityChangeHistory =
-	require("./model_archive/attendance/ActivityChangeHistory.Model")(
-		sequelize,
-		Sequelize
-	);
-const ActivityStatistics =
-	require("./model_archive/attendance/ActivityStatistics.Model")(
-		sequelize,
-		Sequelize
-	);
-
-// 📁 File 모델 그룹
-const File = require("./model_archive/file/File.Model")(sequelize, Sequelize);
-const ActivityHasFile = require("./model_archive/file/ActivityHasFile.Model")(
-	sequelize,
-	Sequelize
-);
-const ActivityInstanceHasFile =
-	require("./model_archive/file/ActivityInstanceHasFile.Model")(
-		sequelize,
-		Sequelize
-	);
-
-// 🙋🏻‍♂️ Visitation 모델 그룹
-const Visitation = require("./model_archive/visitation/Visitation.Model")(
-	sequelize,
-	Sequelize
-);
-
-// 🔗️ Season 모델 그룹
-const Season = require("./model_archive/season/Season.Model")(
-	sequelize,
-	Sequelize
-);
-
-// 🔗 Service 모델 그룹
-const Service = require("./model_archive/service/Service.Model")(
-	sequelize,
-	Sequelize
-);
-
-// 🏢 ChurchOffice 모델 그룹
-const ChurchOffice = require("./model_archive/churchOffice/ChurchOffice.Model")(
-	sequelize,
-	Sequelize
-);
-
-// 🏢 ChurchOffice 모델 그룹
-const UserHasChurchOffice =
-	require("./model_archive/churchOffice/UserHasChurchOffice.Model")(
-		sequelize,
-		Sequelize
-	);
-
-// 🔗 모델 간 관계 설정
+// 모델 간 관계 설정
 User.hasMany(UserHasRole, { foreignKey: "user_id" });
 UserHasRole.belongsTo(User, { foreignKey: "user_id" });
 
@@ -137,9 +67,6 @@ ActivityCategory.belongsTo(ActivityCategory, {
 	foreignKey: "parent_id",
 });
 
-Activity.hasMany(ActivityRecurrence, { foreignKey: "activity_id" });
-ActivityRecurrence.belongsTo(Activity, { foreignKey: "activity_id" });
-
 Activity.hasMany(ActivityInstance, { foreignKey: "activity_id" });
 ActivityInstance.belongsTo(Activity, { foreignKey: "activity_id" });
 
@@ -164,9 +91,6 @@ Attendance.belongsTo(User, { foreignKey: "user_id" });
 Activity.hasMany(ActivityChangeHistory, { foreignKey: "activity_id" });
 ActivityChangeHistory.belongsTo(Activity, { foreignKey: "activity_id" });
 
-Activity.hasMany(ActivityStatistics, { foreignKey: "activity_id" });
-ActivityStatistics.belongsTo(Activity, { foreignKey: "activity_id" });
-
 File.hasMany(ActivityHasFile, { foreignKey: "file_id" });
 ActivityHasFile.belongsTo(File, { foreignKey: "file_id" });
 
@@ -188,14 +112,6 @@ Visitation.belongsTo(User, { as: "Visitor", foreignKey: "visitor_id" });
 
 User.hasMany(Visitation, { as: "VisitsReceived", foreignKey: "visitee_id" });
 Visitation.belongsTo(User, { as: "Visitee", foreignKey: "visitee_id" });
-
-// // ActivityRecurrence와 ActivityInstance 사이의 관계 추가
-// ActivityRecurrence.hasMany(ActivityInstance, {
-//   foreignKey: "activity_recurrence_id",
-// });
-// ActivityInstance.belongsTo(ActivityRecurrence, {
-//   foreignKey: "activity_recurrence_id",
-// // });
 
 // // ActivityChangeHistory와 ActivityInstance 사이의 관계 수정
 // ActivityInstance.hasMany(ActivityChangeHistory, {
@@ -222,36 +138,30 @@ File.belongsToMany(ActivityInstance, {
 	as: "ActivityInstances",
 });
 
-Organization.hasMany(Service, { foreignKey: "organization_id" });
-Service.belongsTo(Organization, { foreignKey: "organization_id" });
-
 User.hasMany(UserHasChurchOffice, { foreignKey: "user_id" });
 UserHasChurchOffice.belongsTo(User, { foreignKey: "user_id" });
 
 ChurchOffice.hasMany(UserHasChurchOffice, { foreignKey: "church_office_id" });
 UserHasChurchOffice.belongsTo(ChurchOffice, { foreignKey: "church_office_id" });
+UserHasChurchOffice.belongsTo(User, { foreignKey: "user_id" });
 
 // 📦 모듈 내보내기
-module.exports = {
-	sequelize,
-	User,
+export default {
+	Activity,
+	ActivityCategory,
+	ActivityChangeHistory,
+	ActivityHasFile,
+	ActivityInstance,
+	ActivityInstanceHasFile,
+	Attendance,
+	AttendanceStatus,
+	ChurchOffice,
+	File,
 	Organization,
 	Role,
-	UserHasRole,
-	ActivityCategory,
-	Activity,
-	ActivityRecurrence,
-	ActivityInstance,
-	AttendanceStatus,
-	Attendance,
-	ActivityChangeHistory,
-	ActivityStatistics,
-	File,
-	ActivityHasFile,
-	ActivityInstanceHasFile,
-	Visitation,
 	Season,
-	Service,
-	ChurchOffice,
+	User,
 	UserHasChurchOffice,
+	UserHasRole,
+	Visitation,
 };

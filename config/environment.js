@@ -1,4 +1,6 @@
-require("dotenv").config()
+import { config } from "dotenv"
+
+config()
 
 const environment = {
 	local: {
@@ -22,4 +24,4 @@ const environment = {
 }
 
 const nodeEnv = process.env.NODE_ENV || "local"
-module.exports = environment[nodeEnv]
+export default environment[nodeEnv]
