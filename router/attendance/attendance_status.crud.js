@@ -3,40 +3,42 @@ import attendanceStatusService from "../../services/attendance/attendance_status
 
 const router = Router();
 
-router.post("", (req, res, next) => {
+router.post("", async (req, res, next) => {
 	const newStatus = req.body;
 	try {
-		const data = attendanceStatusService.createAttendanceStatus(newStatus);
+		const data = await attendanceStatusService.createAttendanceStatus(
+			newStatus
+		);
 		res.status(201).json({ data: data });
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.get("", (req, res, next) => {
+router.get("", async (req, res, next) => {
 	try {
-		const data = attendanceStatusService.findAttendanceStatuses();
+		const data = await attendanceStatusService.findAttendanceStatuses();
 		res.status(200).json({ data: data });
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.get("/:id", (req, res, next) => {
+router.get("/:id", async (req, res, next) => {
 	const id = req.params.id;
 	try {
-		const data = attendanceStatusService.findAttendanceStatus(id);
+		const data = await attendanceStatusService.findAttendanceStatus(id);
 		res.status(200).json({ data: data });
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.put("", (req, res, next) => {
+router.put("", async (req, res, next) => {
 	const newModel = req.body;
 	const id = newModel.id;
 	try {
-		const updated = attendanceStatusService.updateAttendanceStatus(
+		const updated = await attendanceStatusService.updateAttendanceStatus(
 			id,
 			newModel
 		);
@@ -46,10 +48,10 @@ router.put("", (req, res, next) => {
 	}
 });
 
-router.delete("", (req, res, next) => {
+router.delete("", async (req, res, next) => {
 	const id = req.body.id;
 	try {
-		const deleted = attendanceStatusService.deleteAttendanceStatus(id);
+		const deleted = await attendanceStatusService.deleteAttendanceStatus(id);
 		res.status(200).json(deleted);
 	} catch (error) {
 		next(error);

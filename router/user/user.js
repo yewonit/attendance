@@ -5,11 +5,11 @@ import userCrudRouter from "./user.crud.js";
 const router = Router();
 
 // 구체적인 경로를 먼저 정의
-router.get("/name", (req, res, next) => {
+router.get("/name", async (req, res, next) => {
 	const name = req.query.name;
 
 	try {
-		const isExists = userService.findUserByName(name);
+		const isExists = await userService.findUserByName(name);
 		if (isExists) {
 			res.status(200).json({ message: "이름이 있습니다." });
 		} else {
@@ -20,11 +20,11 @@ router.get("/name", (req, res, next) => {
 	}
 });
 
-router.post("/phone-number", (req, res, next) => {
+router.post("/phone-number", async (req, res, next) => {
 	const { name, phoneNumber } = req.body;
 
 	try {
-		const userData = userService.checkUserPhoneNumber(name, phoneNumber);
+		const userData = await userService.checkUserPhoneNumber(name, phoneNumber);
 		res.status(200).json({
 			isMatched: true,
 			userData: userData,

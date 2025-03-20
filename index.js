@@ -28,11 +28,12 @@ app.use(cors());
 
 // 로깅 미들웨어 추가
 app.use(requestLogger);
-app.use(errorLogger);
 
 // router 적용
 app.use(healthCheck);
 app.use("/api", router);
+
+app.use(errorLogger);
 
 // 404 에러 핸들러
 app.use((req, res, next) => {

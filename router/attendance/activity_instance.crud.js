@@ -3,40 +3,42 @@ import activityInstanceService from "../../services/attendance/activity_instance
 
 const router = Router();
 
-router.post("", (req, res, next) => {
+router.post("", async (req, res, next) => {
 	const newInstance = req.body;
 	try {
-		const data = activityInstanceService.createActivityInstance(newInstance);
+		const data = await activityInstanceService.createActivityInstance(
+			newInstance
+		);
 		res.status(201).json({ data: data });
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.get("", (req, res, next) => {
+router.get("", async (req, res, next) => {
 	try {
-		const data = activityInstanceService.findActivityInstances();
+		const data = await activityInstanceService.findActivityInstances();
 		res.status(200).json({ data: data });
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.get("/:id", (req, res, next) => {
+router.get("/:id", async (req, res, next) => {
 	const id = req.params.id;
 	try {
-		const data = activityInstanceService.findActivityInstance(id);
+		const data = await activityInstanceService.findActivityInstance(id);
 		res.status(200).json({ data: data });
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.put("", (req, res, next) => {
+router.put("", async (req, res, next) => {
 	const newModel = req.body;
 	const id = newModel.id;
 	try {
-		const updated = activityInstanceService.updateActivityInstance(
+		const updated = await activityInstanceService.updateActivityInstance(
 			id,
 			newModel
 		);
@@ -46,10 +48,10 @@ router.put("", (req, res, next) => {
 	}
 });
 
-router.delete("", (req, res, next) => {
+router.delete("", async (req, res, next) => {
 	const id = req.body.id;
 	try {
-		const deleted = activityInstanceService.deleteActivityInstance(id);
+		const deleted = await activityInstanceService.deleteActivityInstance(id);
 		res.status(200).json(deleted);
 	} catch (error) {
 		next(error);

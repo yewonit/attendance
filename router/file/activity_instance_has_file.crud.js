@@ -3,11 +3,11 @@ import activityInstanceHasFileService from "../../services/file/activity_instanc
 
 const router = Router();
 
-router.post("", (req, res, next) => {
+router.post("", async (req, res, next) => {
 	const newInstanceFile = req.body;
 	try {
 		const data =
-			activityInstanceHasFileService.createActivityInstanceHasFile(
+			await activityInstanceHasFileService.createActivityInstanceHasFile(
 				newInstanceFile
 			);
 		res.status(201).json({ data: data });
@@ -16,31 +16,33 @@ router.post("", (req, res, next) => {
 	}
 });
 
-router.get("", (req, res, next) => {
+router.get("", async (req, res, next) => {
 	try {
-		const data = activityInstanceHasFileService.findActivityInstanceHasFiles();
+		const data =
+			await activityInstanceHasFileService.findActivityInstanceHasFiles();
 		res.status(200).json({ data: data });
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.get("/:id", (req, res, next) => {
+router.get("/:id", async (req, res, next) => {
 	const id = req.params.id;
 	try {
-		const data = activityInstanceHasFileService.findActivityInstanceHasFile(id);
+		const data =
+			await activityInstanceHasFileService.findActivityInstanceHasFile(id);
 		res.status(200).json({ data: data });
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.put("", (req, res, next) => {
+router.put("", async (req, res, next) => {
 	const newModel = req.body;
 	const id = newModel.id;
 	try {
 		const updated =
-			activityInstanceHasFileService.updateActivityInstanceHasFile(
+			await activityInstanceHasFileService.updateActivityInstanceHasFile(
 				id,
 				newModel
 			);
@@ -50,11 +52,11 @@ router.put("", (req, res, next) => {
 	}
 });
 
-router.delete("", (req, res, next) => {
+router.delete("", async (req, res, next) => {
 	const id = req.body.id;
 	try {
 		const deleted =
-			activityInstanceHasFileService.deleteActivityInstanceHasFile(id);
+			await activityInstanceHasFileService.deleteActivityInstanceHasFile(id);
 		res.status(200).json(deleted);
 	} catch (error) {
 		next(error);

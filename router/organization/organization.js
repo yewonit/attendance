@@ -15,10 +15,12 @@ router.get(
 	DomainAttendanceCtrl.getOrganizationMembers
 );
 
-router.get("/:id/activities", (req, res, next) => {
+router.get("/:id/activities", async (req, res, next) => {
 	const organizationId = req.params.id;
 	try {
-		const data = organizationService.getOrganizationActivities(organizationId);
+		const data = await organizationService.getOrganizationActivities(
+			organizationId
+		);
 
 		res.status(200).json(data);
 	} catch (error) {
