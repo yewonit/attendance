@@ -27,9 +27,4 @@ class NotFoundError extends AppError {
 	}
 }
 
-module.exports = {
-	AppError,
-	ValidationError,
-	AuthenticationError,
-	NotFoundError,
-};
+export { AppError, AuthenticationError, NotFoundError, ValidationError };
