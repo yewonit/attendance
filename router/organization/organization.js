@@ -1,7 +1,7 @@
 import { Router } from "express";
-import organizationCrudRouter from "./organization.crud.js";
 import organizationService from "../../services/organization/organization.js";
-import DomainAttendanceCtrl from "../domainCtrl/DomainAttendance.Ctrl.js"
+import DomainAttendanceCtrl from "../domainCtrl/DomainAttendance.Ctrl.js";
+import organizationCrudRouter from "./organization.crud.js";
 
 const router = Router();
 
@@ -16,14 +16,14 @@ router.get(
 );
 
 router.get("/:id/activities", (req, res, next) => {
-    const organizationId = req.params.id;
-    try {
-        const data = organizationService.getOrganizationActivities(id)
+	const organizationId = req.params.id;
+	try {
+		const data = organizationService.getOrganizationActivities(organizationId);
 
-        res.status(200).json(data)
-    } catch (error) {
-        next(error)
-    }
+		res.status(200).json(data);
+	} catch (error) {
+		next(error);
+	}
 });
 
 router.post(
