@@ -1,5 +1,6 @@
 import { col, fn, where } from "sequelize";
 import models from "../../models/models.js";
+import { sequelize } from "../../utils/database.js";
 
 // 기존의 attendanceController 객체
 const attendanceController = {
@@ -217,7 +218,7 @@ const attendanceController = {
 			const { organizationId, activityId, activityInstanceId } = req.params;
 
 			// 트랜잭션 시작
-			const result = await models.sequelize.transaction(async (t) => {
+			const result = await sequelize.transaction(async (t) => {
 				// 1. ActivityInstanceHasFile 조회 및 삭제
 				const activityInstanceFiles =
 					await models.ActivityInstanceHasFile.findAll({
