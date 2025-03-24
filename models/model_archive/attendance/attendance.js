@@ -68,7 +68,9 @@ export default (sequelize, Sequelize) => {
     },
     {
       tableName: "attendance",
-      timestamps: false,
+      timestamps: true,
+      createdAt: created_at,
+      updatedAt: updated_at,
       comment: "출석 정보를 관리하는 테이블",
     }
   );

@@ -79,7 +79,9 @@ export default (sequelize, Sequelize) => {
     },
     {
       tableName: "activity_instance",
-      timestamps: false,
+      timestamps: true,
+      createdAt: created_at,
+      updatedAt: updated_at,
       comment: "활동 인스턴스 정보를 관리하는 테이블",
     }
   );

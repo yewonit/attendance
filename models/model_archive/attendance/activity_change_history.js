@@ -37,7 +37,9 @@ export default (sequelize, Sequelize) => {
     },
     {
       tableName: "activity_change_history",
-      timestamps: false,
+      timestamps: true,
+      createdAt: created_at,
+      updatedAt: updated_at,
       comment: "활동 변경 이력 정보를 관리하는 테이블",
     }
   );
