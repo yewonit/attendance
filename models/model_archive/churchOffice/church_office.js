@@ -59,7 +59,9 @@ export default (sequelize, Sequelize) => {
 		},
 		{
 			tableName: "church_office",
-			timestamps: false,
+			timestamps: true,
+			createdAt: created_at,
+			updatedAt: updated_at,
 			comment: "교회 직분 정보를 관리하는 테이블",
 		}
 	)

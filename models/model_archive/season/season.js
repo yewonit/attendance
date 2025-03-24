@@ -3,7 +3,7 @@
 // Description: 시즌 모델 정의
 
 export default (sequelize, Sequelize) => {
-	const Season = sequelize.define(
+	return sequelize.define(
 		"Season",
 		{
 			id: {
@@ -63,19 +63,10 @@ export default (sequelize, Sequelize) => {
 		},
 		{
 			tableName: "season",
-			timestamps: false,
+			timestamps: true,
+			createdAt: created_at,
+			updatedAt: updated_at,
 			comment: "시즌 정보를 관리하는 테이블",
 		}
 	)
-
-	// 필요한 경우 관계 설정을 위한 associate 메서드 추가
-	Season.associate = (models) => {
-		// 예시: Season과 다른 모델과의 관계 설정
-		// Season.hasMany(models.SomeModel, {
-		//   foreignKey: "season_id",
-		//   as: "SomeModels",
-		// });
-	}
-
-	return Season
 }

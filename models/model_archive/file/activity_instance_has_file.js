@@ -80,7 +80,9 @@ export default (sequelize, Sequelize) => {
     },
     {
       tableName: "activity_instance_has_file",
-      timestamps: false,
+      timestamps: true,
+      createdAt: created_at,
+      updatedAt: updated_at,
       comment: "활동 인스턴스와 파일 간의 관계를 관리하는 테이블",
     }
   );
