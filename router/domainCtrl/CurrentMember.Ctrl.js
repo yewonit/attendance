@@ -1,5 +1,9 @@
 import models from "../../models/models.js";
-import { NotFoundError, ValidationError } from "../../utils/errors.js";
+import {
+	DataConflictError,
+	NotFoundError,
+	ValidationError,
+} from "../../utils/errors.js";
 
 const CurrentMemberCtrl = {
 	getMembersWithRoles: async (req, res) => {
@@ -92,11 +96,12 @@ const CurrentMemberCtrl = {
 
 			const userExists = await models.User.findOne({
 				where: {
+					name: userData.name,
 					phone_number: formatPhoneNumber(userData.phone_number),
 				},
 			});
 			if (userExists) {
-				throw new ValidationError(
+				throw new DataConflictError(
 					"이미 같은 전화번호로 생성된 유저가 있습니다."
 				);
 			}
