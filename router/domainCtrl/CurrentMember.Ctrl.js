@@ -132,7 +132,7 @@ const CurrentMemberCtrl = {
 };
 
 const formatPhoneNumber = (phoneNumber) => {
-	return phoneNumber.replace(" ", "").replace("-", "");
+	return phoneNumber.replaceAll(" ", "").replaceAll("-", "");
 };
 
 export default CurrentMemberCtrl;
