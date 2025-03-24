@@ -86,7 +86,15 @@ const CurrentMemberCtrl = {
 
 			// 사용자 생성
 			const user = await models.User.create({
-				...userData,
+				name: userData.name,
+				name_suffix: userData.name_suffix,
+				gender_type: userData.gender_type,
+				birth_date: userData.birth_date,
+				country: userData.country,
+				phone_number: formatPhoneNumber(userData.phone_number),
+				church_member_number: userData.church_member_number,
+				church_registration_date: userData.church_registration_date,
+				is_new_member: userData.is_new_member,
 				creator_id: idOfCreatingUser,
 				updater_id: idOfCreatingUser,
 				creator_ip: req.ip,
@@ -121,6 +129,10 @@ const CurrentMemberCtrl = {
 			return res.status(500).json({ message: "서버 오류가 발생했습니다." });
 		}
 	},
+};
+
+const formatPhoneNumber = (phoneNumber) => {
+	return phoneNumber.replace(" ", "").replace("-", "");
 };
 
 export default CurrentMemberCtrl;
