@@ -23,10 +23,8 @@ const requestLogger = (req, res, next) => {
 			(key) => logData[key] === undefined && delete logData[key]
 		);
 
-		if (res.statusCode >= 400) {
-			logger.warn("HTTP 요청 실패", logData);
-		} else {
-			logger.http("HTTP 요청 완료", logData);
+		if (!res.statusCode >= 400) {
+			logger.info("HTTP 요청 완료", logData);
 		}
 	});
 
@@ -146,8 +144,4 @@ const setupGlobalLogging = () => {
 	});
 };
 
-export {
-	requestLogger,
-	errorLogger,
-	setupGlobalLogging,
-};
+export { requestLogger, errorLogger, setupGlobalLogging };
