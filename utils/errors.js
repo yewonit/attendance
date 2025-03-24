@@ -27,4 +27,16 @@ class NotFoundError extends AppError {
 	}
 }
 
-export { AppError, AuthenticationError, NotFoundError, ValidationError };
+class DataConflictError extends AppError {
+	constructor(message) {
+		super(message, 409);
+	}
+}
+
+export {
+	AppError,
+	AuthenticationError,
+	NotFoundError,
+	ValidationError,
+	DataConflictError,
+};

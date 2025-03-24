@@ -13,6 +13,7 @@ import router from "./router/apigateway.js";
 import { initDatabase } from "./utils/database.js";
 import { NotFoundError } from "./utils/errors.js";
 import logger from "./utils/logger.js";
+import globalError from "./middleware/global_error.js";
 
 const app = express();
 
@@ -34,6 +35,8 @@ app.use(healthCheck);
 app.use("/api", router);
 
 app.use(errorLogger);
+
+app.use(globalError);
 
 // 404 에러 핸들러
 app.use((req, res, next) => {
