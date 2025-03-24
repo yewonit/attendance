@@ -1,4 +1,5 @@
 import models from "../../models/models.js";
+import { NotFoundError } from "../../utils/errors.js";
 
 const CurrentMemberCtrl = {
 	getMembersWithRoles: async (req, res) => {
@@ -76,8 +77,7 @@ const CurrentMemberCtrl = {
 	},
 	createMember: async (req, res) => {
 		try {
-			const { userData, organizationId, organizationCode, idOfCreatingUser } =
-				req.body;
+			const { userData, organizationId, idOfCreatingUser } = req.body;
 
 			// 필수 필드 검증
 			if (!userData || !organizationId || !idOfCreatingUser) {
@@ -101,19 +101,28 @@ const CurrentMemberCtrl = {
 				updater_ip: req.ip,
 			});
 
+			const organization = await models.Organization.findOne({
+				where: {
+					id: organizationId,
+				},
+			});
+			if (!organization)
+				throw new NotFoundError("존재하지 않는 organization입니다.");
+
 			const role = await models.Role.findOne({
 				where: {
 					organization_id: organizationId,
 					role_name: "순원",
 				},
 			});
+			if (!role) throw new NotFoundError("존재하지 않는 role입니다.");
 
 			// 사용자와 역할 연결
 			await models.UserHasRole.create({
 				user_id: user.id,
 				role_id: role.id,
 				organization_id: organizationId,
-				organization_code: organizationCode,
+				organization_code: organization.organization_code,
 				is_deleted: "N",
 				creator_id: idOfCreatingUser,
 				updater_id: idOfCreatingUser,
