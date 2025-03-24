@@ -90,9 +90,9 @@ export default (sequelize, Sequelize) => {
 		{
 			tableName: "organization",
 			timestamps: true,
-			createdAt: created_at,
-			updatedAt: updated_at,
+			createdAt: "created_at",
+			updatedAt: "updated_at",
 			comment: "조직 정보를 관리하는 테이블",
 		}
-	)
-}
+	);
+};

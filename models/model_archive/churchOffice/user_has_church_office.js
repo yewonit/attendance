@@ -73,9 +73,9 @@ export default (sequelize, Sequelize) => {
 		{
 			tableName: "user_has_church_office",
 			timestamps: true,
-			createdAt: created_at,
-			updatedAt: updated_at,
+			createdAt: "created_at",
+			updatedAt: "updated_at",
 			comment: "사용자와 교회 직분 간의 관계를 관리하는 테이블",
 		}
-	)
-}
+	);
+};
