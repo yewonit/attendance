@@ -1,3 +1,5 @@
+const AUTH_SERVER_URL = `${environment.AUTH_SERVER_HOST}:${environment.AUTH_SERVER_PORT}`;
+
 const get = async (path, headers) => {
 	const url = `${AUTH_SERVER_URL}${path}`;
 	const response = await fetch(url, {
@@ -111,4 +113,4 @@ const del = async (path, headers) => {
 	return response;
 };
 
-export { get, post, put, patch, del };
+export { del, get, patch, post, put };

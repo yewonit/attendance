@@ -5,6 +5,7 @@ import activityChangeHistoryRouter from "./attendance/activity_change_history.js
 import activityInstanceRouter from "./attendance/activity_instance.js";
 import attendanceRouter from "./attendance/attendance.js";
 import attendanceStatusRouter from "./attendance/attendance_status.js";
+import authRouter from "./auth/auth.js";
 import churchOfficeRouter from "./churchOffice/church_office.js";
 import userHasChurchOfficeRouter from "./churchOffice/user_has_church_office.js";
 import activityHasFileRouter from "./file/activity_has_file.js";
@@ -21,6 +22,8 @@ import CoramdeoController from "./domainCtrl/Coramdeo.Ctrl.js";
 import CurrentMemberCtrl from "./domainCtrl/CurrentMember.Ctrl.js";
 
 const router = Router();
+
+router.use("/auth", authRouter);
 
 router.use("/users", userRouter);
 router.use("/activity-categories", activityCategoryRouter);

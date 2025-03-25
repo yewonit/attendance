@@ -1,7 +1,5 @@
-import environment from "../../config/environment.js";
+import { AuthenticationError, ValidationError } from "../../utils/errors.js";
 import { post } from "../../utils/request.js";
-
-const AUTH_SERVER_URL = `${environment.AUTH_SERVER_HOST}:${environment.AUTH_SERVER_PORT}`;
 
 const loginWithEmailAndPassword = async (email, name, password) => {
 	const path = "/v1/token";
@@ -10,43 +8,57 @@ const loginWithEmailAndPassword = async (email, name, password) => {
 		{},
 		{ email: email, name: name, password: password }
 	);
-	return response;
+	if (!response.status) return response;
+	else if (response.status === 400) throw new ValidationError(response.message);
+	else if (response.status === 401)
+		throw new AuthenticationError(response.message);
+	else throw new Error(response.message);
 };
 
-const verifyWithTokens = async (accessToken, refreshToken) => {
-	const verifyPath = "/v1/verify";
-	const verifyResponse = await post(
-		verifyPath,
-		{},
-		{ accessToken: accessToken }
-	);
-	if (verifyResponse.status === 401) {
-		const refreshPath = "/v1/refresh";
-		const refreshResponse = await post(
-			refreshPath,
-			{},
-			{ refreshToken: refreshToken }
-		);
-		return refreshResponse;
-	}
-	return verifyResponse;
+const verifyWithToken = async (accessToken) => {
+	const path = "/v1/verify";
+	const response = await post(path, {}, { accessToken: accessToken });
+	if (!response.status) return response;
+	else if (response.status === 400) throw new ValidationError(response.message);
+	else if (response.status === 401)
+		throw new AuthenticationError(response.message);
+	else throw new Error(response.message);
+};
+
+const refreshWithToken = async (refreshToken) => {
+	const path = "/v1/refresh";
+	const response = await post(path, {}, { refreshToken: refreshToken });
+	if (!response.status) return response;
+	else if (response.status === 400) throw new ValidationError(response.message);
+	else if (response.status === 401)
+		throw new AuthenticationError(response.message);
+	else throw new Error(response.message);
 };
 
 const sendVerifyEmail = async (email) => {
 	const path = "/v1/mail/code";
 	const response = await post(path, {}, { email: email });
-	return response;
+	if (!response.status) return response;
+	else if (response.status === 400) throw new ValidationError(response.message);
+	else if (response.status === 401)
+		throw new AuthenticationError(response.message);
+	else throw new Error(response.message);
 };
 
 const verifyEmailCode = async (email, code) => {
 	const path = "/v1/mail/verify";
 	const response = await post(path, {}, { email: email, code: code });
-	return response;
+	if (!response.status) return response;
+	else if (response.status === 400) throw new ValidationError(response.message);
+	else if (response.status === 401)
+		throw new AuthenticationError(response.message);
+	else throw new Error(response.message);
 };
 
 export {
 	loginWithEmailAndPassword,
-	verifyWithTokens,
+	refreshWithToken,
 	sendVerifyEmail,
 	verifyEmailCode,
+	verifyWithToken,
 };
