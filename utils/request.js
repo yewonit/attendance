@@ -1,3 +1,5 @@
+import environment from "../config/environment.js";
+
 const AUTH_SERVER_URL = `${environment.AUTH_SERVER_HOST}:${environment.AUTH_SERVER_PORT}`;
 
 const get = async (path, headers) => {

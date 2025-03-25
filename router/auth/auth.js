@@ -5,7 +5,7 @@ import {
 	refreshWithToken,
 	sendVerifyEmail,
 	verifyEmailCode,
-	verifyWithTokens,
+	verifyWithToken,
 } from "../../services/auth/auth.js";
 import { AuthenticationError } from "../../utils/errors.js";
 
@@ -34,7 +34,7 @@ router.get("/login", async (req, res, next) => {
 	const bearerAccessToken = req.header("Authorization");
 	const { type, accessToken } = bearerAccessToken.split(" ");
 	try {
-		const data = await verifyWithTokens(accessToken);
+		const data = await verifyWithToken(accessToken);
 		const userData = await models.User.findOne({
 			email: data.email,
 			name: data.name,
