@@ -115,12 +115,12 @@ const userService = {
 			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 			if (!emailRegex.test(user.email)) {
 				throw new ValidationError(
-					`이메일이 형식에 맞지 않습니다. email: ${email}`
+					`이메일이 형식에 맞지 않습니다. email: ${user.email}`
 				);
 			}
 
 			const sameEmailExists = await models.User.findOne({
-				email: email,
+				email: user.email,
 			});
 			if (sameEmailExists) {
 				throw new DataConflictError(
