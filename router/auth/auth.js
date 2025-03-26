@@ -7,20 +7,25 @@ import {
 	verifyEmailCode,
 	verifyWithToken,
 } from "../../services/auth/auth.js";
-import { AuthenticationError } from "../../utils/errors.js";
+import { AuthenticationError, ValidationError } from "../../utils/errors.js";
 
 const router = Router();
 
 router.post("/login", async (req, res, next) => {
-	const { email, name, password } = req.body;
+	const { email, password } = req.body;
 	try {
-		const tokens = await loginWithEmailAndPassword(email, name, password);
 		const userData = await models.User.findOne({
 			where: {
 				email: email,
-				password: Buffer.from(password).toString("base64"),
 			},
 		});
+		if (!userData)
+			throw new ValidationError("해당 이메일로 유저를 찾을 수 없습니다.");
+		if (userData.password !== Buffer.from(password).toString("base64"))
+			throw new AuthenticationError("패스워드가 일치하지 않습니다.");
+
+		const tokens = await loginWithEmailAndPassword(email, userData.name);
+
 		res.status(200).json({
 			tokens: tokens,
 			user: userData,

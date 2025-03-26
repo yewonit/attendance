@@ -1,13 +1,9 @@
 import { AuthenticationError, ValidationError } from "../../utils/errors.js";
 import { post } from "../../utils/request.js";
 
-const loginWithEmailAndPassword = async (email, name, password) => {
+const loginWithEmailAndPassword = async (email, name) => {
 	const path = "/v1/token";
-	const response = await post(
-		path,
-		{},
-		{ email: email, name: name, password: password }
-	);
+	const response = await post(path, {}, { email: email, name: name });
 	if (!response.status) return response;
 	else if (response.status === 400) throw new ValidationError(response.message);
 	else if (response.status === 401)
