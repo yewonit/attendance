@@ -134,7 +134,7 @@ const userService = {
 		}
 
 		if (user.password) {
-			user.password = Buffer.from(password).toString("base64");
+			user.password = Buffer.from(user.password).toString("base64");
 		}
 
 		if (user.phone_number) {
