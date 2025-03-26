@@ -15,15 +15,15 @@ const attendanceController = {
 
 			// 필수 데이터 검증
 			if (!activityId || !instanceData || !attendances) {
-				console.log("❌ 필수 데이터 누락");
 				return res
 					.status(400)
-					.json({ message: "필수 데이터가 누락되었습니다." });
+					.json({
+						message: `필수 데이터가 누락되었습니다. activityId: ${activityId}, instanceData: ${instanceData}, attendances: ${attendances}`,
+					});
 			}
 
 			// instanceData 필드 검증
 			if (!instanceData.startDateTime || !instanceData.endDateTime) {
-				console.log("❌ 시작 시간 또는 종료 시간 누락");
 				return res
 					.status(400)
 					.json({ message: "시작 시간과 종료 시간은 필수입니다." });
@@ -32,7 +32,6 @@ const attendanceController = {
 			// 조직이 존재하는지 확인
 			const organization = await models.Organization.findByPk(organizationId);
 			if (!organization) {
-				console.log("❌ 조직을 찾을 수 없음");
 				return res.status(404).json({ message: "조직을 찾을 수 없습니다." });
 			}
 
@@ -41,7 +40,6 @@ const attendanceController = {
 				where: { id: activityId, organization_id: organizationId },
 			});
 			if (!activity) {
-				console.log("❌ 해당 조직의 활동을 찾을 수 없음");
 				return res
 					.status(404)
 					.json({ message: "해당 조직의 활동을 찾을 수 없습니다." });
@@ -95,20 +93,8 @@ const attendanceController = {
 							});
 					}
 				} catch (fileError) {
-					console.error("❌ 파일 정보 저장 중 오류 발생:", fileError);
-					console.error("오류 상세 정보:", JSON.stringify(fileError, null, 2));
+					next(fileError);
 				}
-			} else {
-				console.log("❗ 유효한 이미지 정보가 제공되지 않았습니다.");
-				console.log("imageInfo 유효성 검사 결과:");
-				console.log("- imageInfo 존재 여부:", !!imageInfo);
-				console.log(
-					"- imageInfo가 객체인지:",
-					typeof imageInfo === "object" && imageInfo !== null
-				);
-				console.log("- url 존재 여부:", imageInfo && imageInfo.url);
-				console.log("- fileName 존재 여부:", imageInfo && imageInfo.fileName);
-				console.log("- fileType 존재 여부:", imageInfo && imageInfo.fileType);
 			}
 
 			// 출석 정보 생성 또는 업데이트
@@ -121,10 +107,6 @@ const attendanceController = {
 						),
 					});
 					if (!attendanceStatus) {
-						console.log(`❌ 유효하지 않은 출석 상태: ${attendance.status}`);
-						console.log("데이터베이스에 존재하는 상태들:");
-						const allStatuses = await models.AttendanceStatus.findAll();
-						console.log(allStatuses.map((status) => status.name));
 						throw new Error(`유효하지 않은 출석 상태: ${attendance.status}`);
 					}
 
@@ -202,7 +184,6 @@ const attendanceController = {
 					: null,
 			});
 		} catch (error) {
-			console.error("❌ Error in recordAttendance:", error);
 			res.status(500).json({
 				message: "서버 오류가 발생했습니다.",
 				error: error.message,
@@ -213,7 +194,6 @@ const attendanceController = {
 
 	// 활동 인스턴스 삭제 함수 수정
 	deleteActivityInstance: async (req, res, next) => {
-		console.log("🚀 활동 인스턴스 삭제 프로세스 시작");
 		try {
 			const { organizationId, activityId, activityInstanceId } = req.params;
 
@@ -263,7 +243,6 @@ const attendanceController = {
 				return { deletedActivityInstance, deletedFileIds: fileIds };
 			});
 
-			console.log("✅ 활동 인스턴스 및 관련 데이터 삭제 완료");
 			res.status(200).json({
 				message:
 					"활동 인스턴스와 관련된 모든 데이터가 성공적으로 삭제되었습니다.",
@@ -271,7 +250,6 @@ const attendanceController = {
 				deletedFileIds: result.deletedFileIds,
 			});
 		} catch (error) {
-			console.error("❌ Error in deleteActivityInstance:", error);
 			res.status(500).json({
 				message: "서버 오류가 발생했습니다.",
 				error: error.message,
@@ -294,7 +272,6 @@ const attendanceController = {
 	 * @param {Function} next - Express 다음 미들웨어 함수
 	 */
 	updateAttendance: async (req, res, next) => {
-		console.log("🚀 출석 기록 수정 프로세스 시작");
 		try {
 			// URL 파라미터에서 필요한 정보 추출
 			const { organizationId, activityId, activityInstanceId } = req.params;
@@ -304,21 +281,9 @@ const attendanceController = {
 			// TODO: 실제 인증 시스템 구현 시 이 부분 수정 필요
 			const currentUserId = userId || 1; // 임시 사용자 ID
 
-			// 받은 데이터 로깅 (디버깅 및 모니터링 목적)
-			console.log("📦 받은 데이터:");
-			console.log("- 파라미터:", {
-				organizationId,
-				activityId,
-				activityInstanceId,
-			});
-			console.log("- instanceData:", JSON.stringify(instanceData, null, 2));
-			console.log("- attendances:", JSON.stringify(attendances, null, 2));
-			console.log("- imageInfo:", JSON.stringify(imageInfo, null, 2));
-
 			// 필수 데이터 검증
 			// 활동 인스턴스 ID, 인스턴스 데이터, 출석 정보는 드시 필요
 			if (!activityInstanceId || !instanceData || !attendances) {
-				console.log("❌ 필수 데이터 누락");
 				return res
 					.status(400)
 					.json({ message: "필수 데이터가 누락되었습니다." });
@@ -330,7 +295,6 @@ const attendanceController = {
 				where: { id: activityInstanceId, activity_id: activityId },
 			});
 			if (!activityInstance) {
-				console.log("❌ 활동 인스턴스를 찾을 수 없음");
 				return res
 					.status(404)
 					.json({ message: "활동 인스턴스를 찾을 수 없습니다." });
@@ -338,7 +302,6 @@ const attendanceController = {
 
 			// 활동 인스턴스 정보 업데이트
 			// 프론트엔드에서 전송한 데이터로 인스턴스 정보 갱신
-			console.log("📝 활동 인스턴스 정보 업데이트 중...");
 			await activityInstance.update({
 				start_datetime: instanceData.startDateTime,
 				end_datetime: instanceData.endDateTime,
@@ -347,7 +310,6 @@ const attendanceController = {
 				notes: instanceData.notes || activityInstance.notes,
 				updater_id: currentUserId,
 			});
-			console.log("✅ 활동 인스턴스 정보 업데이트 완료");
 
 			// 이미지 정보 업데이트
 			if (
@@ -356,8 +318,6 @@ const attendanceController = {
 				imageInfo.fileName &&
 				imageInfo.fileType
 			) {
-				console.log("🖼️ 이미지 정보 업데이트 중...");
-
 				// 기존 이미지 정보 조회
 				const existingFile = await models.ActivityInstanceHasFile.findOne({
 					where: { activity_instance_id: activityInstanceId },
@@ -395,17 +355,11 @@ const attendanceController = {
 					creator_ip: req.ip,
 					updater_ip: req.ip,
 				});
-
-				console.log("✅ 이미지 정보 업데이트 완료");
 			}
 
 			// 출석 정보 업데이트
-			console.log("📊 출석 정보 업데이트 중...");
 			const updatedAttendances = await Promise.all(
 				attendances.map(async (attendance) => {
-					console.log(`👤 사용자 출석 처리 (userId: ${attendance.userId}):`);
-					console.log(JSON.stringify(attendance, null, 2));
-
 					// 출석 상태 확인 (대소문자 구분 없이)
 					// AttendanceStatus 테이블에서 해당하는 상태 조회
 					const attendanceStatus = await models.AttendanceStatus.findOne({
@@ -415,7 +369,6 @@ const attendanceController = {
 						),
 					});
 					if (!attendanceStatus) {
-						console.log(`❌ 유효하지 않은 출석 상태: ${attendance.status}`);
 						throw new Error(`유효하지 않은 출석 상태: ${attendance.status}`);
 					}
 
@@ -447,24 +400,17 @@ const attendanceController = {
 							note: attendance.note || attendanceRecord.note,
 							updater_id: currentUserId,
 						});
-					} else {
-						console.log("✨ 새 출석 정보 생성");
 					}
 
 					return attendanceRecord;
 				})
 			);
-			console.log("✅ 출석 정보 업데이트 완료");
 
 			// 활동 인스턴스의 총 출석 수 업데이트
-			console.log("🔢 출석 수 업데이트 중...");
 			await activityInstance.update({
 				attendance_count: updatedAttendances.length,
 				updater_id: currentUserId,
 			});
-			console.log("✅ 출석 수 업데이트 완료");
-
-			console.log("🎉 출석 기록 수정 프로세스 완료");
 
 			// 응답에 이미지 정보 추가
 			const updatedImageInfo = await models.ActivityInstanceHasFile.findOne({
@@ -510,7 +456,6 @@ const attendanceController = {
 			});
 		} catch (error) {
 			// 에러 처리 및 로깅
-			console.error("❌ Error in updateAttendance:", error);
 			res.status(500).json({
 				message: "서버 오류가 발생했습니다.",
 				error: error.message,
@@ -521,7 +466,6 @@ const attendanceController = {
 
 	// 활동 인스턴스 상세 정보 조회
 	getActivityInstanceDetails: async (req, res, next) => {
-		console.log("🚀 활동 인스턴스 상세 정보 조회 시작");
 		try {
 			const { organizationId, activityId, activityInstanceId } = req.params;
 
@@ -565,13 +509,11 @@ const attendanceController = {
 			});
 
 			if (!activityInstance) {
-				console.log("❌ 활동 인스턴스를 찾을 수 없음");
 				return res
 					.status(404)
 					.json({ message: "활동 인스턴스를 찾을 수 없습니다." });
 			}
 
-			console.log("✅ 활동 인스턴스 상세 정보 조회 완료");
 			res.status(200).json({
 				activityInstance: {
 					id: activityInstance.id,
@@ -603,7 +545,6 @@ const attendanceController = {
 				},
 			});
 		} catch (error) {
-			console.error("❌ Error in getActivityInstanceDetails:", error);
 			res.status(500).json({
 				message: "서버 오류가 발생했습니다.",
 				error: error.message,
@@ -614,7 +555,6 @@ const attendanceController = {
 
 	// 조직 멤버 목록 조회
 	getOrganizationMembers: async (req, res, next) => {
-		console.log("🚀 조직 멤버 목록 조회 시작");
 		try {
 			const { organizationId } = req.params;
 
@@ -636,7 +576,6 @@ const attendanceController = {
 				],
 			});
 
-			console.log("✅ 조직 멤버 목록 조회 완료");
 			res.status(200).json({
 				members: organizationMembers.map((member) => ({
 					id: member.User.id,
@@ -649,7 +588,6 @@ const attendanceController = {
 				})),
 			});
 		} catch (error) {
-			console.error("❌ Error in getOrganizationMembers:", error);
 			res.status(500).json({
 				message: "서버 오류가 발생했습니다.",
 				error: error.message,

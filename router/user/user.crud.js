@@ -15,11 +15,15 @@ router.get("/:id", (req, res, next) => {
 });
 
 router.post("", (req, res, next) => {
-	const newUser = req.body;
+	const { userData, organizationId, idOfCreatingUser } = req.body;
 
 	try {
-		const data = userService.createUser(newUser);
-		res.status(201).json({ data: data });
+		const data = userService.createUser(
+			userData,
+			organizationId,
+			idOfCreatingUser
+		);
+		res.status(201).json(data);
 	} catch (error) {
 		next(error);
 	}
