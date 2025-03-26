@@ -16,13 +16,11 @@ import userHasRoleRouter from "./role/user_has_role.js";
 import seasonRouter from "./season/season.js";
 import userRouter from "./user/user.js";
 import visitationRouter from "./visitation/visitation.js";
-const router = Router();
-
-
 
 import CoramdeoController from "./domainCtrl/Coramdeo.Ctrl.js";
 import CurrentMemberCtrl from "./domainCtrl/CurrentMember.Ctrl.js";
 
+const router = Router();
 
 router.use("/users", userRouter);
 router.use("/activity-categories", activityCategoryRouter);

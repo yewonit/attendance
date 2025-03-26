@@ -98,6 +98,7 @@ const CurrentMemberCtrl = {
 				where: {
 					name: userData.name,
 					phone_number: formatPhoneNumber(userData.phone_number),
+					is_deleted: "N",
 				},
 			});
 			if (userExists) {
