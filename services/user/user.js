@@ -107,7 +107,9 @@ const userService = {
 
 	updateUser: async (id, user) => {
 		const exist = await models.User.findOne({
-			id: id,
+			where: {
+				id: id,
+			},
 		});
 		if (!exist) throw new NotFoundError("해당 id로 유저를 찾을 수 없습니다.");
 
@@ -120,7 +122,9 @@ const userService = {
 			}
 
 			const sameEmailExists = await models.User.findOne({
-				email: user.email,
+				where: {
+					email: user.email,
+				},
 			});
 			if (sameEmailExists) {
 				throw new DataConflictError(
