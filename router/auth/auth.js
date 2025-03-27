@@ -37,12 +37,14 @@ router.post("/login", async (req, res, next) => {
 
 router.get("/login", async (req, res, next) => {
 	const bearerAccessToken = req.header("Authorization");
-	const { type, accessToken } = bearerAccessToken.split(" ");
+	const accessToken = bearerAccessToken.split(" ")[1];
 	try {
 		const data = await verifyWithToken(accessToken);
 		const userData = await models.User.findOne({
-			email: data.email,
-			name: data.name,
+			where: {
+				email: data.email,
+				name: data.name,
+			},
 		});
 		res.json({
 			user: userData,

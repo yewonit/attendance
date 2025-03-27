@@ -3,7 +3,7 @@ import { post } from "../../utils/request.js";
 
 const loginWithEmailAndPassword = async (email, name) => {
 	const path = "/v1/token";
-	const response = await post(path, {}, { email: email, name: name });
+	const response = await post(path, {}, { email, name });
 	if (!response.status) return response;
 	else if (response.status === 400) throw new ValidationError(response.message);
 	else if (response.status === 401)
@@ -13,7 +13,7 @@ const loginWithEmailAndPassword = async (email, name) => {
 
 const verifyWithToken = async (accessToken) => {
 	const path = "/v1/verify";
-	const response = await post(path, {}, { accessToken: accessToken });
+	const response = await post(path, {}, { accessToken });
 	if (!response.status) return response;
 	else if (response.status === 400) throw new ValidationError(response.message);
 	else if (response.status === 401)
@@ -23,7 +23,7 @@ const verifyWithToken = async (accessToken) => {
 
 const refreshWithToken = async (refreshToken) => {
 	const path = "/v1/refresh";
-	const response = await post(path, {}, { refreshToken: refreshToken });
+	const response = await post(path, {}, { refreshToken });
 	if (!response.status) return response;
 	else if (response.status === 400) throw new ValidationError(response.message);
 	else if (response.status === 401)
@@ -33,7 +33,7 @@ const refreshWithToken = async (refreshToken) => {
 
 const sendVerifyEmail = async (email) => {
 	const path = "/v1/mail/code";
-	const response = await post(path, {}, { email: email });
+	const response = await post(path, {}, { email });
 	if (!response.status) return response;
 	else if (response.status === 400) throw new ValidationError(response.message);
 	else if (response.status === 401)
@@ -43,7 +43,7 @@ const sendVerifyEmail = async (email) => {
 
 const verifyEmailCode = async (email, code) => {
 	const path = "/v1/mail/verify";
-	const response = await post(path, {}, { email: email, code: code });
+	const response = await post(path, {}, { email, code });
 	if (!response.status) return response;
 	else if (response.status === 400) throw new ValidationError(response.message);
 	else if (response.status === 401)
