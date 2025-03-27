@@ -8,8 +8,26 @@ import {
 	verifyWithToken,
 } from "../../services/auth/auth.js";
 import { AuthenticationError, ValidationError } from "../../utils/errors.js";
+import userService from "../../services/user/user.js";
 
 const router = Router();
+
+router.post("/register", async (req, res, next) => {
+	const { id, email, password } = req.body;
+	if (!id || !email || !password)
+		next(
+			new ValidationError(
+				`필수 값이 누락되었습니다. id: ${id}, email: ${email}, password: ${password}`
+			)
+		);
+
+	try {
+		const updated = await userService.setEmailAndPassword(id, email, password);
+		res.status(200).json(updated);
+	} catch (error) {
+		next(error);
+	}
+});
 
 router.post("/login", async (req, res, next) => {
 	const { email, password } = req.body;
