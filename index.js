@@ -9,6 +9,7 @@ import {
 	requestLogger,
 	setupGlobalLogging,
 } from "./middleware/logging.js";
+import authRouter from "./router/auth/auth.js";
 import router from "./router/apigateway.js";
 import { initDatabase } from "./utils/database.js";
 import { NotFoundError } from "./utils/errors.js";
@@ -32,6 +33,7 @@ app.use(requestLogger);
 
 // router 적용
 app.use(healthCheck);
+app.use("/auth", authRouter);
 app.use("/api", router);
 
 app.use(errorLogger);
