@@ -114,38 +114,51 @@ const userService = {
 		if (!exist) throw new NotFoundError("해당 id로 유저를 찾을 수 없습니다.");
 
 		if (user.email) {
-			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-			if (!emailRegex.test(user.email)) {
-				throw new ValidationError(
-					`이메일이 형식에 맞지 않습니다. email: ${user.email}`
-				);
-			}
-
-			const sameEmailExists = await models.User.findOne({
-				where: {
-					email: user.email,
-				},
-			});
-			if (sameEmailExists) {
-				throw new DataConflictError(
-					"이미 같은 email로 등록된 유저가 있습니다."
-				);
-			}
+			await emailCheck(user.email);
 		}
 
 		if (user.password) {
+			passwordCheck(user.password);
 			user.password = Buffer.from(user.password).toString("base64");
 		}
 
 		if (user.phone_number) {
-			user.phhone_number = formatPhoneNumber(user.phone_number);
+			user.phone_number = formatPhoneNumber(user.phone_number);
 		}
 
 		const [updated] = await models.User.update(user, {
 			where: { id: id },
 		});
 
-		if (updated) return updated;
+		return updated;
+	},
+
+	setEmailAndPassword: async (id, email, password) => {
+		const exist = await models.User.findOne({
+			where: {
+				id: id,
+			},
+		});
+		if (!exist) throw new NotFoundError("해당 id로 유저를 찾을 수 없습니다.");
+		if (exist.email || exist.password)
+			throw new ValidationError("이미 이메일과 패스워드가 등록되어있습니다.");
+
+		await emailCheck(email);
+		passwordCheck(password);
+		const encodedPassword = Buffer.from(password).toString("base64");
+
+		const [updated] = await models.User.update(
+			{
+				id,
+				email,
+				encodedPassword,
+			},
+			{
+				where: { id: id },
+			}
+		);
+
+		return updated;
 	},
 
 	deleteUser: crudService.delete(models.User),
@@ -243,6 +256,30 @@ const userService = {
 
 const formatPhoneNumber = (phoneNumber) => {
 	return phoneNumber.replaceAll(" ", "").replaceAll("-", "");
+};
+
+const emailCheck = async (email) => {
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	if (!emailRegex.test(email)) {
+		throw new ValidationError(`이메일이 형식에 맞지 않습니다. email: ${email}`);
+	}
+
+	const sameEmailExists = await models.User.findOne({
+		where: {
+			email: email,
+		},
+	});
+	if (sameEmailExists) {
+		throw new DataConflictError("이미 같은 email로 등록된 유저가 있습니다.");
+	}
+};
+
+const passwordCheck = (password) => {
+	const passwordRegex =
+		/^(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[a-zA-Z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
+	if (!passwordRegex.test(password)) {
+		throw new ValidationError("패스워드가 형식에 맞지 않습니다.");
+	}
 };
 
 export default userService;
