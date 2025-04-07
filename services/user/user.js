@@ -1,4 +1,5 @@
 // User.Ctrl.js
+import { Sequelize, Op } from "sequelize";
 import models from "../../models/models.js";
 import {
 	DataConflictError,
@@ -251,6 +252,81 @@ const userService = {
 		};
 
 		return userData;
+	},
+
+	searchMembersByName: async (name) => {
+		if (!name) {
+			const error = new Error("이름이 제공되지 않았습니다.");
+			error.status = 400;
+			throw error;
+		}
+		
+		const decodedName = decodeURIComponent(name);
+		
+		// 사용자 테이블에서 이름으로 검색 - Op.like 직접 사용
+		const users = await models.User.findAll({
+			where: {
+				name: {
+					[Op.like]: `%${decodedName}%`
+				},
+				is_deleted: "N"
+			},
+			attributes: { exclude: ["password"] }
+		});
+		
+		if (users.length === 0) {
+			return [];
+		}
+		
+		// 각 사용자의 역할 및 조직 정보 조회
+		const formattedMembers = await Promise.all(users.map(async (user) => {
+			// 사용자의 역할 및 조직 정보 조회
+			const userHasRoles = await models.UserHasRole.findAll({
+				where: { 
+					user_id: user.id,
+					is_deleted: "N"
+				}
+			});
+			
+			// 역할 및 조직 정보 개별 조회
+			const organizations = await Promise.all(
+				userHasRoles.map(async (userRole) => {
+					const role = await models.Role.findOne({
+						where: { id: userRole.role_id },
+						attributes: ["id", "role_name"]
+					});
+					
+					const organization = await models.Organization.findOne({
+						where: { id: userRole.organization_id },
+						attributes: ["id", "organization_name"]
+					});
+					
+					return {
+						organizationName: organization ? organization.organization_name : null,
+						organizationId: organization ? organization.id : null,
+						roleName: role ? role.role_name : null
+					};
+				})
+			);
+			
+			// 소속 국 정보 추출 (조직 이름에서 "국"이 포함된 경우)
+			const department = organizations.find(org => 
+				org.organizationName && org.organizationName.includes('국')
+			);
+		
+			
+			
+			return {
+				id: user.id,
+				name: user.name,
+				phoneNumber: user.phone_number,
+				department: department ? department.organizationName : null,
+				organizations: organizations,
+				isNewMember: user.is_new_member === 'Y',
+			};
+		}));
+		
+		return formattedMembers;
 	},
 };
 
