@@ -2,19 +2,21 @@ import bodyParser from "body-parser";
 import compression from "compression";
 import cors from "cors";
 import express from "express";
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpecs from './config/swagger.js';
 
 import healthCheck from "./healthcheck.js";
+import globalError from "./middleware/global_error.js";
 import {
 	errorLogger,
 	requestLogger,
 	setupGlobalLogging,
 } from "./middleware/logging.js";
-import authRouter from "./router/auth/auth.js";
 import router from "./router/apigateway.js";
+import authRouter from "./router/auth/auth.js";
 import { initDatabase } from "./utils/database.js";
 import { NotFoundError } from "./utils/errors.js";
 import logger from "./utils/logger.js";
-import globalError from "./middleware/global_error.js";
 
 const app = express();
 
@@ -27,6 +29,9 @@ app.use(compression());
 
 // cors: 크로스오리진 지원, 모든 출처 허용 설정
 app.use(cors());
+
+// Swagger UI 설정
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 // 로깅 미들웨어 추가
 app.use(requestLogger);
