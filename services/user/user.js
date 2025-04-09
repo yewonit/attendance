@@ -151,7 +151,7 @@ const userService = {
 			{
 				id,
 				email,
-				encodedPassword,
+				password: encodedPassword,
 			},
 			{
 				where: { id: id },
