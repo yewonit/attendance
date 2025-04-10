@@ -3,6 +3,7 @@
 import models from "../../models/models.js";
 import crudService from "../common/crud.js";
 import { NotFoundError } from "../../utils/errors.js";
+import { Op } from "sequelize";
 
 // 📝 조직 정보 유효성 검사 함수
 const validateOrganizationData = async (data) => {
@@ -18,6 +19,28 @@ const validateOrganizationData = async (data) => {
 	}
 	// ✅ 추가 유효성 검사 로직
 	// 추가적인 유효성 검사 로직을 구현할 수 있습니다.
+};
+
+const getMembersById = async (organizationId) => {
+	const organizationMembers = await models.UserHasRole.findAll({
+		where: {
+			organization_id: organizationId,
+			is_deleted: "N",
+		},
+		include: [
+			{
+				model: models.User,
+				attributes: ["id", "name", "email", "phone_number"],
+				where: { is_deleted: "N" },
+			},
+			{
+				model: models.Role,
+				attributes: ["id", "role_name"],
+			},
+		],
+	});
+
+	return organizationMembers;
 };
 
 // 📦 조직 관련 컨트롤러 모듈
@@ -43,10 +66,10 @@ const organizationService = {
 	// 🗑️ 조직 삭제
 	deleteOrganization: crudService.delete(models.Organization),
 
-	// 🎨 추가 조직 관련 기능 예시
-	// 여기에 추가적인 조직 관련 기능을 구현할 수 있습니다.
+	// 조직 멤버 목록 조회
+	getOrganizationMembers: async (organizationId) =>
+		await getMembersById(organizationId),
 
-	// organizationController 객체에 새로운 메서드를 추가합니다:
 	getOrganizationActivities: async (organizationId) => {
 		if (!organizationId) {
 			throw new Error("조직 ID가 제공되지 않았습니다.");
@@ -150,7 +173,53 @@ const organizationService = {
 			organizationId: organization.id,
 			organizationName: organization.organization_name,
 			activities: activitiesData,
-		}
+		};
+	},
+	getCurrentSeasonCoramdeoOrg: async (seasonId) => {
+		const coramdeo = await models.Organization.findOne({
+			where: {
+				season_id: seasonId,
+				organization_code: "CORAMDEO",
+			},
+		});
+
+		return coramdeo;
+	},
+	getUnderOrganizationById: async (parentId) => {
+		const orgs = await models.Organization.findAll({
+			where: {
+				upper_organization_id: parentId,
+			},
+		});
+
+		return orgs;
+	},
+	getUnderOrganizationByIdWithMembers: async (parentId) => {
+		const orgs = await models.Organization.findAll({
+			where: {
+				upper_organization_id: parentId,
+			},
+		});
+
+		const orgsWithMembers = await Promise.all(
+			orgs.map(async (org) => {
+				const members = await getMembersById(org.id);
+				const formattedMembers = members.map((member) => ({
+					id: member.user_id,
+					name: member.User.name,
+					email: member.User.email,
+					phoneNumber: member.User.phone_number,
+					role: member.Role.role_name,
+				}));
+
+				return {
+					...org.toJSON(),
+					members: formattedMembers,
+				};
+			})
+		);
+
+		return orgsWithMembers;
 	},
 };
 
