@@ -3,6 +3,7 @@ import models from "../../models/models.js";
 import {
 	loginWithEmailAndPassword,
 	refreshWithToken,
+	resetPassword,
 	sendVerifyEmail,
 	verifyEmailCode,
 	verifyWithToken,
@@ -98,6 +99,16 @@ router.post("/verify", async (req, res, next) => {
 		const isVerified = await verifyEmailCode(email, code);
 		if (isVerified) res.status(200).json(isVerified);
 		else throw new AuthenticationError("이메일 검증에 실패했습니다.");
+	} catch (error) {
+		next(error);
+	}
+});
+
+router.post("/reset-password", async (req, res, next) => {
+	const { name, phoneNumber } = req.body;
+	try {
+		const result = await resetPassword(name, phoneNumber);
+		res.status(200).json(result);
 	} catch (error) {
 		next(error);
 	}
