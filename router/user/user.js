@@ -102,6 +102,37 @@ router.post("/phone-number", async (req, res, next) => {
 	}
 });
 
+// 이름으로 회원 검색 API 추가
+router.get("/search", async (req, res, next) => {
+	try {
+		const { name } = req.query;
+		
+		if (!name) {
+			return res.status(400).json({ 
+				success: false, 
+				message: "이름을 입력해주세요." 
+			});
+		}
+		
+		const members = await userService.searchMembersByName(name);
+		
+		if (members.length === 0) {
+			return res.status(404).json({
+				success: false,
+				message: "해당 이름의 교인이 없습니다."
+			});
+		}
+		
+		return res.status(200).json({
+			success: true,
+			data: members
+		});
+		
+	} catch (error) {
+		next(error);
+	}
+});
+
 // CRUD 라우터는 마지막에 통합
 router.use("/", userCrudRouter);
 
