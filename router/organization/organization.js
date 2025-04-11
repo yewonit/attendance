@@ -2,6 +2,7 @@ import { Router } from "express";
 import organizationService from "../../services/organization/organization.js";
 import DomainAttendanceCtrl from "../domainCtrl/DomainAttendance.Ctrl.js";
 import organizationCrudRouter from "./organization.crud.js";
+import { getCurrentSeasonId } from "../../utils/season.js";
 
 const router = Router();
 
@@ -354,15 +355,185 @@ const router = Router();
  *         description: 서버 오류가 발생했습니다.
  */
 
+/**
+ * @swagger
+ * /api/organizations/coramdeo/members:
+ *   get:
+ *     summary: 현재 회기의 모든 그룹 조직 및 멤버 조회
+ *     description: 현재 회기의 모든 그룹 조직과 멤버를 조회합니다
+ *     tags: [Organizations]
+ *     responses:
+ *       200:
+ *         description: 성공적으로 리스트를 조회했습니다.
+ *       500:
+ *         description: 서버 오류가 발생했습니다.
+ */
+
+router.get("/coramdeo/members", async (req, res, next) => {
+	const seasonId = getCurrentSeasonId();
+	try {
+		const coramdeo = await organizationService.getCurrentSeasonCoramdeoOrg(
+			seasonId
+		);
+		const gooks = await organizationService.getUnderOrganizationById(
+			coramdeo.id
+		);
+		const gookWithGroup = await Promise.all(
+			gooks.map(async (gook) => {
+				const groups = await organizationService.getUnderOrganizationById(
+					gook.id
+				);
+				const groupWithMembers = await Promise.all(
+					groups.map(async (group) => {
+						return await organizationService.getUnderOrganizationByIdWithMembers(
+							group.id
+						);
+					})
+				);
+				return {
+					...gook.toJSON(),
+					groups: groupWithMembers,
+				};
+			})
+		);
+
+		res.status(200).json(gookWithGroup);
+	} catch (error) {
+		next(error);
+	}
+});
+
+/**
+ * @swagger
+ * /api/organizations/gooks:
+ *   get:
+ *     summary: 현재 회기의 국 리스트 조회
+ *     description: 현재 회기 또는 특정 연도의 국 리스트를 조회합니다.
+ *     tags: [Organizations]
+ *     parameters:
+ *       - in: query
+ *         name: year
+ *         schema:
+ *           type: integer
+ *         description: 조회할 연도 (선택사항)
+ *     responses:
+ *       200:
+ *         description: 성공적으로 국 리스트를 조회했습니다.
+ *       500:
+ *         description: 서버 오류가 발생했습니다.
+ */
+
+// 현재 회기 또는 원하는 회기의 국 리스트 반환
+router.get("/gooks", async (req, res, next) => {
+	let year = req.query.year;
+	let seasonId;
+	if (!year) seasonId = getCurrentSeasonId();
+	else seasonId = getCurrentSeasonId(new Date(year, 1, 1));
+
+	try {
+		const coramdeo = await organizationService.getCurrentSeasonCoramdeoOrg(
+			seasonId
+		);
+		const gooks = await organizationService.getUnderOrganizationById(
+			coramdeo.id
+		);
+		res.status(200).json(gooks);
+	} catch (error) {
+		next(error);
+	}
+});
+
+/**
+ * @swagger
+ * /api/organizations/groups:
+ *   get:
+ *     summary: 국에 소속된 그룹 조회
+ *     description: 특정 국에 소속된 모든 그룹을 조회합니다.
+ *     tags: [Organizations]
+ *     parameters:
+ *       - in: query
+ *         name: gookId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 국 ID
+ *     responses:
+ *       200:
+ *         description: 성공적으로 그룹 리스트를 조회했습니다.
+ *       500:
+ *         description: 서버 오류가 발생했습니다.
+ */
+
+// 국에 소속된 그룹 반환
+router.get("/groups", async (req, res, next) => {
+	const gookId = req.query.gookId;
+	try {
+		const groups = await organizationService.getUnderOrganizationById(gookId);
+		res.status(200).json(groups);
+	} catch (error) {
+		next(error);
+	}
+});
+
+/**
+ * @swagger
+ * /api/organizations/groups/members:
+ *   get:
+ *     summary: 그룹의 순과 멤버 조회
+ *     description: 특정 그룹에 소속된 모든 순과 각 순의 멤버들을 조회합니다.
+ *     tags: [Organizations]
+ *     parameters:
+ *       - in: query
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 그룹 ID
+ *     responses:
+ *       200:
+ *         description: 성공적으로 순과 멤버 정보를 조회했습니다.
+ *       500:
+ *         description: 서버 오류가 발생했습니다.
+ */
+
+// 그룹에 소속된 순과 각 순의 멤버들 반환
+router.get("/groups/members", async (req, res, next) => {
+	const groupId = req.query.groupId;
+	try {
+		const groupMembers =
+			await organizationService.getUnderOrganizationByIdWithMembers(groupId);
+		res.status(200).json(groupMembers);
+	} catch (error) {
+		next(error);
+	}
+});
+
 router.use("/", organizationCrudRouter);
 
 // TODO - DomainAttendanceCtrl service로 분리 필요
 
 // 조직 멤버 목록 조회
-router.get(
-	"/:organizationId/members",
-	DomainAttendanceCtrl.getOrganizationMembers
-);
+router.get("/:id/members", async (req, res, next) => {
+	const organizationId = req.params.id;
+	try {
+		const organizationMembers =
+			await organizationService.getOrganizationMembers(organizationId);
+
+		res.status(200).json({
+			members: organizationMembers.map((member) => ({
+				id: member.User.id,
+				name: member.User.name,
+				email: member.User.email,
+				roleId: member.Role.id,
+				roleName: member.Role.role_name,
+				roleStartDate: member.role_start_date,
+				roleEndDate: member.role_end_date,
+			})),
+		});
+	} catch (error) {
+		next(error);
+	}
+});
 
 router.get("/:id/activities", async (req, res, next) => {
 	const organizationId = req.params.id;
