@@ -33,21 +33,26 @@ router.post("/register", async (req, res, next) => {
 router.post("/login", async (req, res, next) => {
 	const { email, password } = req.body;
 	try {
-		const userData = await models.User.findOne({
+		const user = await models.User.findOne({
 			where: {
 				email: email,
 			},
 		});
-		if (!userData)
+		if (!user)
 			throw new ValidationError("해당 이메일로 유저를 찾을 수 없습니다.");
-		if (userData.password !== Buffer.from(password).toString("base64"))
+		if (user.password !== Buffer.from(password).toString("base64"))
 			throw new AuthenticationError("패스워드가 일치하지 않습니다.");
 
-		const tokens = await loginWithEmailAndPassword(email, userData.name);
+		const tokens = await loginWithEmailAndPassword(email, user.name);
+		const userData = await userService.checkUserPhoneNumber(
+			user.name,
+			user.phone_number
+		);
+		delete user.password;
 
 		res.status(200).json({
 			tokens: tokens,
-			user: userData,
+			userData: userData,
 		});
 	} catch (error) {
 		next(error);
