@@ -10,6 +10,7 @@ import {
 } from "../../services/auth/auth.js";
 import { AuthenticationError, ValidationError } from "../../utils/errors.js";
 import userService from "../../services/user/user.js";
+import { hashPassword } from "../../utils/password.js";
 
 const router = Router();
 
@@ -40,7 +41,8 @@ router.post("/login", async (req, res, next) => {
 		});
 		if (!user)
 			throw new ValidationError("해당 이메일로 유저를 찾을 수 없습니다.");
-		if (user.password !== Buffer.from(password).toString("base64"))
+		const hashedPassword = await hashPassword(password);
+		if (user.password !== hashedPassword)
 			throw new AuthenticationError("패스워드가 일치하지 않습니다.");
 
 		const tokens = await loginWithEmailAndPassword(email, user.name);

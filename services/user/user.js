@@ -7,6 +7,7 @@ import {
 	ValidationError,
 } from "../../utils/errors.js";
 import crudService from "../common/crud.js";
+import { hashPassword } from "../../utils/password.js";
 
 const validateUserInfo = async (data) => {
 	if (!data.name) {
@@ -120,7 +121,7 @@ const userService = {
 
 		if (user.password) {
 			passwordCheck(user.password);
-			user.password = Buffer.from(user.password).toString("base64");
+			user.password = await hashPassword(user.password);
 		}
 
 		if (user.phone_number) {
@@ -146,7 +147,7 @@ const userService = {
 
 		await emailCheck(email);
 		passwordCheck(password);
-		const encodedPassword = Buffer.from(password).toString("base64");
+		const encodedPassword = await hashPassword(password);
 
 		const [updated] = await models.User.update(
 			{
