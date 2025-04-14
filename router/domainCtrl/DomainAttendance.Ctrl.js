@@ -15,11 +15,9 @@ const attendanceController = {
 
 			// 필수 데이터 검증
 			if (!activityId || !instanceData || !attendances) {
-				return res
-					.status(400)
-					.json({
-						message: `필수 데이터가 누락되었습니다. activityId: ${activityId}, instanceData: ${instanceData}, attendances: ${attendances}`,
-					});
+				return res.status(400).json({
+					message: `필수 데이터가 누락되었습니다. activityId: ${activityId}, instanceData: ${instanceData}, attendances: ${attendances}`,
+				});
 			}
 
 			// instanceData 필드 검증
@@ -543,49 +541,6 @@ const attendanceController = {
 						})
 					),
 				},
-			});
-		} catch (error) {
-			res.status(500).json({
-				message: "서버 오류가 발생했습니다.",
-				error: error.message,
-				stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
-			});
-		}
-	},
-
-	// 조직 멤버 목록 조회
-	getOrganizationMembers: async (req, res, next) => {
-		try {
-			const { organizationId } = req.params;
-
-			const organizationMembers = await models.UserHasRole.findAll({
-				where: {
-					organization_id: organizationId,
-					is_deleted: "N",
-				},
-				include: [
-					{
-						model: models.User,
-						attributes: ["id", "name", "email"],
-						where: { is_deleted: "N" },
-					},
-					{
-						model: models.Role,
-						attributes: ["id", "role_name"],
-					},
-				],
-			});
-
-			res.status(200).json({
-				members: organizationMembers.map((member) => ({
-					id: member.User.id,
-					name: member.User.name,
-					email: member.User.email,
-					roleId: member.Role.id,
-					roleName: member.Role.role_name,
-					roleStartDate: member.role_start_date,
-					roleEndDate: member.role_end_date,
-				})),
 			});
 		} catch (error) {
 			res.status(500).json({

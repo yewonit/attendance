@@ -3,12 +3,14 @@ import models from "../../models/models.js";
 import {
 	loginWithEmailAndPassword,
 	refreshWithToken,
+	resetPassword,
 	sendVerifyEmail,
 	verifyEmailCode,
 	verifyWithToken,
 } from "../../services/auth/auth.js";
 import { AuthenticationError, ValidationError } from "../../utils/errors.js";
 import userService from "../../services/user/user.js";
+import { hashPassword } from "../../utils/password.js";
 
 const router = Router();
 
@@ -32,21 +34,27 @@ router.post("/register", async (req, res, next) => {
 router.post("/login", async (req, res, next) => {
 	const { email, password } = req.body;
 	try {
-		const userData = await models.User.findOne({
+		const user = await models.User.findOne({
 			where: {
 				email: email,
 			},
 		});
-		if (!userData)
+		if (!user)
 			throw new ValidationError("해당 이메일로 유저를 찾을 수 없습니다.");
-		if (userData.password !== Buffer.from(password).toString("base64"))
+		const hashedPassword = await hashPassword(password);
+		if (user.password !== hashedPassword)
 			throw new AuthenticationError("패스워드가 일치하지 않습니다.");
 
-		const tokens = await loginWithEmailAndPassword(email, userData.name);
+		const tokens = await loginWithEmailAndPassword(email, user.name);
+		const userData = await userService.checkUserPhoneNumber(
+			user.name,
+			user.phone_number
+		);
+		delete user.password;
 
 		res.status(200).json({
 			tokens: tokens,
-			user: userData,
+			userData: userData,
 		});
 	} catch (error) {
 		next(error);
@@ -98,6 +106,16 @@ router.post("/verify", async (req, res, next) => {
 		const isVerified = await verifyEmailCode(email, code);
 		if (isVerified) res.status(200).json(isVerified);
 		else throw new AuthenticationError("이메일 검증에 실패했습니다.");
+	} catch (error) {
+		next(error);
+	}
+});
+
+router.post("/reset-password", async (req, res, next) => {
+	const { name, phoneNumber } = req.body;
+	try {
+		const result = await resetPassword(name, phoneNumber);
+		res.status(200).json(result);
 	} catch (error) {
 		next(error);
 	}

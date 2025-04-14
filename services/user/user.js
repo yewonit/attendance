@@ -1,4 +1,5 @@
 // User.Ctrl.js
+import { Sequelize, Op } from "sequelize";
 import models from "../../models/models.js";
 import {
 	DataConflictError,
@@ -6,6 +7,7 @@ import {
 	ValidationError,
 } from "../../utils/errors.js";
 import crudService from "../common/crud.js";
+import { hashPassword } from "../../utils/password.js";
 
 const validateUserInfo = async (data) => {
 	if (!data.name) {
@@ -119,7 +121,7 @@ const userService = {
 
 		if (user.password) {
 			passwordCheck(user.password);
-			user.password = Buffer.from(user.password).toString("base64");
+			user.password = await hashPassword(user.password);
 		}
 
 		if (user.phone_number) {
@@ -145,7 +147,7 @@ const userService = {
 
 		await emailCheck(email);
 		passwordCheck(password);
-		const encodedPassword = Buffer.from(password).toString("base64");
+		const encodedPassword = await hashPassword(password);
 
 		const [updated] = await models.User.update(
 			{
@@ -251,6 +253,77 @@ const userService = {
 		};
 
 		return userData;
+	},
+
+	searchMembersByName: async (name) => {
+		if (!name) {
+			const error = new Error("이름이 제공되지 않았습니다.");
+			error.status = 400;
+			throw error;
+		}
+
+		const decodedName = decodeURIComponent(name);
+
+		// 사용자 테이블에서 이름으로 검색 - Op.like 직접 사용
+		const users = await models.User.findAll({
+			where: {
+				name: {
+					[Op.like]: `%${decodedName}%`,
+				},
+				is_deleted: "N",
+			},
+			attributes: { exclude: ["password"] },
+		});
+
+		if (users.length === 0) {
+			return [];
+		}
+
+		// 각 사용자의 역할 및 조직 정보 조회
+		const formattedMembers = await Promise.all(
+			users.map(async (user) => {
+				// 사용자의 역할 및 조직 정보 조회
+				const userHasRoles = await models.UserHasRole.findAll({
+					where: {
+						user_id: user.id,
+						is_deleted: "N",
+					},
+				});
+
+				// 역할 및 조직 정보 개별 조회
+				const organizations = await Promise.all(
+					userHasRoles.map(async (userRole) => {
+						const role = await models.Role.findOne({
+							where: { id: userRole.role_id },
+							attributes: ["id", "role_name"],
+						});
+
+						const organization = await models.Organization.findOne({
+							where: { id: userRole.organization_id },
+							attributes: ["id", "organization_name"],
+						});
+
+						return {
+							organizationName: organization
+								? organization.organization_name
+								: null,
+							organizationId: organization ? organization.id : null,
+							roleName: role ? role.role_name : null,
+						};
+					})
+				);
+
+				return {
+					id: user.id,
+					name: user.name,
+					phoneNumber: user.phone_number,
+					organizations: organizations,
+					isNewMember: user.is_new_member === "Y",
+				};
+			})
+		);
+
+		return formattedMembers;
 	},
 };
 
