@@ -1,7 +1,9 @@
 import OrganizationModel from "../organization/organization.js";
+import PermissionGroupModel from "../permission/permission_group.js";
 
 export default (sequelize, Sequelize) => {
 	const Organization = OrganizationModel(sequelize, Sequelize);
+	const PermissionGroup = PermissionGroupModel(sequelize, Sequelize);
 
 	return sequelize.define(
 		"Role",
@@ -31,6 +33,15 @@ export default (sequelize, Sequelize) => {
 				allowNull: false,
 				defaultValue: "N",
 				comment: "삭제 여부 (Y: 삭제됨, N: 활성 상태)",
+			},
+			permission_group_id: {
+				type: Sequelize.INTEGER,
+				allowNull: true,
+				comment: "권한 그룹 id",
+				references: {
+					model: PermissionGroup,
+					key: "id",
+				},
 			},
 			created_at: {
 				type: Sequelize.DATE,
