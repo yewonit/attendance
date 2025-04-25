@@ -121,4 +121,14 @@ router.post("/reset-password", async (req, res, next) => {
 	}
 });
 
+router.post("/check-email", async (req, res, next) => {
+	const { email } = req.params;
+	try {
+		await userService.emailDuplicationCheck(email);
+		res.status(200);
+	} catch (error) {
+		next(error);
+	}
+});
+
 export default router;
