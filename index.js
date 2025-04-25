@@ -2,8 +2,8 @@ import bodyParser from "body-parser";
 import compression from "compression";
 import cors from "cors";
 import express from "express";
-import swaggerUi from 'swagger-ui-express';
-import swaggerSpecs from './config/swagger.js';
+import swaggerUi from "swagger-ui-express";
+import swaggerSpecs from "./config/swagger.js";
 
 import healthCheck from "./healthcheck.js";
 import globalError from "./middleware/global_error.js";
@@ -31,23 +31,25 @@ app.use(compression());
 app.use(cors());
 
 // Swagger UI 설정
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
-// 로깅 미들웨어 추가
-app.use(requestLogger);
+// 로깅 미들웨어 제거 (전역 적용 대신 각 라우터에 개별 적용)
+// app.use(requestLogger);
 
-// router 적용
+// router 적용 - 각 라우터에 requestLogger 적용
 app.use(healthCheck);
-app.use("/auth", authRouter);
-app.use("/api", router);
+app.use("/auth", requestLogger, authRouter);
+app.use("/api", requestLogger, router);
 
+// 에러 로깅 미들웨어는 유지
 app.use(errorLogger);
 
 app.use(globalError);
 
-// 404 에러 핸들러
-app.use((req, res, next) => {
-	next(new NotFoundError("요청하신 리소스를 찾을 수 없습니다."));
+// 404 에러 핸들러 수정
+app.use((req, res) => {
+	// NotFoundError를 발생시키는 대신 직접 404 응답을 보냄
+	res.status(404).send("404 not found");
 });
 
 // 서버 시작
