@@ -2,30 +2,14 @@ import logger from "../utils/logger.js";
 
 // HTTP 요청 로깅 미들웨어
 const requestLogger = (req, res, next) => {
-	const start = Date.now();
-
 	// 응답이 완료되면 로깅
 	res.on("finish", () => {
-		const duration = Date.now() - start;
-		const logData = {
-			method: req.method,
-			path: req.originalUrl, // req.path 대신 originalUrl 사용
-			query: Object.keys(req.query).length ? req.query : undefined, // 빈 객체 제외
-			duration: `${duration}ms`,
-			status: res.statusCode,
-			userAgent: req.get("user-agent"),
-			ip: req.ip || req.connection.remoteAddress,
-			userId: req.user?.id,
-		};
+		// 로그 데이터를 객체 대신 문자열 한 줄로 구성
+		const logMessage = `${req.method} ${req.originalUrl} ${res.statusCode}${
+			Object.keys(req.query).length ? " query:" + JSON.stringify(req.query) : ""
+		}`;
 
-		// 불필요한 undefined 값 제거
-		Object.keys(logData).forEach(
-			(key) => logData[key] === undefined && delete logData[key]
-		);
-
-		if (!res.statusCode >= 400) {
-			logger.info("HTTP 요청 완료", logData);
-		}
+		logger.info(logMessage);
 	});
 
 	next();
@@ -33,8 +17,10 @@ const requestLogger = (req, res, next) => {
 
 // 에러 로깅 미들웨어
 const errorLogger = (err, req, res, next) => {
+	const now = Date.now();
 	try {
 		const logData = {
+			timestamp: now,
 			name: err.name,
 			message: err.message,
 			status: err.status || 500,

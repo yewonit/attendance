@@ -325,6 +325,10 @@ const userService = {
 
 		return formattedMembers;
 	},
+
+	emailDuplicationCheck: async (email) => {
+		await emailCheck(email);
+	},
 };
 
 const formatPhoneNumber = (phoneNumber) => {
