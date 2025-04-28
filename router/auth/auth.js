@@ -122,10 +122,10 @@ router.post("/reset-password", async (req, res, next) => {
 });
 
 router.get("/check-email", async (req, res, next) => {
-	const email = req.params;
+	const email = req.query.email;
 	try {
 		await userService.emailDuplicationCheck(email);
-		res.status(200);
+		res.status(200).json({ message: "이메일 사용 가능", email });
 	} catch (error) {
 		next(error);
 	}
