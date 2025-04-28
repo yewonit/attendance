@@ -55,5 +55,5 @@ jobs:
             docker rm attendance-dev
             docker rmi coramdeoyouth/attendance:dev
             docker pull coramdeoyouth/attendance:dev
-            docker run -d -p 3001:3000 --name attendance-dev --network auth-net -e NODE_ENV=development --restart unless-stopped coramdeoyouth/attendance:dev
+            docker run -i -t --log-driver=awslogs --log-opt awslogs-region=ap-northeast-2 --log-opt awslogs-group=attendance --log-opt awslogs-stream=dev -d -p 3001:3000 --name attendance-dev --network auth-net -e NODE_ENV=development --restart unless-stopped coramdeoyouth/attendance:dev
           EOF
