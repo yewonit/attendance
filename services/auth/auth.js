@@ -1,4 +1,4 @@
-import { AuthenticationError, ValidationError } from "../../utils/errors.js";
+import { AuthenticationError, NotFoundError, ValidationError } from "../../utils/errors.js";
 import { post } from "../../utils/request.js";
 import userService from "../user/user.js";
 
@@ -52,64 +52,22 @@ const verifyEmailCode = async (email, code) => {
 	else throw new Error(response.message);
 };
 
-const resetPassword = async (name, phoneNumber) => {
-	const userData = await userService.checkUserPhoneNumber(name, phoneNumber);
-	if (!userData.email)
-		throw new ValidationError("email이 등록되지 않았습니다.");
-
-	const generatedPassword = generateRandomPassword();
+const resetPassword = async (id, password) => {
+	const userData = await userService.findUser(id);
+	if (!userData)
+		throw new NotFoundError("해당 id로 유저가 없습니다");
 
 	await userService.updateUser(userData.id, {
-		password: generatedPassword,
+		password: password,
 	});
 
-	const path = "/v1/mail/reset-password";
-	const response = await post(
-		path,
-		{},
-		{ email: userData.email, newPassword: generatedPassword }
-	);
-	if (!response.status) return { email: userData.email };
-	else if (response.status === 400) throw new ValidationError(response.message);
-	else if (response.status === 401)
-		throw new AuthenticationError(response.message);
-	else throw new Error(response.message);
-};
-
-// private method
-const generateRandomPassword = (length = 10) => {
-	const lowerCaseLetters = "abcdefghijklmnopqrstuvwxyz";
-	const numbers = "0123456789";
-	const specialCharacters = "!@#$%^&*(),.?:{}|<>";
-	const allCharacters = lowerCaseLetters + numbers;
-
-	let result = [
-		lowerCaseLetters[Math.floor(Math.random() * lowerCaseLetters.length)],
-		numbers[Math.floor(Math.random() * numbers.length)],
-	];
-
-	for (let i = 0; i < 2; i++) {
-		result.push(
-			specialCharacters[Math.floor(Math.random() * specialCharacters.length)]
-		);
-	}
-
-	for (let i = result.length; i < length; i++) {
-		result.push(
-			allCharacters[Math.floor(Math.random() * allCharacters.length)]
-		);
-	}
-
-	result = result.sort(() => Math.random() - 0.5);
-
-	return result.join("");
+	return true
 };
 
 export {
 	loginWithEmailAndPassword,
-	refreshWithToken,
-	sendVerifyEmail,
+	refreshWithToken, resetPassword, sendVerifyEmail,
 	verifyEmailCode,
-	verifyWithToken,
-	resetPassword,
+	verifyWithToken
 };
+
