@@ -118,7 +118,7 @@ const attendanceController = {
 								attendance_status_id: attendanceStatus.id,
 								check_in_time: attendance.checkInTime || null,
 								check_out_time: attendance.checkOutTime || null,
-								note: attendance.note || "",
+								notes: attendance.notes || "",
 								attendance_role: "PARTICIPANT", // 기본 역할 설정
 								creator_id: currentUserId,
 								updater_id: currentUserId,
@@ -133,8 +133,6 @@ const attendanceController = {
 							note: attendance.note || attendanceRecord.note,
 							updater_id: currentUserId,
 						});
-					} else {
-						console.log("✨ 새 출석 정보 생성");
 					}
 
 					return attendanceRecord;
@@ -390,7 +388,6 @@ const attendanceController = {
 						});
 
 					if (!created) {
-						console.log("🔄 기존 출석 정보 업데이트");
 						await attendanceRecord.update({
 							attendance_status_id: attendanceStatus.id,
 							check_in_time: attendance.checkInTime,
