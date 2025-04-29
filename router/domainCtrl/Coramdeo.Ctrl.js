@@ -186,7 +186,6 @@ const coramdeoController = {
 			}
 
 			// 1. Season 확인 및 생성
-			console.log("Season 확인 및 생성 시작");
 			let season = await models.Season.findOne({
 				where: {
 					season_name: YEAR.toString(),
@@ -196,7 +195,6 @@ const coramdeoController = {
 
 			if (!season) {
 				// Season이 없으면 생성
-				console.log("Season 미 존재로 생성");
 				season = await models.Season.create({
 					season_name: YEAR.toString(),
 					creator_id: 1, // 시스템 사용자 ID
@@ -206,10 +204,8 @@ const coramdeoController = {
 					access_service_id: "SYSTEM",
 				});
 			}
-			console.log("Season 확인 및 생성 완료");
 
 			// 2. Organization 확인 및 생성
-			console.log("Coramdeo Org 확인 및 생성 시작");
 			let coramdeo = await models.Organization.findOne({
 				where: {
 					season_id: season.id,
@@ -220,7 +216,6 @@ const coramdeoController = {
 
 			if (!coramdeo) {
 				// Organization이 없으면 생성
-				console.log("Coramdeo Org 미 존재로 생성");
 				coramdeo = await models.Organization.create({
 					organization_name: "코람데오 청년선교회",
 					organization_code: ORGANIZATION_CODE,
@@ -237,8 +232,6 @@ const coramdeoController = {
 					access_service_id: "SYSTEM",
 				});
 			}
-			console.log("Coramdeo Org 확인 및 생성 완료");
-			console.log("Coramdeo Org ID:", coramdeo.id);
 
 			for (let member of memberList) {
 				let gook = member["국"];
@@ -261,8 +254,7 @@ const coramdeoController = {
 					ageYear = ageYear.slice(0, 2);
 				}
 
-				console.log(name, "등록 시작");
-
+				// 국
 				let gookOrganization = await models.Organization.findOne({
 					where: {
 						season_id: season.id,
@@ -289,8 +281,8 @@ const coramdeoController = {
 						access_service_id: "SYSTEM",
 					});
 				}
-				console.log(name, "국 등록 완료");
 
+				// 그룹
 				let groupOrganization = await models.Organization.findOne({
 					where: {
 						season_id: season.id,
@@ -317,8 +309,8 @@ const coramdeoController = {
 						access_service_id: "SYSTEM",
 					});
 				}
-				console.log(name, "그룹 등록 완료");
 
+				// 순
 				let soonOrganization = await models.Organization.findOne({
 					where: {
 						season_id: season.id,
@@ -345,8 +337,8 @@ const coramdeoController = {
 						access_service_id: "SYSTEM",
 					});
 				}
-				console.log(name, "순 등록 완료");
 
+				// 직분
 				let roleData = undefined;
 				if (role === "그룹장") {
 					roleData = await models.Role.findOne({
@@ -455,8 +447,8 @@ const coramdeoController = {
 						});
 					}
 				}
-				console.log(name, "직분 생성 완료");
 
+				// 유저 등록
 				let user = await models.User.findOne({
 					where: {
 						name: name,
@@ -486,8 +478,8 @@ const coramdeoController = {
 						updater_ip: "127.0.0.1",
 					});
 				}
-				console.log(name, "유저 등록 완료");
 
+				// 유저 직분 연결
 				let userHasRole = await models.UserHasRole.findOne({
 					where: {
 						user_id: user.id,
@@ -510,7 +502,6 @@ const coramdeoController = {
 						updater_ip: "127.0.0.1",
 					});
 				}
-				console.log(name, "직분 등록 완료");
 			}
 
 			// 임시 응답 (개발 중)

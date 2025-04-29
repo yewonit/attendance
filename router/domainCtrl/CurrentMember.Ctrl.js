@@ -32,10 +32,6 @@ const CurrentMemberCtrl = {
 
 			// 필터링된 결과가 없는 경우 404 상태 코드와 메시지를 반환합니다.
 			if (userHasRoles.length === 0) {
-				console.log(
-					"%c해당 조직에 소속된 멤버가 없습니다.",
-					"color: red; font-size: 16px; font-weight: bold;"
-				);
 				return res
 					.status(404)
 					.json({ message: "해당 조직에 소속된 멤버가 없습니다." });
