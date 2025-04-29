@@ -8,8 +8,8 @@ import {
 	verifyEmailCode,
 	verifyWithToken,
 } from "../../services/auth/auth.js";
-import { AuthenticationError, ValidationError } from "../../utils/errors.js";
 import userService from "../../services/user/user.js";
+import { AuthenticationError, ValidationError } from "../../utils/errors.js";
 import { comparePassword } from "../../utils/password.js";
 
 const router = Router();
@@ -112,9 +112,9 @@ router.post("/verify", async (req, res, next) => {
 });
 
 router.post("/reset-password", async (req, res, next) => {
-	const { name, phoneNumber } = req.body;
+	const { id, password  } = req.body;
 	try {
-		const result = await resetPassword(name, phoneNumber);
+		const result = await resetPassword(id, password);
 		res.status(200).json(result);
 	} catch (error) {
 		next(error);
