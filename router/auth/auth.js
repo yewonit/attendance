@@ -105,14 +105,14 @@ router.post("/verify", async (req, res, next) => {
 	try {
 		const isVerified = await verifyEmailCode(email, code);
 		if (isVerified) res.status(200).json(isVerified);
-		else throw new AuthenticationError("이메일 검증에 실패했습니다.");
+		else throw new ValidationError("이메일 검증에 실패했습니다.");
 	} catch (error) {
 		next(error);
 	}
 });
 
 router.post("/reset-password", async (req, res, next) => {
-	const { id, password  } = req.body;
+	const { id, password } = req.body;
 	try {
 		const result = await resetPassword(id, password);
 		res.status(200).json(result);
