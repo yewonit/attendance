@@ -105,14 +105,14 @@ router.post("/verify", async (req, res, next) => {
 	try {
 		const isVerified = await verifyEmailCode(email, code);
 		if (isVerified) res.status(200).json(isVerified);
-		else throw new AuthenticationError("이메일 검증에 실패했습니다.");
+		else throw new ValidationError("이메일 검증에 실패했습니다.");
 	} catch (error) {
 		next(error);
 	}
 });
 
 router.post("/reset-password", async (req, res, next) => {
-	const { id, password  } = req.body;
+	const { id, password } = req.body;
 	try {
 		const result = await resetPassword(id, password);
 		res.status(200).json(result);
@@ -121,11 +121,40 @@ router.post("/reset-password", async (req, res, next) => {
 	}
 });
 
-router.get("/check-email", async (req, res, next) => {
+router.get("/users/email", async (req, res, next) => {
 	const email = req.query.email;
 	try {
 		await userService.emailDuplicationCheck(email);
 		res.status(200).json({ message: "이메일 사용 가능", email });
+	} catch (error) {
+		next(error);
+	}
+});
+
+router.get("/users/name", async (req, res, next) => {
+	const name = req.query.name;
+
+	try {
+		const isExists = await userService.findUserByName(name);
+		if (isExists) {
+			res.status(200).json({ message: "이름이 있습니다." });
+		} else {
+			res.status(404).json({ message: "이름이 없습니다." });
+		}
+	} catch (error) {
+		next(error);
+	}
+});
+
+router.post("/users/phone-number", async (req, res, next) => {
+	const { name, phoneNumber } = req.body;
+
+	try {
+		const userData = await userService.checkUserPhoneNumber(name, phoneNumber);
+		res.status(200).json({
+			isMatched: true,
+			userData: userData,
+		});
 	} catch (error) {
 		next(error);
 	}
