@@ -17,6 +17,9 @@ import UserHasRoleModel from "./model_archive/role/user_has_role.js";
 import SeasonModel from "./model_archive/season/season.js";
 import UserModel from "./model_archive/user/user.js";
 import VisitationModel from "./model_archive/visitation/visitation.js";
+import PermissionModel from "./model_archive/permission/permissions.js";
+import PermissionGroupModel from "./model_archive/permission/permission_group.js";
+import PermissionGroupHasPermissionModel from "./model_archive/permission/permission_group_has_permission.js";
 
 const User = UserModel(sequelize, Sequelize);
 const Organization = OrganizationModel(sequelize, Sequelize);
@@ -38,6 +41,12 @@ const Visitation = VisitationModel(sequelize, Sequelize);
 const Season = SeasonModel(sequelize, Sequelize);
 const ChurchOffice = ChurchOfficeModel(sequelize, Sequelize);
 const UserHasChurchOffice = UserHasChurchOfficeModel(sequelize, Sequelize);
+const Permission = PermissionModel(sequelize, Sequelize);
+const PermissionGroup = PermissionGroupModel(sequelize, Sequelize);
+const PermissionGroupHasPermission = PermissionGroupHasPermissionModel(
+	sequelize,
+	Sequelize
+);
 
 // 모델 간 관계 설정
 User.hasMany(UserHasRole, { foreignKey: "user_id" });
@@ -145,6 +154,21 @@ ChurchOffice.hasMany(UserHasChurchOffice, { foreignKey: "church_office_id" });
 UserHasChurchOffice.belongsTo(ChurchOffice, { foreignKey: "church_office_id" });
 UserHasChurchOffice.belongsTo(User, { foreignKey: "user_id" });
 
+Permission.hasMany(PermissionGroupHasPermission, {
+	foreignKey: "permission_id",
+});
+PermissionGroup.hasMany(PermissionGroupHasPermission, {
+	foreignKey: "permission_group_id",
+});
+PermissionGroupHasPermission.belongsTo(Permission, {
+	foreignKey: "permission_id",
+});
+PermissionGroupHasPermission.belongsTo(PermissionGroup, {
+	foreignKey: "permission_group_id",
+});
+PermissionGroup.hasMany(Role, { foreignKey: "permission_group_id" });
+Role.belongsTo(PermissionGroup, { foreignKey: "permission_group_id" });
+
 // 📦 모듈 내보내기
 export default {
 	Activity,
@@ -164,4 +188,7 @@ export default {
 	UserHasChurchOffice,
 	UserHasRole,
 	Visitation,
+	Permission,
+	PermissionGroup,
+	PermissionGroupHasPermission,
 };
