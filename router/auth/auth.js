@@ -46,11 +46,62 @@ router.post("/login", async (req, res, next) => {
 			throw new AuthenticationError("패스워드가 일치하지 않습니다.");
 
 		const tokens = await loginWithEmailAndPassword(email, user.name);
-		const userData = await userService.checkUserPhoneNumber(
-			user.name,
-			user.phone_number
+		
+		const userHasRoles = await models.UserHasRole.findAll({
+			where: { user_id: user.id },
+			attributes: [
+				"id",
+				"role_id",
+				"organization_id",
+				"role_start_date",
+				"role_end_date",
+			],
+		});
+		
+		const rolesWithOrganization = await Promise.all(
+			userHasRoles.map(async (userHasRole) => {
+				const role = await models.Role.findOne({
+					where: { id: userHasRole.role_id },
+					attributes: ["id", "role_name", "created_at"],
+				});
+
+				const organization = await models.Organization.findOne({
+					where: { id: userHasRole.organization_id },
+					attributes: [
+						"id",
+						"organization_name",
+						"organization_description",
+						"organization_code",
+					],
+				});
+
+				const permissionGroup = await models.PermissionGroup.findOne({
+					where: { id: role.permission_group_id }
+				})
+
+				return {
+					userHasRoleId: userHasRole.id,
+					roleId: role.id,
+					roleStart: userHasRole.role_start_date,
+					roleEnd: userHasRole.role_end_date,
+					roleName: role.role_name,
+					roleCreatedAt: role.created_at,
+					permissionName: permissionGroup.name,
+					organizationId: organization.id,
+					organizationName: organization.organization_name,
+					organizationCode: organization.organization_code,
+					organizationDescription: organization.organization_description,
+				};
+			})
 		);
-		delete user.password;
+
+		const userData = {
+			id: user.id,
+			name: user.name,
+			email: user.email,
+			phoneNumber: user.phone_number,
+			roles: rolesWithOrganization,
+		}
 
 		res.status(200).json({
 			tokens: tokens,
@@ -66,12 +117,69 @@ router.get("/login", async (req, res, next) => {
 	const accessToken = bearerAccessToken.split(" ")[1];
 	try {
 		const data = await verifyWithToken(accessToken);
-		const userData = await models.User.findOne({
+		const user = await models.User.findOne({
 			where: {
 				email: data.email,
 				name: data.name,
 			},
 		});
+
+		const userHasRoles = await models.UserHasRole.findAll({
+			where: { user_id: user.id },
+			attributes: [
+				"id",
+				"role_id",
+				"organization_id",
+				"role_start_date",
+				"role_end_date",
+			],
+		});
+		
+		const rolesWithOrganization = await Promise.all(
+			userHasRoles.map(async (userHasRole) => {
+				const role = await models.Role.findOne({
+					where: { id: userHasRole.role_id },
+					attributes: ["id", "role_name", "created_at"],
+				});
+
+				const organization = await models.Organization.findOne({
+					where: { id: userHasRole.organization_id },
+					attributes: [
+						"id",
+						"organization_name",
+						"organization_description",
+						"organization_code",
+					],
+				});
+
+				const permissionGroup = await models.PermissionGroup.findOne({
+					where: { id: role.permission_group_id }
+				})
+
+				return {
+					userHasRoleId: userHasRole.id,
+					roleId: role.id,
+					roleStart: userHasRole.role_start_date,
+					roleEnd: userHasRole.role_end_date,
+					roleName: role.role_name,
+					roleCreatedAt: role.created_at,
+					permissionName: permissionGroup.name,
+					organizationId: organization.id,
+					organizationName: organization.organization_name,
+					organizationCode: organization.organization_code,
+					organizationDescription: organization.organization_description,
+				};
+			})
+		);
+
+		const userData = {
+			id: user.id,
+			name: user.name,
+			email: user.email,
+			phoneNumber: user.phone_number,
+			roles: rolesWithOrganization,
+		}
+		
 		res.json({
 			user: userData,
 		});
