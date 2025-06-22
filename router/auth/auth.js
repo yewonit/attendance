@@ -62,7 +62,7 @@ router.post("/login", async (req, res, next) => {
 			userHasRoles.map(async (userHasRole) => {
 				const role = await models.Role.findOne({
 					where: { id: userHasRole.role_id },
-					attributes: ["id", "role_name", "created_at"],
+					attributes: ["id", "role_name", "created_at", "permission_group_id"],
 				});
 
 				const organization = await models.Organization.findOne({
@@ -139,7 +139,7 @@ router.get("/login", async (req, res, next) => {
 			userHasRoles.map(async (userHasRole) => {
 				const role = await models.Role.findOne({
 					where: { id: userHasRole.role_id },
-					attributes: ["id", "role_name", "created_at"],
+					attributes: ["id", "role_name", "created_at", "permission_group_id"],
 				});
 
 				const organization = await models.Organization.findOne({
