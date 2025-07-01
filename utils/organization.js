@@ -1,4 +1,4 @@
-import { ValidationError } from "./errors"
+import { ValidationError } from "./errors.js"
 
 const BASE = '코람데오'
 
