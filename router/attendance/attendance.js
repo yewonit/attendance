@@ -1,5 +1,6 @@
 import { Router } from "express";
 import attendanceCrudRouter from "./attendance.crud.js";
+import attendanceAggregationRouter from "./attendance_aggregation.js";
 
 const router = Router();
 
@@ -83,5 +84,6 @@ const router = Router();
  */
 
 router.use("/", attendanceCrudRouter);
+router.use("/aggregation", attendanceAggregationRouter);
 
 export default router;
