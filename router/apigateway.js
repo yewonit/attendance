@@ -1,18 +1,7 @@
 import { Router } from "express";
 import activityRouter from "./attendance/activity.js";
-import activityCategoryRouter from "./attendance/activity_category.js";
-import activityInstanceRouter from "./attendance/activity_instance.js";
-import attendanceRouter from "./attendance/attendance.js";
-import attendanceStatusRouter from "./attendance/attendance_status.js";
-import activityHasFileRouter from "./file/activity_has_file.js";
-import activityInstanceHasFileRouter from "./file/activity_instance_has_file.js";
-import fileRouter from "./file/file.js";
 import organizationRouter from "./organization/organization.js";
-import roleRouter from "./role/role.js";
-import userHasRoleRouter from "./role/user_has_role.js";
-import seasonRouter from "./season/season.js";
 import userRouter from "./user/user.js";
-
 import CoramdeoController from "./domainCtrl/Coramdeo.Ctrl.js";
 import CurrentMemberCtrl from "./domainCtrl/CurrentMember.Ctrl.js";
 
@@ -29,14 +18,6 @@ router.use("/users", userRouter);
 /**
  * @swagger
  * tags:
- *   name: Activity Categories
- *   description: 활동 카테고리 관리 API
- */
-router.use("/activity-categories", activityCategoryRouter);
-
-/**
- * @swagger
- * tags:
  *   name: Activities
  *   description: 활동 관리 API
  */
@@ -45,82 +26,10 @@ router.use("/activities", activityRouter);
 /**
  * @swagger
  * tags:
- *   name: Activity Instances
- *   description: 활동 인스턴스 관리 API
- */
-router.use("/activity-instances", activityInstanceRouter);
-
-/**
- * @swagger
- * tags:
- *   name: Attendances
- *   description: 출석 관리 API
- */
-router.use("/attendances", attendanceRouter);
-
-/**
- * @swagger
- * tags:
- *   name: Attendance Statuses
- *   description: 출석 상태 값 관리 API
- */
-router.use("/attendance-statuses", attendanceStatusRouter);
-
-/**
- * @swagger
- * tags:
- *   name: Activity Files
- *   description: 활동 - 파일 관리 API
- */
-router.use("/activity-has-files", activityHasFileRouter);
-
-/**
- * @swagger
- * tags:
- *   name: Activity Instance Files
- *   description: 활동 인스턴스 파일 관리 API
- */
-router.use("/activity-instance-has-files", activityInstanceHasFileRouter);
-
-/**
- * @swagger
- * tags:
- *   name: Files
- *   description: 파일 관리 API
- */
-router.use("/files", fileRouter);
-
-/**
- * @swagger
- * tags:
  *   name: Organizations
  *   description: 조직 관리 API
  */
 router.use("/organizations", organizationRouter);
-
-/**
- * @swagger
- * tags:
- *   name: Roles
- *   description: 역할 (그룹장, 순장 등) 관리 API
- */
-router.use("/roles", roleRouter);
-
-/**
- * @swagger
- * tags:
- *   name: User Roles
- *   description: 유저 - 역할 관리 API
- */
-router.use("/user-has-roles", userHasRoleRouter);
-
-/**
- * @swagger
- * tags:
- *   name: Seasons
- *   description: 시즌 관리 API
- */
-router.use("/seasons", seasonRouter);
 
 /**
  * @swagger
