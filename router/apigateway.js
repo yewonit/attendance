@@ -1,12 +1,9 @@
 import { Router } from "express";
 import activityRouter from "./attendance/activity.js";
 import activityCategoryRouter from "./attendance/activity_category.js";
-import activityChangeHistoryRouter from "./attendance/activity_change_history.js";
 import activityInstanceRouter from "./attendance/activity_instance.js";
 import attendanceRouter from "./attendance/attendance.js";
 import attendanceStatusRouter from "./attendance/attendance_status.js";
-import churchOfficeRouter from "./churchOffice/church_office.js";
-import userHasChurchOfficeRouter from "./churchOffice/user_has_church_office.js";
 import activityHasFileRouter from "./file/activity_has_file.js";
 import activityInstanceHasFileRouter from "./file/activity_instance_has_file.js";
 import fileRouter from "./file/file.js";
@@ -15,7 +12,6 @@ import roleRouter from "./role/role.js";
 import userHasRoleRouter from "./role/user_has_role.js";
 import seasonRouter from "./season/season.js";
 import userRouter from "./user/user.js";
-import visitationRouter from "./visitation/visitation.js";
 
 import CoramdeoController from "./domainCtrl/Coramdeo.Ctrl.js";
 import CurrentMemberCtrl from "./domainCtrl/CurrentMember.Ctrl.js";
@@ -49,14 +45,6 @@ router.use("/activities", activityRouter);
 /**
  * @swagger
  * tags:
- *   name: Activity Change Histories
- *   description: 활동 변경 이력 관리 API
- */
-router.use("/activity-change-histories", activityChangeHistoryRouter);
-
-/**
- * @swagger
- * tags:
  *   name: Activity Instances
  *   description: 활동 인스턴스 관리 API
  */
@@ -77,22 +65,6 @@ router.use("/attendances", attendanceRouter);
  *   description: 출석 상태 값 관리 API
  */
 router.use("/attendance-statuses", attendanceStatusRouter);
-
-/**
- * @swagger
- * tags:
- *   name: Church Offices
- *   description: 교회 직분 (장로, 권사 등) 관리 API
- */
-router.use("/church-offices", churchOfficeRouter);
-
-/**
- * @swagger
- * tags:
- *   name: User Church Offices
- *   description: 유저 - 직분 관리 API
- */
-router.use("/user-has-church-offices", userHasChurchOfficeRouter);
 
 /**
  * @swagger
@@ -149,14 +121,6 @@ router.use("/user-has-roles", userHasRoleRouter);
  *   description: 시즌 관리 API
  */
 router.use("/seasons", seasonRouter);
-
-/**
- * @swagger
- * tags:
- *   name: Visitations
- *   description: 심방 관리 API
- */
-router.use("/visitations", visitationRouter);
 
 /**
  * @swagger

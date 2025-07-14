@@ -2,12 +2,9 @@ import { Sequelize } from "sequelize";
 import { sequelize } from "../utils/database.js";
 import ActivityModel from "./model_archive/attendance/activity.js";
 import ActivityCategoryModel from "./model_archive/attendance/activity_category.js";
-import ActivityChangeHistoryModel from "./model_archive/attendance/activity_change_history.js";
 import ActivityInstanceModel from "./model_archive/attendance/activity_instance.js";
 import AttendanceModel from "./model_archive/attendance/attendance.js";
 import AttendanceStatusModel from "./model_archive/attendance/attendance_status.js";
-import ChurchOfficeModel from "./model_archive/churchOffice/church_office.js";
-import UserHasChurchOfficeModel from "./model_archive/churchOffice/user_has_church_office.js";
 import ActivityHasFileModel from "./model_archive/file/activity_has_file.js";
 import ActivityInstanceHasFileModel from "./model_archive/file/activity_instance_has_file.js";
 import FileModel from "./model_archive/file/file.js";
@@ -16,7 +13,6 @@ import RoleModel from "./model_archive/role/role.js";
 import UserHasRoleModel from "./model_archive/role/user_has_role.js";
 import SeasonModel from "./model_archive/season/season.js";
 import UserModel from "./model_archive/user/user.js";
-import VisitationModel from "./model_archive/visitation/visitation.js";
 import PermissionModel from "./model_archive/permission/permissions.js";
 import PermissionGroupModel from "./model_archive/permission/permission_group.js";
 import PermissionGroupHasPermissionModel from "./model_archive/permission/permission_group_has_permission.js";
@@ -30,17 +26,13 @@ const Activity = ActivityModel(sequelize, Sequelize);
 const ActivityInstance = ActivityInstanceModel(sequelize, Sequelize);
 const AttendanceStatus = AttendanceStatusModel(sequelize, Sequelize);
 const Attendance = AttendanceModel(sequelize, Sequelize);
-const ActivityChangeHistory = ActivityChangeHistoryModel(sequelize, Sequelize);
 const File = FileModel(sequelize, Sequelize);
 const ActivityHasFile = ActivityHasFileModel(sequelize, Sequelize);
 const ActivityInstanceHasFile = ActivityInstanceHasFileModel(
 	sequelize,
 	Sequelize
 );
-const Visitation = VisitationModel(sequelize, Sequelize);
 const Season = SeasonModel(sequelize, Sequelize);
-const ChurchOffice = ChurchOfficeModel(sequelize, Sequelize);
-const UserHasChurchOffice = UserHasChurchOfficeModel(sequelize, Sequelize);
 const Permission = PermissionModel(sequelize, Sequelize);
 const PermissionGroup = PermissionGroupModel(sequelize, Sequelize);
 const PermissionGroupHasPermission = PermissionGroupHasPermissionModel(
@@ -97,9 +89,6 @@ Attendance.belongsTo(AttendanceStatus, { foreignKey: "attendance_status_id" });
 User.hasMany(Attendance, { foreignKey: "user_id" });
 Attendance.belongsTo(User, { foreignKey: "user_id" });
 
-Activity.hasMany(ActivityChangeHistory, { foreignKey: "activity_id" });
-ActivityChangeHistory.belongsTo(Activity, { foreignKey: "activity_id" });
-
 File.hasMany(ActivityHasFile, { foreignKey: "file_id" });
 ActivityHasFile.belongsTo(File, { foreignKey: "file_id" });
 
@@ -116,12 +105,6 @@ ActivityInstanceHasFile.belongsTo(ActivityInstance, {
 	foreignKey: "activity_instance_id",
 });
 
-User.hasMany(Visitation, { as: "VisitsMade", foreignKey: "visitor_id" });
-Visitation.belongsTo(User, { as: "Visitor", foreignKey: "visitor_id" });
-
-User.hasMany(Visitation, { as: "VisitsReceived", foreignKey: "visitee_id" });
-Visitation.belongsTo(User, { as: "Visitee", foreignKey: "visitee_id" });
-
 // // ActivityChangeHistory와 ActivityInstance 사이의 관계 수정
 // ActivityInstance.hasMany(ActivityChangeHistory, {
 //   foreignKey: "activity_instance_id",
@@ -129,9 +112,6 @@ Visitation.belongsTo(User, { as: "Visitee", foreignKey: "visitee_id" });
 // ActivityChangeHistory.belongsTo(ActivityInstance, {
 //   foreignKey: "activity_instance_id",
 // });
-
-Activity.hasMany(ActivityChangeHistory, { foreignKey: "activity_id" });
-ActivityChangeHistory.belongsTo(Activity, { foreignKey: "activity_id" });
 
 ActivityInstance.belongsToMany(File, {
 	through: ActivityInstanceHasFile,
@@ -146,13 +126,6 @@ File.belongsToMany(ActivityInstance, {
 	otherKey: "activity_instance_id",
 	as: "ActivityInstances",
 });
-
-User.hasMany(UserHasChurchOffice, { foreignKey: "user_id" });
-UserHasChurchOffice.belongsTo(User, { foreignKey: "user_id" });
-
-ChurchOffice.hasMany(UserHasChurchOffice, { foreignKey: "church_office_id" });
-UserHasChurchOffice.belongsTo(ChurchOffice, { foreignKey: "church_office_id" });
-UserHasChurchOffice.belongsTo(User, { foreignKey: "user_id" });
 
 Permission.hasMany(PermissionGroupHasPermission, {
 	foreignKey: "permission_id",
@@ -173,21 +146,17 @@ Role.belongsTo(PermissionGroup, { foreignKey: "permission_group_id" });
 export default {
 	Activity,
 	ActivityCategory,
-	ActivityChangeHistory,
 	ActivityHasFile,
 	ActivityInstance,
 	ActivityInstanceHasFile,
 	Attendance,
 	AttendanceStatus,
-	ChurchOffice,
 	File,
 	Organization,
 	Role,
 	Season,
 	User,
-	UserHasChurchOffice,
 	UserHasRole,
-	Visitation,
 	Permission,
 	PermissionGroup,
 	PermissionGroupHasPermission,
