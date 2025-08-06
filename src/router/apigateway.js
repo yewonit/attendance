@@ -2,7 +2,6 @@ import { Router } from "express";
 import activityRouter from "./attendance/activity.js";
 import organizationRouter from "./organization/organization.js";
 import userRouter from "./user/user.js";
-import CoramdeoController from "./domainCtrl/Coramdeo.Ctrl.js";
 import CurrentMemberCtrl from "./domainCtrl/CurrentMember.Ctrl.js";
 
 const router = Router();
@@ -75,36 +74,6 @@ router.get("/current-members", CurrentMemberCtrl.getMembersWithRoles);
  *         description: 서버 오류가 발생했습니다.
  */
 router.post("/current-members", CurrentMemberCtrl.createMember);
-
-/**
- * @swagger
- * /api/coramdeo/members:
- *   post:
- *     summary: 코람데오 회원 정보 업데이트
- *     description: 코람데오 회원의 정보를 업데이트합니다.
- *     tags: [Coramdeo]
- *     responses:
- *       200:
- *         description: 성공적으로 회원 정보가 업데이트되었습니다.
- *       500:
- *         description: 서버 오류가 발생했습니다.
- */
-router.post("/coramdeo/members", CoramdeoController.updateCoramdeoMember);
-
-/**
- * @swagger
- * /api/coramdeo/activities:
- *   post:
- *     summary: 회기별 코람데오 활동 초기화
- *     description: 회기별 코람데오 활동을 초기화합니다.
- *     tags: [Coramdeo]
- *     responses:
- *       200:
- *         description: 성공적으로 활동이 초기화되었습니다.
- *       500:
- *         description: 서버 오류가 발생했습니다.
- */
-router.post("/coramdeo/activities", CoramdeoController.initCoramdeoActivities);
 
 // 설정된 라우터 모듈을 내보냅니다.
 export default router;
