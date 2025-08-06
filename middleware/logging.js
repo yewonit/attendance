@@ -1,4 +1,4 @@
-import logger from "../utils/logger.js";
+import logger from "../src/utils/logger.js";
 
 // HTTP 요청 로깅 미들웨어
 const requestLogger = (req, res, next) => {

@@ -1,5 +1,5 @@
-import { AuthenticationError } from "../utils/errors";
-import { verifyWithToken } from "../services/auth/auth";
+import { AuthenticationError } from "../src/utils/errors.js";
+import { verifyWithToken } from "../src/services/auth/auth.js";
 
 export default async (req, res, next) => {
 	try {
