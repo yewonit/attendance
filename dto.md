@@ -1,18 +1,5 @@
 # 📋 **API Request/Response DTO 문서**
 
-## 🏥 **Health Check**
-
-### `GET /health-check`
-
-```typescript
-// RequestDto: 없음
-
-// ResponseDto
-interface HealthCheckResponse {
-	status: string; // "OK"
-}
-```
-
 ---
 
 ## 🔐 **Authentication APIs**
@@ -44,6 +31,7 @@ interface LoginRequest {
 }
 
 // ResponseDto
+// -------------------------- 프론트에서 사용하는 값 체크 필요 ----------------------------
 interface LoginResponse {
 	tokens: {
 		// loginWithEmailAndPassword 결과 (외부 인증 서버 응답)
@@ -101,64 +89,6 @@ interface TokenVerifyResponse {
 			organizationDescription: string;
 		}>;
 	};
-}
-```
-
-### `POST /auth/refresh`
-
-```typescript
-// RequestDto
-interface RefreshTokenRequest {
-	refreshToken: string;
-}
-
-// ResponseDto
-interface RefreshTokenResponse {
-	// refreshWithToken 결과 (외부 인증 서버 응답)
-	[key: string]: any;
-}
-```
-
-### `POST /auth/code`
-
-```typescript
-// RequestDto
-interface SendVerifyEmailRequest {
-	email: string;
-}
-
-// ResponseDto: 204 No Content
-```
-
-### `POST /auth/verify`
-
-```typescript
-// RequestDto
-interface VerifyEmailCodeRequest {
-	email: string;
-	code: string;
-}
-
-// ResponseDto
-interface VerifyEmailCodeResponse {
-	// verifyEmailCode 결과 (외부 인증 서버 응답)
-	[key: string]: any;
-}
-```
-
-### `POST /auth/reset-password`
-
-```typescript
-// RequestDto
-interface ResetPasswordRequest {
-	id: number;
-	password: string;
-}
-
-// ResponseDto
-interface ResetPasswordResponse {
-	// boolean true
-	[key: string]: boolean;
 }
 ```
 
@@ -240,16 +170,17 @@ interface CreateUserRequest {
 		name_suffix?: string;
 		gender_type?: string;
 		birth_date?: string;
-		country?: string;
+		country?: string; // 불필요
 		phone_number: string;
 		church_registration_date?: string;
 		is_new_member?: string; // "Y" | "N"
 	};
 	organizationId: number;
-	idOfCreatingUser: number;
+	idOfCreatingUser: number; // 불필요
 }
 
 // ResponseDto
+// -------------------------- 프론트에서 사용하는 값 체크 필요 ----------------------------
 interface CreateUserResponse {
 	// User 모델 객체
 	id: number;
@@ -315,6 +246,7 @@ interface FindUserResponse {
 
 ```typescript
 // RequestDto
+// -------------------------- 프론트에서 사용하는 값 체크 필요 ----------------------------
 interface UpdateUserRequest {
 	id: number;
 	name?: string;
@@ -437,6 +369,7 @@ interface CreateOrganizationRequest {
 }
 
 // ResponseDto
+// -------------------------- 프론트에서 사용하는 값 체크 필요 ----------------------------
 interface CreateOrganizationResponse {
 	data: {
 		// Organization 모델 객체
@@ -519,116 +452,6 @@ interface DeleteOrganizationRequest {
 interface DeleteOrganizationResponse {
 	// 삭제된 행 수
 	[0]: number;
-}
-```
-
-### `GET /api/organizations/coramdeo/members`
-
-```typescript
-// RequestDto: 없음
-
-// ResponseDto
-interface CoramdeoMembersResponse {
-	// 복잡한 중첩 구조
-	data: Array<{
-		// gook 정보 (Organization 모델의 모든 필드)
-		id: number;
-		organization_name: string;
-		organization_code: string;
-		organization_description: string;
-		season_id: number;
-		upper_organization_id: number;
-		// ... 기타 Organization 필드들
-		groups: Array<
-			Array<{
-				// group 정보
-				id: number;
-				organization_name: string;
-				organization_code: string;
-				// ... 기타 Organization 필드들
-				members: Array<{
-					id: number; // user_id
-					name: string;
-					email: string;
-					phoneNumber: string;
-					role: string; // role_name
-				}>;
-			}>
-		>;
-	}>;
-}
-```
-
-### `GET /api/organizations/gooks`
-
-```typescript
-// RequestDto
-interface GetGooksRequest {
-	// Query params
-	year?: number;
-}
-
-// ResponseDto
-interface GetGooksResponse {
-	data: Array<{
-		// Organization 모델 객체들 (국 레벨)
-		id: number;
-		organization_name: string;
-		organization_code: string;
-		season_id: number;
-		upper_organization_id: number;
-		// ... 기타 Organization 필드들
-	}>;
-}
-```
-
-### `GET /api/organizations/groups`
-
-```typescript
-// RequestDto
-interface GetGroupsRequest {
-	// Query params
-	gookId: number;
-}
-
-// ResponseDto
-interface GetGroupsResponse {
-	data: Array<{
-		// Organization 모델 객체들 (그룹 레벨)
-		id: number;
-		organization_name: string;
-		organization_code: string;
-		upper_organization_id: number;
-		// ... 기타 Organization 필드들
-	}>;
-}
-```
-
-### `GET /api/organizations/groups/members`
-
-```typescript
-// RequestDto
-interface GetGroupMembersRequest {
-	// Query params
-	groupId: number;
-}
-
-// ResponseDto
-interface GetGroupMembersResponse {
-	data: Array<{
-		// Organization + members
-		id: number;
-		organization_name: string;
-		organization_code: string;
-		// ... 기타 Organization 필드들
-		members: Array<{
-			id: number; // user_id
-			name: string;
-			email: string;
-			phoneNumber: string;
-			role: string; // role_name
-		}>;
-	}>;
 }
 ```
 

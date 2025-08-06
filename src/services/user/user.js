@@ -1,13 +1,13 @@
 // User.Ctrl.js
 import { Sequelize, Op } from "sequelize";
-import models from "../models/models.js";
+import models from "../../models/models.js";
 import {
 	DataConflictError,
 	NotFoundError,
 	ValidationError,
-} from "../utils/errors.js";
+} from "../../utils/errors.js";
 import crudService from "../common/crud.js";
-import { hashPassword } from "../utils/password.js";
+import { hashPassword } from "../../utils/password.js";
 
 const validateUserInfo = async (data) => {
 	if (!data.name) {

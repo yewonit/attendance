@@ -1,5 +1,5 @@
 import { Router } from "express";
-import userService from "../services/user/user.js";
+import userService from "../../services/user/user.js";
 import userCrudRouter from "./user.crud.js";
 
 const router = Router();

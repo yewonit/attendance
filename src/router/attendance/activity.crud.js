@@ -1,5 +1,5 @@
 import { Router } from "express";
-import activityService from "../services/attendance/activity.js";
+import activityService from "../../services/attendance/activity.js";
 
 const router = Router();
 

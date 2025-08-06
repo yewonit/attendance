@@ -1,6 +1,6 @@
 import { col, fn, where } from "sequelize";
-import models from "../models/models.js";
-import { sequelize } from "../utils/database.js";
+import models from "../../models/models.js";
+import { sequelize } from "../../utils/database.js";
 
 // 기존의 attendanceController 객체
 const attendanceController = {

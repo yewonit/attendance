@@ -1,7 +1,7 @@
 // Activity.Ctrl.js
 
 // 필요한 모델과 컨트롤러 유틸리티를 임포트합니다.
-import models from "../models/models.js"; // 실제 경로에 맞게 수정해야 합니다.
+import models from "../../models/models.js"; // 실제 경로에 맞게 수정해야 합니다.
 import crudService from "../common/crud.js";
 
 /**

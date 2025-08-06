@@ -1,5 +1,5 @@
 import { Router } from "express";
-import models from "../models/models.js";
+import models from "../../models/models.js";
 import {
 	loginWithEmailAndPassword,
 	refreshWithToken,
@@ -7,10 +7,10 @@ import {
 	sendVerifyEmail,
 	verifyEmailCode,
 	verifyWithToken,
-} from "../services/auth/auth.js";
-import userService from "../services/user/user.js";
-import { AuthenticationError, ValidationError } from "../utils/errors.js";
-import { comparePassword } from "../utils/password.js";
+} from "../../services/auth/auth.js";
+import userService from "../../services/user/user.js";
+import { AuthenticationError, ValidationError } from "../../utils/errors.js";
+import { comparePassword } from "../../utils/password.js";
 
 const router = Router();
 

@@ -2,8 +2,8 @@ import {
 	AuthenticationError,
 	NotFoundError,
 	ValidationError,
-} from "../utils/errors.js";
-import { post } from "../utils/request.js";
+} from "../../utils/errors.js";
+import { post } from "../../utils/request.js";
 import userService from "../user/user.js";
 
 const loginWithEmailAndPassword = async (email, name) => {

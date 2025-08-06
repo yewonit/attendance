@@ -1,8 +1,8 @@
 // Organization.Ctrl.js
 
-import models from "../models/models.js";
+import models from "../../models/models.js";
 import crudService from "../common/crud.js";
-import { NotFoundError } from "../utils/errors.js";
+import { NotFoundError } from "../../utils/errors.js";
 import { Op } from "sequelize";
 
 // 📝 조직 정보 유효성 검사 함수
@@ -193,33 +193,6 @@ const organizationService = {
 		});
 
 		return orgs;
-	},
-	getUnderOrganizationByIdWithMembers: async (parentId) => {
-		const orgs = await models.Organization.findAll({
-			where: {
-				upper_organization_id: parentId,
-			},
-		});
-
-		const orgsWithMembers = await Promise.all(
-			orgs.map(async (org) => {
-				const members = await getMembersById(org.id);
-				const formattedMembers = members.map((member) => ({
-					id: member.user_id,
-					name: member.User.name,
-					email: member.User.email,
-					phoneNumber: member.User.phone_number,
-					role: member.Role.role_name,
-				}));
-
-				return {
-					...org.toJSON(),
-					members: formattedMembers,
-				};
-			})
-		);
-
-		return orgsWithMembers;
 	},
 };
 
