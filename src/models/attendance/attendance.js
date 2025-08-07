@@ -1,4 +1,10 @@
+import UserModel from "../user/user.js";
+import ActivityModel from "../activity/activity.js";
+
 export default (sequelize, Sequelize) => {
+	const user = UserModel(sequelize, Sequelize);
+	const activity = ActivityModel(sequelize, Sequelize);
+
 	return sequelize.define(
 		"Attendance",
 		{
@@ -12,36 +18,24 @@ export default (sequelize, Sequelize) => {
 				type: Sequelize.INTEGER,
 				allowNull: false,
 				comment: "사용자 ID",
+				references: {
+					model: user,
+					key: "id",
+				},
 			},
-			activity_instance_id: {
+			activity_id: {
 				type: Sequelize.INTEGER,
 				allowNull: false,
 				comment: "활동 인스턴스 ID",
+				references: {
+					model: activity,
+					key: "id",
+				},
 			},
-			attendance_status_id: {
-				type: Sequelize.INTEGER,
+			attendance_status: {
+				type: Sequelize.STRING(10),
 				allowNull: false,
-				comment: "출석 상태 ID",
-			},
-			check_in_time: {
-				type: Sequelize.DATE,
-				allowNull: true,
-				comment: "입실 시간",
-			},
-			check_out_time: {
-				type: Sequelize.DATE,
-				allowNull: true,
-				comment: "퇴실 시간",
-			},
-			attendance_role: {
-				type: Sequelize.ENUM("PARTICIPANT", "LEADER", "ASSISTANT"),
-				allowNull: false,
-				comment: "참석 역할",
-			},
-			notes: {
-				type: Sequelize.TEXT,
-				allowNull: true,
-				comment: "특이사항 등 메모",
+				comment: "출석 상태",
 			},
 			created_at: {
 				type: Sequelize.DATE,
@@ -54,16 +48,6 @@ export default (sequelize, Sequelize) => {
 				allowNull: false,
 				defaultValue: Sequelize.NOW,
 				comment: "수정 일시",
-			},
-			creator_id: {
-				type: Sequelize.INTEGER,
-				allowNull: false,
-				comment: "생성자 ID",
-			},
-			updater_id: {
-				type: Sequelize.INTEGER,
-				allowNull: false,
-				comment: "수정자 ID",
 			},
 		},
 		{

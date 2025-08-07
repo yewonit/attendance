@@ -1,27 +1,41 @@
+import ActivityModel from "../activity/activity.js";
+
 export default (sequelize, Sequelize) => {
+	const activity = ActivityModel(sequelize, Sequelize);
+
 	return sequelize.define(
-		"AttendanceStatus",
+		"ActivityImage",
 		{
 			id: {
 				type: Sequelize.INTEGER,
 				primaryKey: true,
 				autoIncrement: true,
-				comment: "출석 상태 고유 식별자",
+				comment: "활동 이미지 고유 식별자",
+			},
+			activity_id: {
+				type: Sequelize.INTEGER,
+				allowNull: false,
+				comment: "활동 ID, 활동 테이블의 ID를 참조",
+				references: {
+					model: activity,
+					key: "id",
+				},
 			},
 			name: {
-				type: Sequelize.STRING(50),
-				allowNull: false,
-				comment: "상태명, 예: 출석, 결석, 지각, 조퇴",
-			},
-			description: {
 				type: Sequelize.TEXT,
-				allowNull: true,
-				comment: "상태 설명",
+				allowNull: false,
+				comment: "이미지 이름",
 			},
-			is_counted_as_attended: {
+			path: {
+				type: Sequelize.TEXT,
+				allowNull: false,
+				comment: "이미지 경로",
+			},
+			is_deleted: {
 				type: Sequelize.BOOLEAN,
 				allowNull: false,
-				comment: "출석으로 인정 여부",
+				defaultValue: false,
+				comment: "삭제 여부",
 			},
 			created_at: {
 				type: Sequelize.DATE,
@@ -37,11 +51,11 @@ export default (sequelize, Sequelize) => {
 			},
 		},
 		{
-			tableName: "attendance_status",
+			tableName: "activity_image",
 			timestamps: true,
 			createdAt: "created_at",
 			updatedAt: "updated_at",
-			comment: "출석 상태 정보를 관리하는 테이블",
+			comment: "활동 이미지",
 		}
 	);
 };

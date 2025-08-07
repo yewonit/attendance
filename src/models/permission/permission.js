@@ -1,22 +1,17 @@
 export default (sequelize, Sequelize) => {
 	return sequelize.define(
-		"PermissionGroup",
+		"Permission",
 		{
 			id: {
 				type: Sequelize.INTEGER,
 				primaryKey: true,
 				autoIncrement: true,
-				comment: "권한 그룹 고유 식별자",
+				comment: "권한 고유 식별자",
 			},
-			name: {
+			code: {
 				type: Sequelize.STRING(20),
 				allowNull: false,
-				comment: "권한 그룹 이름",
-			},
-			description: {
-				type: Sequelize.STRING(255),
-				allowNull: false,
-				comment: "권한 그룹 설명",
+				comment: "권한 코드",
 			},
 			created_at: {
 				type: Sequelize.DATE,
@@ -32,11 +27,11 @@ export default (sequelize, Sequelize) => {
 			},
 		},
 		{
-			tableName: "permission_group",
+			tableName: "permission",
 			timestamps: true,
 			createdAt: "created_at",
 			updatedAt: "updated_at",
-			comment: "권한 그룹 테이블",
+			comment: "권한 테이블",
 		}
 	);
 };
