@@ -2,25 +2,6 @@
 
 ---
 
-## 🔐 **Authentication APIs**
-
-### `POST /auth/register`
-
-```typescript
-// RequestDto
-interface RegisterRequest {
-	id: number;
-	email: string;
-	password: string;
-}
-
-// ResponseDto
-interface RegisterResponse {
-	// userService.setEmailAndPassword 결과 (updated count)
-	[0]: number; // 업데이트된 행 수
-}
-```
-
 ### `POST /auth/login`
 
 ```typescript
@@ -31,11 +12,10 @@ interface LoginRequest {
 }
 
 // ResponseDto
-// -------------------------- 프론트에서 사용하는 값 체크 필요 ----------------------------
 interface LoginResponse {
 	tokens: {
-		// loginWithEmailAndPassword 결과 (외부 인증 서버 응답)
-		[key: string]: any;
+		accessToken: string;
+		refreshToken: string;
 	};
 	userData: {
 		id: number;
@@ -43,17 +23,11 @@ interface LoginResponse {
 		email: string;
 		phoneNumber: string;
 		roles: Array<{
-			userHasRoleId: number;
-			roleId: number;
-			roleStart: string; // 날짜
-			roleEnd: string; // 날짜
-			roleName: string;
-			roleCreatedAt: string; // 날짜
 			permissionName: string;
 			organizationId: number;
 			organizationName: string;
 			organizationCode: string;
-			organizationDescription: string;
+			roleName: string;
 		}>;
 	};
 }
@@ -76,50 +50,13 @@ interface TokenVerifyResponse {
 		email: string;
 		phoneNumber: string;
 		roles: Array<{
-			userHasRoleId: number;
-			roleId: number;
-			roleStart: string;
-			roleEnd: string;
-			roleName: string;
-			roleCreatedAt: string;
 			permissionName: string;
 			organizationId: number;
 			organizationName: string;
 			organizationCode: string;
-			organizationDescription: string;
+			roleName: string;
 		}>;
 	};
-}
-```
-
-### `GET /auth/users/email`
-
-```typescript
-// RequestDto
-interface EmailDuplicationCheckRequest {
-	// Query params
-	email: string;
-}
-
-// ResponseDto
-interface EmailDuplicationCheckResponse {
-	message: string; // "이메일 사용 가능"
-	email: string;
-}
-```
-
-### `GET /auth/users/name`
-
-```typescript
-// RequestDto
-interface UserNameExistsRequest {
-	// Query params
-	name: string;
-}
-
-// ResponseDto
-interface UserNameExistsResponse {
-	message: string; // "이름이 있습니다." | "이름이 없습니다."
 }
 ```
 
@@ -141,16 +78,10 @@ interface CheckUserPhoneNumberResponse {
 		email: string;
 		phoneNumber: string;
 		roles: Array<{
-			userHasRoleId: number;
-			roleId: number;
-			roleStart: string;
-			roleEnd: string;
-			roleName: string;
-			roleCreatedAt: string;
 			organizationId: number;
 			organizationName: string;
 			organizationCode: string;
-			organizationDescription: string;
+			roleName: string;
 		}>;
 	};
 }
@@ -170,188 +101,57 @@ interface CreateUserRequest {
 		name_suffix?: string;
 		gender_type?: string;
 		birth_date?: string;
-		country?: string; // 불필요
 		phone_number: string;
 		church_registration_date?: string;
 		is_new_member?: string; // "Y" | "N"
 	};
 	organizationId: number;
-	idOfCreatingUser: number; // 불필요
+	idOfCreatingUser: number;
 }
 
 // ResponseDto
-// -------------------------- 프론트에서 사용하는 값 체크 필요 ----------------------------
 interface CreateUserResponse {
-	// User 모델 객체
 	id: number;
 	name: string;
 	name_suffix: string;
 	gender_type: string;
 	birth_date: string;
-	country: string;
 	phone_number: string;
 	church_registration_date: string;
 	is_new_member: string;
-	creator_id: number;
-	updater_id: number;
-	creator_ip: string;
-	updater_ip: string;
 	created_at: string;
 	updated_at: string;
-	// ... 기타 User 모델 필드들
 }
 ```
 
-### `GET /api/users`
-
-```typescript
-// RequestDto: 없음
-
-// ResponseDto
-interface FindUsersResponse {
-	data: Array<{
-		// User 모델의 모든 필드들 (password 제외)
-		id: number;
-		name: string;
-		email: string;
-		phone_number: string;
-		// ... 기타 모든 User 필드들
-	}>;
-}
-```
-
-### `GET /api/users/:id`
-
-```typescript
-// RequestDto
-interface FindUserRequest {
-	// Path params
-	id: string;
-}
-
-// ResponseDto
-interface FindUserResponse {
-	data: {
-		// User 모델 객체
-		id: number;
-		name: string;
-		email: string;
-		phone_number: string;
-		// ... 기타 모든 User 필드들
-	};
-}
-```
-
-### `PUT /api/users`
-
-```typescript
-// RequestDto
-// -------------------------- 프론트에서 사용하는 값 체크 필요 ----------------------------
-interface UpdateUserRequest {
-	id: number;
-	name?: string;
-	email?: string;
-	password?: string;
-	phone_number?: string;
-	// ... 기타 업데이트 가능한 필드들
-}
-
-// ResponseDto
-interface UpdateUserResponse {
-	// 업데이트된 행 수
-	[0]: number;
-}
-```
-
-### `DELETE /api/users`
-
-```typescript
-// RequestDto
-interface DeleteUserRequest {
-	id: number;
-}
-
-// ResponseDto
-interface DeleteUserResponse {
-	// 삭제된 행 수
-	[0]: number;
-}
-```
-
-### `GET /api/users/name`
-
-```typescript
-// RequestDto
-interface FindUserByNameRequest {
-	// Query params
-	name: string;
-}
-
-// ResponseDto
-interface FindUserByNameResponse {
-	message: string; // "이름이 있습니다." | "이름이 없습니다."
-}
-```
+````
 
 ### `POST /api/users/phone-number`
 
 ```typescript
 // RequestDto
 interface CheckUserPhoneNumberRequest {
-	name: string;
-	phoneNumber: string;
+  name: string;
+  phoneNumber: string;
 }
 
 // ResponseDto
 interface CheckUserPhoneNumberResponse {
-	isMatched: boolean;
-	userData: {
-		id: number;
-		name: string;
-		email: string;
-		phoneNumber: string;
-		roles: Array<{
-			userHasRoleId: number;
-			roleId: number;
-			roleStart: string;
-			roleEnd: string;
-			roleName: string;
-			roleCreatedAt: string;
-			organizationId: number;
-			organizationName: string;
-			organizationCode: string;
-			organizationDescription: string;
-		}>;
-	};
+  isMatched: boolean;
+  userData: {
+    id: number;
+    name: string;
+    email: string;
+    phoneNumber: string;
+    roles: Array<{
+      organizationId: number;
+      organizationName: string;
+      organizationCode: string;
+      roleName: string;
+    }>;
+  };
 }
-```
-
-### `GET /api/users/search`
-
-```typescript
-// RequestDto
-interface SearchMembersByNameRequest {
-	// Query params
-	name: string;
-}
-
-// ResponseDto
-interface SearchMembersByNameResponse {
-	success: boolean;
-	data?: Array<{
-		id: number;
-		name: string;
-		phoneNumber: string;
-		organizations: Array<{
-			organizationName: string;
-			organizationId: number;
-			roleName: string;
-		}>;
-		isNewMember: boolean;
-	}>;
-	message?: string; // 에러 시
-}
-```
+````
 
 ---
 
@@ -365,19 +165,17 @@ interface CreateOrganizationRequest {
 	organization_name: string;
 	organization_code: string;
 	organization_description?: string;
-	// ... 기타 Organization 필드들
+	upper_organization_id?: number;
+	description?: string;
 }
 
 // ResponseDto
-// -------------------------- 프론트에서 사용하는 값 체크 필요 ----------------------------
 interface CreateOrganizationResponse {
 	data: {
-		// Organization 모델 객체
 		id: number;
 		organization_name: string;
 		organization_code: string;
 		organization_description: string;
-		// ... 기타 모든 Organization 필드들
 	};
 }
 ```
@@ -390,12 +188,10 @@ interface CreateOrganizationResponse {
 // ResponseDto
 interface FindOrganizationsResponse {
 	data: Array<{
-		// Organization 모델의 모든 필드들
 		id: number;
 		organization_name: string;
 		organization_code: string;
 		organization_description: string;
-		// ... 기타 모든 Organization 필드들
 	}>;
 }
 ```
@@ -412,11 +208,9 @@ interface FindOrganizationRequest {
 // ResponseDto
 interface FindOrganizationResponse {
 	data: {
-		// Organization 모델 객체
 		id: number;
 		organization_name: string;
 		organization_code: string;
-		// ... 기타 모든 Organization 필드들
 	};
 }
 ```
@@ -430,28 +224,13 @@ interface UpdateOrganizationRequest {
 	organization_name?: string;
 	organization_code?: string;
 	organization_description?: string;
-	// ... 기타 업데이트 가능한 필드들
+	upper_organization_id?: number;
+	description?: string;
 }
 
 // ResponseDto
 interface UpdateOrganizationResponse {
-	// 업데이트된 행 수
-	[0]: number;
-}
-```
-
-### `DELETE /api/organizations`
-
-```typescript
-// RequestDto
-interface DeleteOrganizationRequest {
-	id: number;
-}
-
-// ResponseDto
-interface DeleteOrganizationResponse {
-	// 삭제된 행 수
-	[0]: number;
+	[0]: number; // 업데이트된 행 수
 }
 ```
 
@@ -470,10 +249,7 @@ interface GetOrganizationMembersResponse {
 		id: number; // User.id
 		name: string;
 		email: string;
-		roleId: number;
 		roleName: string;
-		roleStartDate: string;
-		roleEndDate: string;
 	}>;
 }
 ```
@@ -499,18 +275,14 @@ interface GetOrganizationActivitiesResponse {
 		instances: Array<{
 			id: number;
 			activity_id: number;
-			parent_instance_id: number;
 			start_datetime: string;
 			end_datetime: string;
 			actual_location: string;
-			actual_online_link: string;
 			notes: string;
 			attendance_count: number;
 			is_canceled: boolean;
 			created_at: string;
 			updated_at: string;
-			creator_id: number;
-			updater_id: number;
 			attendances: Array<{
 				userId: number;
 				userName: string;
@@ -543,21 +315,16 @@ interface GetOrganizationActivitiesResponse {
 // RequestDto
 interface CreateActivityRequest {
 	name: string;
-	activity_category_id: number;
+	description: string;
+	start_date: string;
+	end_date: string;
 	organization_id: number;
-	location_type: "OFFLINE" | "ONLINE" | "HYBRID";
-	location?: string;
-	online_link?: string;
-	default_start_time: string;
-	default_end_time: string;
-	is_deleted?: "Y" | "N";
-	// ... 기타 Activity 필드들
+	category: string;
 }
 
 // ResponseDto
 interface CreateActivityResponse {
 	data: {
-		// Activity 모델 객체
 		id: number;
 		name: string;
 		activity_category_id: number;
@@ -567,84 +334,7 @@ interface CreateActivityResponse {
 		online_link: string;
 		default_start_time: string;
 		default_end_time: string;
-		// ... 기타 모든 Activity 필드들
 	};
-}
-```
-
-### `GET /api/activities`
-
-```typescript
-// RequestDto: 없음
-
-// ResponseDto
-interface FindActivitiesResponse {
-	data: Array<{
-		// Activity 모델의 모든 필드들
-		id: number;
-		name: string;
-		activity_category_id: number;
-		organization_id: number;
-		// ... 기타 모든 Activity 필드들
-	}>;
-}
-```
-
-### `GET /api/activities/:id`
-
-```typescript
-// RequestDto
-interface FindActivityRequest {
-	// Path params
-	id: string;
-}
-
-// ResponseDto
-interface FindActivityResponse {
-	data: {
-		// Activity 모델 객체
-		id: number;
-		name: string;
-		activity_category_id: number;
-		organization_id: number;
-		// ... 기타 모든 Activity 필드들
-	};
-}
-```
-
-### `PUT /api/activities`
-
-```typescript
-// RequestDto
-interface UpdateActivityRequest {
-	id: number;
-	name?: string;
-	activity_category_id?: number;
-	location_type?: "OFFLINE" | "ONLINE" | "HYBRID";
-	location?: string;
-	online_link?: string;
-	// ... 기타 업데이트 가능한 필드들
-}
-
-// ResponseDto
-interface UpdateActivityResponse {
-	// 업데이트된 행 수
-	[0]: number;
-}
-```
-
-### `DELETE /api/activities`
-
-```typescript
-// RequestDto
-interface DeleteActivityRequest {
-	id: number;
-}
-
-// ResponseDto
-interface DeleteActivityResponse {
-	// 삭제된 행 수
-	[0]: number;
 }
 ```
 
@@ -666,26 +356,9 @@ interface GetCurrentMembersResponse {
 	data: Array<{
 		userId: number;
 		name: string;
-		nameSuffix: string;
 		email: string;
-		genderType: string;
-		birthDate: string;
-		address: string;
-		addressDetail: string;
-		city: string;
-		stateProvince: string;
-		country: string;
-		zipPostalCode: string;
-		isAddressPublic: boolean;
-		snsUrl: string;
-		hobby: string;
 		phoneNumber: string;
-		isPhoneNumberPublic: boolean;
-		churchMemberNumber: string;
-		churchRegistrationDate: string;
-		isNewMember: string;
-		isLongTermAbsentee: boolean;
-		isKakaotalkChatMember: boolean;
+		organizationId: number;
 		roleId: number;
 		roleName: string;
 	}>;
@@ -702,7 +375,6 @@ interface CreateCurrentMemberRequest {
 		name_suffix?: string;
 		gender_type?: string;
 		birth_date?: string;
-		country?: string;
 		phone_number: string;
 		church_registration_date?: string;
 		is_new_member?: string;
@@ -713,51 +385,173 @@ interface CreateCurrentMemberRequest {
 
 // ResponseDto
 interface CreateCurrentMemberResponse {
-	// User 모델 객체
 	id: number;
 	name: string;
 	name_suffix: string;
 	gender_type: string;
 	birth_date: string;
-	country: string;
 	phone_number: string;
 	church_registration_date: string;
 	is_new_member: string;
-	creator_id: number;
-	updater_id: number;
-	creator_ip: string;
-	updater_ip: string;
 	created_at: string;
 	updated_at: string;
-	// ... 기타 User 모델 필드들
 }
 ```
 
-### `POST /api/coramdeo/members`
+# 프론트
+
+## 🎯 **Activity Instances APIs**
+
+### `POST /organizations/{organizationId}/activities/{activityId}/attendance`
 
 ```typescript
-// RequestDto: CoramdeoController.updateCoramdeoMember 구현 필요
+// RequestDto
+interface CreateActivityInstanceRequest {
+	// Path params
+	organizationId: number;
+	activityId: number;
 
-// ResponseDto: CoramdeoController.updateCoramdeoMember 구현 필요
+	// Body
+	instanceData: {
+		startDateTime: string; // UTC ISO 형식 (예: "2024-01-15T10:00:00.000Z")
+		endDateTime: string; // UTC ISO 형식 (예: "2024-01-15T12:00:00.000Z")
+		location: string; // 모임 장소
+		notes: string; // 모임 메모
+	};
+	attendances: Array<{
+		userId: number;
+		status: string; // "출석" | "결석" | "지각"
+		checkInTime: string | null; // UTC ISO 형식 또는 null
+		checkOutTime: string | null; // UTC ISO 형식 또는 null
+		note: string; // 개별 출석 메모
+	}>;
+	imageInfo?: {
+		url: string; // 이미지 URL
+		fileName: string; // 파일명
+		fileSize: number; // 파일 크기 (bytes)
+		fileType: string; // MIME 타입 (예: "image/jpeg")
+	} | null;
+}
+
+// ResponseDto
+interface CreateActivityInstanceResponse {
+	result: number; // 1: 성공, 0: 실패
+	data?: {
+		id: number; // 생성된 인스턴스 ID
+		activity_id: number;
+		start_datetime: string;
+		end_datetime: string;
+		actual_location: string;
+		notes: string;
+		attendance_count: number;
+		created_at: string;
+	};
+	error?: string; // 에러 시 메시지
+}
 ```
 
-### `POST /api/coramdeo/activities`
+### `DELETE /organizations/{organizationId}/activities/{activityId}/instances/{activityInstanceId}`
 
 ```typescript
-// RequestDto: CoramdeoController.initCoramdeoActivities 구현 필요
+// RequestDto
+interface DeleteActivityInstanceRequest {
+	// Path params
+	organizationId: number;
+	activityId: number;
+	activityInstanceId: number;
+}
 
-// ResponseDto: CoramdeoController.initCoramdeoActivities 구현 필요
+// ResponseDto
+interface DeleteActivityInstanceResponse {
+	result: number; // 1: 성공, 0: 실패
+	error?: string; // 에러 시 메시지
+}
+```
+
+### `PUT /organizations/{organizationId}/activities/{activityId}/instances/{activityInstanceId}/attendance`
+
+```typescript
+// RequestDto
+interface UpdateActivityInstanceRequest {
+	// Path params
+	organizationId: number;
+	activityId: number;
+	activityInstanceId: number;
+
+	// Body (CreateActivityInstanceRequest의 instanceData, attendances, imageInfo와 동일)
+	instanceData: {
+		startDateTime: string;
+		endDateTime: string;
+		location: string;
+		notes: string;
+	};
+	attendances: Array<{
+		userId: number;
+		status: string; // "출석" | "결석" | "지각"
+		checkInTime: string | null;
+		checkOutTime: string | null;
+		note: string;
+	}>;
+	imageInfo?: {
+		url: string;
+		fileName: string;
+		fileSize: number;
+		fileType: string;
+	} | null;
+}
+
+// ResponseDto
+interface UpdateActivityInstanceResponse {
+	result: number; // 1: 성공, 0: 실패
+	error?: string; // 에러 시 메시지
+}
+```
+
+### `GET /organizations/{organizationId}/activities/{activityId}/instances/{activityInstanceId}`
+
+```typescript
+// RequestDto
+interface GetActivityInstanceDetailsRequest {
+	// Path params
+	organizationId: number;
+	activityId: number;
+	activityInstanceId: number;
+}
+
+// ResponseDto
+interface GetActivityInstanceDetailsResponse {
+	result: number; // 1: 성공, 0: 실패
+	activityInstance?: {
+		id: number;
+		activity_id: number;
+		start_datetime: string;
+		end_datetime: string;
+		actual_location: string;
+		notes: string;
+		attendance_count: number;
+		is_canceled: boolean;
+		created_at: string;
+		updated_at: string;
+		attendances: Array<{
+			userId: number;
+			userName: string;
+			userEmail: string;
+			userPhoneNumber: string;
+			status: string; // "출석" | "결석" | "지각"
+			check_in_time: string;
+			check_out_time: string;
+			note: string;
+		}>;
+		images: Array<{
+			id: number;
+			fileName: string;
+			filePath: string;
+			fileType: string;
+			fileSize: number;
+		}>;
+	};
+	error?: string;
+}
 ```
 
 ---
-
-## 📝 **주요 특징 및 주의사항**
-
-1. **날짜 필드**: 대부분 string으로 반환 (ISO 형식 추정)
-2. **Boolean 필드**: DB에서 "Y"/"N" 문자열로 저장되는 경우 많음
-3. **Enum 필드**: location_type, gender_type 등은 특정 값들만 허용
-4. **중첩 구조**: Organizations 관련 API들이 복잡한 중첩 구조를 가짐
-5. **동적 필드**: `...model.toJSON()` 사용으로 인한 동적 속성들
-6. **외부 의존성**: 인증 관련 API는 외부 서버와 통신
-
-이 DTO 구조를 참고해서 DB 구조 변경 후에도 동일한 API 동작을 보장할 수 있을 것 같습니다!
