@@ -154,39 +154,6 @@ interface GetOrganizationActivitiesResponse {
 
 ---
 
-## 🎯 **Activities APIs**
-
-### `POST /api/activities`
-
-```typescript
-// RequestDto
-interface CreateActivityRequest {
-	name: string;
-	description: string;
-	start_date: string;
-	end_date: string;
-	organization_id: number;
-	category: string;
-}
-
-// ResponseDto
-interface CreateActivityResponse {
-	data: {
-		id: number;
-		name: string;
-		activity_category_id: number;
-		organization_id: number;
-		location_type: string;
-		location: string;
-		online_link: string;
-		default_start_time: string;
-		default_end_time: string;
-	};
-}
-```
-
----
-
 ## 🎭 **Domain Controllers**
 
 ### `GET /api/current-members`
