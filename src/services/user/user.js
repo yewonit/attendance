@@ -1,13 +1,14 @@
 // User.Ctrl.js
-import { Sequelize, Op } from "sequelize";
+import { Op } from "sequelize";
 import models from "../../models/models.js";
 import {
 	DataConflictError,
 	NotFoundError,
 	ValidationError,
 } from "../../utils/errors.js";
-import crudService from "../common/crud.js";
 import { hashPassword } from "../../utils/password.js";
+import { getCurrentSeason } from "../../utils/season.js";
+import crudService from "../common/crud.js";
 
 const validateUserInfo = async (data) => {
 	if (!data.name) {
@@ -59,14 +60,9 @@ const userService = {
 			name_suffix: userData.name_suffix,
 			gender_type: userData.gender_type,
 			birth_date: userData.birth_date,
-			country: userData.country,
 			phone_number: formatPhoneNumber(userData.phone_number),
 			church_registration_date: userData.church_registration_date,
 			is_new_member: userData.is_new_member,
-			creator_id: idOfCreatingUser,
-			updater_id: idOfCreatingUser,
-			creator_ip: req.ip,
-			updater_ip: req.ip,
 		});
 
 		const organization = await models.Organization.findOne({
@@ -77,26 +73,11 @@ const userService = {
 		if (!organization)
 			throw new NotFoundError("존재하지 않는 organization입니다.");
 
-		const role = await models.Role.findOne({
-			where: {
-				organization_id: organizationId,
-				role_name: "순원",
-			},
-		});
-		if (!role) throw new NotFoundError("존재하지 않는 role입니다.");
-
 		// 사용자와 역할 연결
-		await models.UserHasRole.create({
+		await models.UserRole.create({
 			user_id: user.id,
-			role_id: role.id,
+			role_id: 4,	// 순원
 			organization_id: organizationId,
-			organization_code: organization.organization_code,
-			is_deleted: "N",
-			creator_id: idOfCreatingUser,
-			updater_id: idOfCreatingUser,
-			creator_ip: req.ip,
-			updater_ip: req.ip,
-			access_service_id: req.headers["x-access-service-id"],
 		});
 
 		// 생성된 사용자 정보 반환
@@ -199,48 +180,7 @@ const userService = {
 			throw new Error("사용자 정보가 일치하지 않습니다.");
 		}
 
-		const userHasRoles = await models.UserHasRole.findAll({
-			where: { user_id: user.id },
-			attributes: [
-				"id",
-				"role_id",
-				"organization_id",
-				"role_start_date",
-				"role_end_date",
-			],
-		});
-
-		const rolesWithOrganization = await Promise.all(
-			userHasRoles.map(async (userHasRole) => {
-				const role = await models.Role.findOne({
-					where: { id: userHasRole.role_id },
-					attributes: ["id", "role_name", "created_at"],
-				});
-
-				const organization = await models.Organization.findOne({
-					where: { id: userHasRole.organization_id },
-					attributes: [
-						"id",
-						"organization_name",
-						"organization_description",
-						"organization_code",
-					],
-				});
-
-				return {
-					userHasRoleId: userHasRole.id,
-					roleId: role.id,
-					roleStart: userHasRole.role_start_date,
-					roleEnd: userHasRole.role_end_date,
-					roleName: role.role_name,
-					roleCreatedAt: role.created_at,
-					organizationId: organization.id,
-					organizationName: organization.organization_name,
-					organizationCode: organization.organization_code,
-					organizationDescription: organization.organization_description,
-				};
-			})
-		);
+		const rolesWithOrganization = await getRoleAndOrganization(user.id);
 
 		const userData = {
 			id: user.id,
@@ -278,48 +218,17 @@ const userService = {
 		}
 
 		// 각 사용자의 역할 및 조직 정보 조회
-		const formattedMembers = await Promise.all(
-			users.map(async (user) => {
-				// 사용자의 역할 및 조직 정보 조회
-				const userHasRoles = await models.UserHasRole.findAll({
-					where: {
-						user_id: user.id,
-						is_deleted: "N",
-					},
-				});
-
-				// 역할 및 조직 정보 개별 조회
-				const organizations = await Promise.all(
-					userHasRoles.map(async (userRole) => {
-						const role = await models.Role.findOne({
-							where: { id: userRole.role_id },
-							attributes: ["id", "role_name"],
-						});
-
-						const organization = await models.Organization.findOne({
-							where: { id: userRole.organization_id },
-							attributes: ["id", "organization_name"],
-						});
-
-						return {
-							organizationName: organization
-								? organization.organization_name
-								: null,
-							organizationId: organization ? organization.id : null,
-							roleName: role ? role.role_name : null,
-						};
-					})
-				);
-
-				return {
-					id: user.id,
-					name: user.name,
-					phoneNumber: user.phone_number,
-					organizations: organizations,
-					isNewMember: user.is_new_member === "Y",
-				};
-			})
-		);
+		const formattedMembers = [];
+		for (let user of users) {
+			const rolesWithOrganization = await getRoleAndOrganization(user.id);
+			formattedMembers.push({
+				id: user.id,
+				name: user.name,
+				email: user.email,
+				phoneNumber: user.phone_number,
+				roles: rolesWithOrganization,
+			});
+		}
 
 		return formattedMembers;
 	},
@@ -327,7 +236,54 @@ const userService = {
 	emailDuplicationCheck: async (email) => {
 		await emailCheck(email);
 	},
+
+	getUserRoleOfCurrentSeason: async (userId) => {
+		const rolesWithOrganization = await getRoleAndOrganization(userId);
+		return rolesWithOrganization;
+	}
 };
+
+const getRoleAndOrganization = async (userId) => {
+	const currentSeason = getCurrentSeason();
+
+	const result = await models.UserRole.findAll({
+		include: [
+			{
+				model: models.Role,
+				where: {
+					is_deleted: false
+				},
+				attributes: ['id', 'name']
+			},
+			{
+				model: models.Organization,
+				where: {
+					season_id: currentSeason.id,
+					is_deleted: false
+				},
+				attributes: ['id', 'organization_code']
+			}
+		],
+		where: {
+			user_id: userId,
+			is_deleted: 'N'
+		}
+	});
+
+	if (!result || result.length === 0) {
+		throw new NotFoundError("해당 유저의 역할 정보를 찾을 수 없습니다.");
+	}
+
+	const rolesWithOrganization = result.map(userRole => ({
+		roleName: userRole.Role.name,
+		permissionName: userRole.Role.name, // TODO: 추후 api 수정 시 제거
+		organizationId: userRole.Organization.id,
+		organizationName: userRole.Organization.organization_code, // TODO: 추후 api 수정 시 제거
+		organizationCode: userRole.Organization.organization_code
+	}));
+
+	return rolesWithOrganization;
+}
 
 const formatPhoneNumber = (phoneNumber) => {
 	return phoneNumber.replaceAll(" ", "").replaceAll("-", "");

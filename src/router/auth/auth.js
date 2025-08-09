@@ -47,60 +47,14 @@ router.post("/login", async (req, res, next) => {
 
 		const tokens = await loginWithEmailAndPassword(email, user.name);
 
-		const userHasRoles = await models.UserHasRole.findAll({
-			where: { user_id: user.id },
-			attributes: [
-				"id",
-				"role_id",
-				"organization_id",
-				"role_start_date",
-				"role_end_date",
-			],
-		});
-
-		const rolesWithOrganization = await Promise.all(
-			userHasRoles.map(async (userHasRole) => {
-				const role = await models.Role.findOne({
-					where: { id: userHasRole.role_id },
-					attributes: ["id", "role_name", "created_at", "permission_group_id"],
-				});
-
-				const organization = await models.Organization.findOne({
-					where: { id: userHasRole.organization_id },
-					attributes: [
-						"id",
-						"organization_name",
-						"organization_description",
-						"organization_code",
-					],
-				});
-
-				const permissionGroup = await models.PermissionGroup.findOne({
-					where: { id: role.permission_group_id },
-				});
-
-				return {
-					userHasRoleId: userHasRole.id,
-					roleId: role.id,
-					roleStart: userHasRole.role_start_date,
-					roleEnd: userHasRole.role_end_date,
-					roleName: role.role_name,
-					roleCreatedAt: role.created_at,
-					permissionName: permissionGroup.name,
-					organizationId: organization.id,
-					organizationName: organization.organization_name,
-					organizationCode: organization.organization_code,
-					organizationDescription: organization.organization_description,
-				};
-			})
-		);
+		const userRoleAndOrganization = await userService.getUserRoleOfCurrentSeason(user.id);
 
 		const userData = {
 			id: user.id,
 			name: user.name,
 			email: user.email,
 			phoneNumber: user.phone_number,
-			roles: rolesWithOrganization,
+			roles: userRoleAndOrganization,
 		};
 
 		res.status(200).json({
@@ -124,60 +78,14 @@ router.get("/login", async (req, res, next) => {
 			},
 		});
 
-		const userHasRoles = await models.UserHasRole.findAll({
-			where: { user_id: user.id },
-			attributes: [
-				"id",
-				"role_id",
-				"organization_id",
-				"role_start_date",
-				"role_end_date",
-			],
-		});
-
-		const rolesWithOrganization = await Promise.all(
-			userHasRoles.map(async (userHasRole) => {
-				const role = await models.Role.findOne({
-					where: { id: userHasRole.role_id },
-					attributes: ["id", "role_name", "created_at", "permission_group_id"],
-				});
-
-				const organization = await models.Organization.findOne({
-					where: { id: userHasRole.organization_id },
-					attributes: [
-						"id",
-						"organization_name",
-						"organization_description",
-						"organization_code",
-					],
-				});
-
-				const permissionGroup = await models.PermissionGroup.findOne({
-					where: { id: role.permission_group_id },
-				});
-
-				return {
-					userHasRoleId: userHasRole.id,
-					roleId: role.id,
-					roleStart: userHasRole.role_start_date,
-					roleEnd: userHasRole.role_end_date,
-					roleName: role.role_name,
-					roleCreatedAt: role.created_at,
-					permissionName: permissionGroup.name,
-					organizationId: organization.id,
-					organizationName: organization.organization_name,
-					organizationCode: organization.organization_code,
-					organizationDescription: organization.organization_description,
-				};
-			})
-		);
+		const userRoleAndOrganization = await userService.getUserRoleOfCurrentSeason(user.id);
 
 		const userData = {
 			id: user.id,
 			name: user.name,
 			email: user.email,
 			phoneNumber: user.phone_number,
-			roles: rolesWithOrganization,
+			roles: userRoleAndOrganization,
 		};
 
 		res.json({
@@ -212,7 +120,7 @@ router.post("/verify", async (req, res, next) => {
 	const { email, code } = req.body;
 	try {
 		const isVerified = await verifyEmailCode(email, code);
-		if (isVerified) res.status(200).json(isVerified);
+		if (isVerified) res.status(200).json({ "isVerified": isVerified });
 		else throw new ValidationError("이메일 검증에 실패했습니다.");
 	} catch (error) {
 		next(error);
@@ -223,7 +131,7 @@ router.post("/reset-password", async (req, res, next) => {
 	const { id, password } = req.body;
 	try {
 		const result = await resetPassword(id, password);
-		res.status(200).json(result);
+		res.status(200).json({ "result": result });
 	} catch (error) {
 		next(error);
 	}
