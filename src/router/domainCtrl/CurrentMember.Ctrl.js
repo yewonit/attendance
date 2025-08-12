@@ -16,55 +16,41 @@ const CurrentMemberCtrl = {
 					.json({ message: "조직 ID가 제공되지 않았습니다." });
 			}
 
-			// UserHasRole 모델을 사용하여 조직 ID로 필터링합니다.
-			const userHasRoles = await models.UserHasRole.findAll({
+			const userRoles = await models.UserRole.findAll({
 				where: { organization_id: organizationId },
 				include: [
 					{
 						model: models.User,
+						where: { id: models.UserRole.user_id, is_deleted: false },
 						attributes: { exclude: ["password"] },
 					},
 					{
 						model: models.Role,
+						where: { id: models.UserRole.role_id, is_deleted: false },
 					},
 				],
 			});
 
 			// 필터링된 결과가 없는 경우 404 상태 코드와 메시지를 반환합니다.
-			if (userHasRoles.length === 0) {
+			if (userRoles.length === 0) {
 				return res
 					.status(404)
 					.json({ message: "해당 조직에 소속된 멤버가 없습니다." });
 			}
 
 			// 필터링된 결과를 JSON 배열로 변환합니다.
-			const members = userHasRoles.map((userHasRole) => {
-				const { User: user, Role: role } = userHasRole;
+			const members = userRoles.map((userRole) => {
+				const { User: user, Role: role } = userRole;
 				return {
 					userId: user.id,
 					name: user.name,
-					nameSuffix: user.name_suffix,
 					email: user.email,
-					genderType: user.gender_type,
-					birthDate: user.birth_date,
-					address: user.address,
-					addressDetail: user.address_detail,
-					city: user.city,
-					stateProvince: user.state_province,
-					country: user.country,
-					zipPostalCode: user.zip_postal_code,
-					isAddressPublic: user.is_address_public,
-					snsUrl: user.sns_url,
-					hobby: user.hobby,
 					phoneNumber: user.phone_number,
-					isPhoneNumberPublic: user.is_phone_number_public,
-					churchMemberNumber: user.church_member_number,
 					churchRegistrationDate: user.church_registration_date,
 					isNewMember: user.is_new_member,
 					isLongTermAbsentee: user.is_long_term_absentee,
-					isKakaotalkChatMember: user.is_kakaotalk_chat_member,
 					roleId: role.id,
-					roleName: role.role_name,
+					roleName: role.name,
 				};
 			});
 
@@ -94,7 +80,7 @@ const CurrentMemberCtrl = {
 				where: {
 					name: userData.name,
 					phone_number: formatPhoneNumber(userData.phone_number),
-					is_deleted: "N",
+					is_deleted: false,
 				},
 			});
 			if (userExists) {
@@ -107,16 +93,11 @@ const CurrentMemberCtrl = {
 			const user = await models.User.create({
 				name: userData.name,
 				name_suffix: userData.name_suffix,
-				gender_type: userData.gender_type,
+				gender: userData.gender_type,
 				birth_date: userData.birth_date,
-				country: userData.country,
 				phone_number: formatPhoneNumber(userData.phone_number),
 				church_registration_date: userData.church_registration_date,
 				is_new_member: userData.is_new_member,
-				creator_id: idOfCreatingUser,
-				updater_id: idOfCreatingUser,
-				creator_ip: req.ip,
-				updater_ip: req.ip,
 			});
 
 			const organization = await models.Organization.findOne({
@@ -127,26 +108,11 @@ const CurrentMemberCtrl = {
 			if (!organization)
 				throw new NotFoundError("존재하지 않는 organization입니다.");
 
-			const role = await models.Role.findOne({
-				where: {
-					organization_id: organizationId,
-					role_name: "순원",
-				},
-			});
-			if (!role) throw new NotFoundError("존재하지 않는 role입니다.");
-
 			// 사용자와 역할 연결
-			await models.UserHasRole.create({
+			await models.UserRole.create({
 				user_id: user.id,
-				role_id: role.id,
+				role_id: 4, // 순원
 				organization_id: organizationId,
-				organization_code: organization.organization_code,
-				is_deleted: "N",
-				creator_id: idOfCreatingUser,
-				updater_id: idOfCreatingUser,
-				creator_ip: req.ip,
-				updater_ip: req.ip,
-				access_service_id: req.headers["x-access-service-id"],
 			});
 
 			// 생성된 사용자 정보 반환

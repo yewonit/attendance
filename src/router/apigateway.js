@@ -1,5 +1,5 @@
 import { Router } from "express";
-import activityRouter from "./attendance/activity.js";
+import activityRouter from "./activity/activity.js";
 import organizationRouter from "./organization/organization.js";
 import userRouter from "./user/user.js";
 import CurrentMemberCtrl from "./domainCtrl/CurrentMember.Ctrl.js";
