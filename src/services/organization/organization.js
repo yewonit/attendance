@@ -78,34 +78,24 @@ const organizationService = {
 			include: [
 				{
 					model: models.Activity,
+					attributes: ["id", "name"],
+					where: { organization_id: organizationId, is_deleted: false },
 					include: [
-						models.ActivityCategory,
 						{
-							model: models.ActivityInstance,
+							model: models.Attendance,
+							where: { activity_id: models.Activity.id },
 							include: [
 								{
-									model: models.Attendance,
-									include: [
-										{
-											model: models.User,
-											attributes: ["id", "name", "email", "phone_number"],
-										},
-										models.AttendanceStatus,
-									],
-								},
-								// 이미지 파일 정보를 포함
-								{
-									model: models.File,
-									as: "Images",
-									attributes: [
-										"id",
-										"file_name",
-										"file_path",
-										"file_type",
-										"file_size",
-									],
+									model: models.User,
+									where: { id: models.Attendance.user_id, is_deleted: false },
+									attributes: ["id", "name", "email"],
 								},
 							],
+						},
+						{
+							model: models.ActivityImage,
+							where: { activity_id: models.Activity.id },
+							attributes: ["id", "name", "path"],
 						},
 					],
 				},
@@ -118,53 +108,43 @@ const organizationService = {
 			);
 		}
 
-		const activitiesData = organization.Activities.map((activity) => {
+		// TODO: 추후 프론트에서 리뉴얼된 테이블 데이터에 맞춰 사용하도록 수정 필요
+		const activitiesData = organization.Activity.map((activity) => {
 			return {
-				id: activity.id,
+				id: 1,
 				name: activity.name,
 				description: activity.description,
-				category: activity.ActivityCategory
-					? activity.ActivityCategory.name
-					: null,
-				instances: activity.ActivityInstances.map((instance) => {
-					return {
-						id: instance.id,
-						activity_id: instance.activity_id,
-						parent_instance_id: instance.parent_instance_id,
-						start_datetime: instance.start_datetime,
-						end_datetime: instance.end_datetime,
-						actual_location: instance.actual_location,
-						actual_online_link: instance.actual_online_link,
-						notes: instance.notes,
-						attendance_count: instance.attendance_count,
-						is_canceled: instance.is_canceled,
-						created_at: instance.created_at,
-						updated_at: instance.updated_at,
-						creator_id: instance.creator_id,
-						updater_id: instance.updater_id,
-						attendances: instance.Attendances.map((attendance) => {
-							return {
-								userId: attendance.User.id,
-								userName: attendance.User.name,
-								userEmail: attendance.User.email,
-								userPhoneNumber: attendance.User.phone_number,
-								status: attendance.AttendanceStatus
-									? attendance.AttendanceStatus.name
-									: null,
-								check_in_time: attendance.check_in_time,
-								check_out_time: attendance.check_out_time,
-								note: attendance.note,
-							};
-						}),
-						images: instance.Images.map((image) => ({
-							id: image.id,
-							fileName: image.file_name,
-							filePath: image.file_path,
-							fileType: image.file_type,
-							fileSize: image.file_size,
-						})),
-					};
-				}),
+				category: activity.category,
+				instances: {
+					id: activity.id,
+					activity_id: 1,
+					parent_instance_id: null,
+					start_datetime: activity.start_time,
+					end_datetime: activity.end_time,
+					notes: activity.description,
+					is_canceled: activity.is_deleted,
+					created_at: activity.created_at,
+					updated_at: activity.updated_at,
+					attendances: activity.Attendance.map((attendance) => {
+						return {
+							userId: attendance.User.id,
+							userName: attendance.User.name,
+							userEmail: attendance.User.email,
+							userPhoneNumber: attendance.User.phone_number,
+							status: attendance.attendance_status,
+							check_in_time: activity.start_time,
+							check_out_time: activity.end_time,
+							note: null,
+						};
+					}),
+					images: activity.ActivityImage.map((image) => ({
+						id: image.id,
+						fileName: image.name,
+						filePath: image.path,
+						fileType: "jpeg",
+						fileSize: 100,
+					})),
+				},
 			};
 		});
 
