@@ -22,20 +22,19 @@ const validateOrganizationData = async (data) => {
 };
 
 const getMembersById = async (organizationId) => {
-	const organizationMembers = await models.UserHasRole.findAll({
+	const organizationMembers = await models.UserRole.findAll({
 		where: {
 			organization_id: organizationId,
-			is_deleted: "N",
 		},
 		include: [
 			{
 				model: models.User,
-				attributes: ["id", "name", "email", "phone_number"],
-				where: { is_deleted: "N" },
+				attributes: ["id", "name", "email"],
+				where: { is_deleted: false },
 			},
 			{
 				model: models.Role,
-				attributes: ["id", "role_name"],
+				attributes: ["id", "name"],
 			},
 		],
 	});

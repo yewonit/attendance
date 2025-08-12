@@ -21,10 +21,10 @@ export default (sequelize, Sequelize) => {
 					key: "id",
 				},
 			},
-			organization_code: {
+			name: {
 				type: Sequelize.STRING(50),
 				allowNull: false,
-				comment: "조직의 고유 코드. 조직의 연속성 추적에 사용",
+				comment: "조직명",
 			},
 			upper_organization_id: {
 				type: Sequelize.INTEGER,

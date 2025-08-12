@@ -370,10 +370,7 @@ router.get("/:id/members", async (req, res, next) => {
 				id: member.User.id,
 				name: member.User.name,
 				email: member.User.email,
-				roleId: member.Role.id,
-				roleName: member.Role.role_name,
-				roleStartDate: member.role_start_date,
-				roleEndDate: member.role_end_date,
+				roleName: member.Role.name,
 			})),
 		});
 	} catch (error) {
