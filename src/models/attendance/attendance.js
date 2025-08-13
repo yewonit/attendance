@@ -37,6 +37,11 @@ export default (sequelize, Sequelize) => {
 				allowNull: false,
 				comment: "출석 상태",
 			},
+			description: {
+				type: Sequelize.STRING(500),
+				allowNull: true,
+				comment: "특이사항",
+			},
 			created_at: {
 				type: Sequelize.DATE,
 				allowNull: false,

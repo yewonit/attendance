@@ -1,7 +1,7 @@
 import { col, fn, where } from "sequelize";
 import models from "../../models/models.js";
 import { sequelize } from "../../utils/database.js";
-
+import { activityTemplate } from "../../enums/activity_template.js";
 // 기존의 attendanceController 객체
 const attendanceController = {
 	// recordAttendance 함수 추가
@@ -34,28 +34,27 @@ const attendanceController = {
 			}
 
 			// 활동이 존재하는지 확인
-			const activity = await models.Activity.findOne({
-				where: { id: activityId, organization_id: organizationId },
-			});
-			if (!activity) {
+			const template = Object.values(activityTemplate).find(
+				(at) => at.id === activityId
+			);
+			if (!template) {
 				return res
 					.status(404)
-					.json({ message: "해당 조직의 활동을 찾을 수 없습니다." });
+					.json({ message: "해당 활동 템플릿을 찾을 수 없습니다." });
 			}
 
 			// 활동 인스턴스 생성
-			const activityInstance = await models.ActivityInstance.create({
-				activity_id: activityId,
-				start_datetime: instanceData.startDateTime,
-				end_datetime: instanceData.endDateTime,
-				actual_location: instanceData.location || "기본 위치",
-				notes: instanceData.notes || "",
-				creator_id: currentUserId,
-				updater_id: currentUserId,
+			const activity = await models.Activity.create({
+				name: template.name,
+				description: template.description,
+				activity_category: template.activityCategory,
+				organization_id: organizationId,
+				start_time: instanceData.startDateTime,
+				end_time: instanceData.endDateTime,
 			});
 
 			// 파일 정보 저장
-			let fileData = null; // fileData 변수를 미리 선언
+			let imageData = null; // fileData 변수를 미리 선언
 
 			if (
 				imageInfo &&
@@ -65,119 +64,38 @@ const attendanceController = {
 				imageInfo.fileType
 			) {
 				try {
-					fileData = await models.File.create({
-						file_for: "AI",
-						file_name: imageInfo.fileName,
-						file_path: imageInfo.url,
-						file_size: imageInfo.fileSize
-							? `${imageInfo.fileSize} bytes`
-							: "0 bytes",
-						file_type: imageInfo.fileType,
-						creator_id: currentUserId,
-						updater_id: currentUserId,
-						creator_ip: req.ip,
-						updater_ip: req.ip,
+					imageData = await models.ActivityImage.create({
+						activity_id: activity.id,
+						name: imageInfo.fileName,
+						path: imageInfo.url,
 					});
-
-					if (fileData) {
-						const activityInstanceHasFile =
-							await models.ActivityInstanceHasFile.create({
-								activity_instance_id: activityInstance.id,
-								file_id: fileData.id,
-								creator_id: currentUserId,
-								updater_id: currentUserId,
-								creator_ip: req.ip,
-								updater_ip: req.ip,
-							});
-					}
 				} catch (fileError) {
 					next(fileError);
 				}
 			}
 
-			// 출석 정보 생성 또는 업데이트
-			const updatedAttendances = await Promise.all(
+			await Promise.all(
 				attendances.map(async (attendance) => {
-					const attendanceStatus = await models.AttendanceStatus.findOne({
-						where: where(
-							fn("LOWER", col("name")),
-							fn("LOWER", attendance.status)
-						),
+					await models.Attendance.create({
+						activity_id: activity.id,
+						user_id: attendance.userId,
+						attendance_status: attendance.status,
+						description: attendance.notes,
 					});
-					if (!attendanceStatus) {
-						throw new Error(`유효하지 않은 출석 상태: ${attendance.status}`);
-					}
-
-					const [attendanceRecord, created] =
-						await models.Attendance.findOrCreate({
-							where: {
-								activity_instance_id: activityInstance.id,
-								user_id: attendance.userId,
-							},
-							defaults: {
-								attendance_status_id: attendanceStatus.id,
-								check_in_time: attendance.checkInTime || null,
-								check_out_time: attendance.checkOutTime || null,
-								notes: attendance.notes || "",
-								attendance_role: "PARTICIPANT", // 기본 역할 설정
-								creator_id: currentUserId,
-								updater_id: currentUserId,
-							},
-						});
-
-					if (!created) {
-						await attendanceRecord.update({
-							attendance_status_id: attendanceStatus.id,
-							check_in_time: attendance.checkInTime || null,
-							check_out_time: attendance.checkOutTime || null,
-							note: attendance.note || attendanceRecord.note,
-							updater_id: currentUserId,
-						});
-					}
-
-					return attendanceRecord;
 				})
 			);
-
-			// 활동 인스턴스의 출석 수 업데이트
-			await activityInstance.update({
-				attendance_count: updatedAttendances.length,
-				updater_id: currentUserId,
-			});
 
 			res.status(200).json({
 				message: "출석 정보가 성공적으로 기록되었습니다.",
 				activityInstance: {
-					id: activityInstance.id,
-					startDateTime: activityInstance.start_datetime,
-					endDateTime: activityInstance.end_datetime,
-					location: activityInstance.actual_location,
-					notes: activityInstance.notes,
+					id: activity.id,
+					startDateTime: activity.start_time,
+					endDateTime: activity.end_time,
+					location: "기본 위치",
+					notes: activity.description,
+					createdAt: activity.created_at,
+					updatedAt: activity.updated_at,
 				},
-				attendances: await Promise.all(
-					updatedAttendances.map(async (attendance) => {
-						const attendanceStatus = await models.AttendanceStatus.findByPk(
-							attendance.attendance_status_id
-						);
-						return {
-							id: attendance.id,
-							userId: attendance.user_id,
-							status: attendanceStatus ? attendanceStatus.name : "출석",
-							checkInTime: attendance.check_in_time,
-							checkOutTime: attendance.check_out_time,
-							note: attendance.note,
-						};
-					})
-				),
-				file: fileData
-					? {
-							id: fileData.id,
-							fileName: fileData.file_name,
-							filePath: fileData.file_path,
-							fileSize: fileData.file_size,
-							fileType: fileData.file_type,
-					  }
-					: null,
 			});
 		} catch (error) {
 			res.status(500).json({
