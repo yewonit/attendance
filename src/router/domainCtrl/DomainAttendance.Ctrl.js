@@ -109,59 +109,24 @@ const attendanceController = {
 	// 활동 인스턴스 삭제 함수 수정
 	deleteActivityInstance: async (req, res, next) => {
 		try {
-			const { organizationId, activityId, activityInstanceId } = req.params;
+			const { activityInstanceId } = req.params;
 
 			// 트랜잭션 시작
 			const result = await sequelize.transaction(async (t) => {
-				// 1. ActivityInstanceHasFile 조회 및 삭제
-				const activityInstanceFiles =
-					await models.ActivityInstanceHasFile.findAll({
-						where: { activity_instance_id: activityInstanceId },
-						transaction: t,
-					});
+				const activity = await models.Activity.findByPk(activityInstanceId);
+				await activity.destroy();
 
-				// 파일 ID 목록 추출
-				const fileIds = activityInstanceFiles.map((file) => file.file_id);
-
-				// ActivityInstanceHasFile 레코드 삭제
-				await models.ActivityInstanceHasFile.destroy({
-					where: { activity_instance_id: activityInstanceId },
-					transaction: t,
+				const activityImage = await models.ActivityImage.findOne({
+					where: { activity_id: activityInstanceId },
 				});
-
-				// 2. File 테이블에서 관련 파일 데이터 삭제
-				await models.File.destroy({
-					where: { id: fileIds },
-					transaction: t,
-				});
-
-				// 3. Attendance 레코드 삭제
-				await models.Attendance.destroy({
-					where: { activity_instance_id: activityInstanceId },
-					transaction: t,
-				});
-
-				// 4. ActivityInstance 삭제
-				const deletedActivityInstance = await models.ActivityInstance.destroy({
-					where: {
-						id: activityInstanceId,
-						activity_id: activityId,
-					},
-					transaction: t,
-				});
-
-				if (deletedActivityInstance === 0) {
-					throw new Error("활동 인스턴스를 찾을 수 없습니다.");
+				if (activityImage) {
+					await activityImage.destroy();
 				}
-
-				return { deletedActivityInstance, deletedFileIds: fileIds };
 			});
 
 			res.status(200).json({
 				message:
 					"활동 인스턴스와 관련된 모든 데이터가 성공적으로 삭제되었습니다.",
-				deletedActivityInstanceId: activityInstanceId,
-				deletedFileIds: result.deletedFileIds,
 			});
 		} catch (error) {
 			res.status(500).json({
