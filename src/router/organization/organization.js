@@ -2,6 +2,7 @@ import organizationService from "../../services/organization/organization.js";
 import organizationCrudRouter from "./organization.crud.js";
 import { Router } from "express";
 import DomainAttendanceCtrl from "../domainCtrl/DomainAttendance.Ctrl.js";
+import { activityTemplate } from "../../enums/activity_template.js";
 
 const router = Router();
 
@@ -379,12 +380,11 @@ router.get("/:id/members", async (req, res, next) => {
 });
 
 router.get("/:id/activities", async (req, res, next) => {
-	const organizationId = req.params.id;
 	try {
-		const data = await organizationService.getOrganizationActivities(
-			organizationId
-		);
-
+		const data = [];
+		for (let activity of Object.values(activityTemplate)) {
+			data.push(activity);
+		}
 		res.status(200).json(data);
 	} catch (error) {
 		next(error);
