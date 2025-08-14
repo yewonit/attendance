@@ -30,7 +30,7 @@ router.get("/:id/members", async (req, res, next) => {
 });
 
 router.post(
-	"/:organizationId/activities/:activityId/attendance",
+	"/:organizationId/activities",
 	DomainAttendanceCtrl.recordAttendance
 );
 
@@ -44,12 +44,6 @@ router.delete(
 router.put(
 	"/:organizationId/activities/:activityId/instances/:activityInstanceId/attendance",
 	DomainAttendanceCtrl.updateAttendance
-);
-
-// 활동 인스턴스 상세 정보 조회
-router.get(
-	"/:organizationId/activities/:activityId/instances/:activityInstanceId",
-	DomainAttendanceCtrl.getActivityInstanceDetails
 );
 
 export default router;

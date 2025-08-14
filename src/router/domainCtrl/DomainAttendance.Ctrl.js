@@ -1,7 +1,6 @@
-import { col, fn, where } from "sequelize";
+import { activityTemplate } from "../../enums/activity_template.js";
 import models from "../../models/models.js";
 import { sequelize } from "../../utils/database.js";
-import { activityTemplate } from "../../enums/activity_template.js";
 // 기존의 attendanceController 객체
 const attendanceController = {
 	// recordAttendance 함수 추가
@@ -240,69 +239,6 @@ const attendanceController = {
 			});
 		} catch (error) {
 			// 에러 처리 및 로깅
-			res.status(500).json({
-				message: "서버 오류가 발생했습니다.",
-				error: error.message,
-				stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
-			});
-		}
-	},
-
-	// 활동 인스턴스 상세 정보 조회
-	getActivityInstanceDetails: async (req, res, next) => {
-		try {
-			const { activityInstanceId } = req.params;
-
-			const activity = await models.Activity.findOne({
-				where: { id: activityInstanceId },
-				include: [
-					{
-						model: models.Attendance,
-						include: [
-							{
-								model: models.User,
-								where: { id: models.Attendance.user_id },
-								attributes: ["id", "name", "email"],
-							},
-						],
-					},
-					{
-						model: models.ActivityImage,
-						where: { activity_id: activityInstanceId },
-					},
-				],
-			});
-
-			if (!activity) {
-				return res
-					.status(404)
-					.json({ message: "활동 인스턴스를 찾을 수 없습니다." });
-			}
-
-			res.status(200).json({
-				activityInstance: {
-					id: activity.id,
-					startDateTime: activity.start_time,
-					endDateTime: activity.end_time,
-					notes: activity.description,
-					activityName: activity.name,
-					activityDescription: activity.description,
-					attendances: activity.Attendances.map((attendance) => ({
-						id: attendance.id,
-						userId: attendance.User.id,
-						userName: attendance.User.name,
-						userEmail: attendance.User.email,
-						status: attendance.attendance_status,
-						note: attendance.description,
-					})),
-					images: activity.ActivityImages.map((image) => ({
-						id: image.id,
-						fileName: image.name,
-						filePath: image.path,
-					})),
-				},
-			});
-		} catch (error) {
 			res.status(500).json({
 				message: "서버 오류가 발생했습니다.",
 				error: error.message,

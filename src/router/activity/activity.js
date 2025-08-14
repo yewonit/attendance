@@ -11,4 +11,20 @@ router.get("", async (req, res, next) => {
   })
 });
 
+router.get("/activities/:id", async (req, res, next) => {
+  const activityId = req.path.id
+
+  try {
+    const data = await activityService.getActivityDetails(activityId)
+    const response = {
+      data: data,
+      error: null
+    }
+
+    res.status(200).json(response)
+  } catch (error) {
+    next(error)
+  }
+})
+
 export default router;
