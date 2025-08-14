@@ -21,7 +21,24 @@ router.get("/activities/:id", async (req, res, next) => {
       error: null
     }
 
-    res.status(200).json(response)
+    res.status(200).json({
+      data: response,
+      error: null
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post("/activities", async (req, res, next) => {
+  const { organizationId, activityTemplateId } = req.query;
+  const data = req.body;
+  try {
+    await activityService.recordActivityAndAttendance(organizationId, activityTemplateId, data)
+    res.status(201).json({
+      data: "successed",
+      error: null
+    })
   } catch (error) {
     next(error)
   }

@@ -15,6 +15,12 @@ class ValidationError extends AppError {
 	}
 }
 
+class DataCreationError extends AppError {
+	constructor(message) {
+		super(message, 400);
+	}
+}
+
 class AuthenticationError extends AppError {
 	constructor(message) {
 		super(message, 401);
@@ -35,8 +41,7 @@ class DataConflictError extends AppError {
 
 export {
 	AppError,
-	AuthenticationError,
-	NotFoundError,
-	ValidationError,
-	DataConflictError,
+	AuthenticationError, DataConflictError, DataCreationError, NotFoundError,
+	ValidationError
 };
+
