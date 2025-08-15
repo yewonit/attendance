@@ -96,6 +96,7 @@ const activityService = {
 				name: template.name,
 				description: activityData.notes,
 				activity_category: template.activityCategory,
+				location: activityData.location,
 				organization_id: organizationId,
 				start_time: activityData.startDateTime,
 				end_time: activityData.endDateTime,
@@ -122,15 +123,11 @@ const activityService = {
 	},
 
 	updateActivityAndAttendance: async (activityId, data) => {
-		const { activityTemplateId, activityData, attendances, imageInfo } = data;
+		const { activityData, attendances, imageInfo } = data;
 
 		if (!activityId || !activityData || !attendances) {
 			throw new ValidationError("필수 데이터가 누락되었습니다.")
 		}
-
-		const template = Object.values(activityTemplate).find((template) => {
-			template.id === activityTemplateId
-		})
 
 		const activity = await models.Activity.findOne({
 			where: { id: activityId },
@@ -142,6 +139,7 @@ const activityService = {
 		}
 
 		await activity.update({
+			location: activityData.location,
 			start_time: activityData.startDateTime,
 			end_time: activityData.endDateTime,
 			description: activityData.notes,

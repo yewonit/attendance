@@ -3,6 +3,7 @@ const initActivityTemplate = (
 	name,
 	description,
 	activityCategory,
+	location,
 	startTime,
 	endTime
 ) => {
@@ -11,6 +12,7 @@ const initActivityTemplate = (
 		name,
 		description,
 		activityCategory,
+		location,
 		startTime,
 		endTime,
 	};
@@ -22,6 +24,7 @@ export const activityTemplate = Object.freeze({
 		"주일2부예배",
 		"주일2부예배",
 		"예배",
+		"커버넌트홀",
 		"10:00:00",
 		"11:20:00"
 	),
@@ -30,6 +33,7 @@ export const activityTemplate = Object.freeze({
 		"주일3부예배",
 		"주일3부예배",
 		"예배",
+		"커버넌트홀",
 		"12:00:00",
 		"13:20:00"
 	),
@@ -38,6 +42,7 @@ export const activityTemplate = Object.freeze({
 		"청년예배",
 		"청년예배",
 		"예배",
+		"커버넌트홀",
 		"14:20:00",
 		"16:10:00"
 	),
@@ -46,6 +51,7 @@ export const activityTemplate = Object.freeze({
 		"수요청년예배",
 		"수요청년예배",
 		"예배",
+		"스카이아트홀",
 		"21:20:00",
 		"22:20:00"
 	),
@@ -54,6 +60,7 @@ export const activityTemplate = Object.freeze({
 		"금요청년예배",
 		"금요청년예배",
 		"예배",
+		"스카이아트홀",
 		"22:30:00",
 		"23:20:00"
 	),

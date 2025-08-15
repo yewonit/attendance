@@ -27,6 +27,11 @@ export default (sequelize, Sequelize) => {
 				allowNull: false,
 				comment: "활동 카테고리 타입",
 			},
+			location: {
+				type: Sequelize.STRING(100),
+				allowNull: true,
+				comment: "장소"
+			},
 			organization_id: {
 				type: Sequelize.INTEGER,
 				allowNull: false,
