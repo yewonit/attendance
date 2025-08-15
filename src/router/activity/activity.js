@@ -11,6 +11,20 @@ router.get("", async (req, res, next) => {
   })
 });
 
+router.post("/activities", async (req, res, next) => {
+  const { organizationId, activityTemplateId } = req.query;
+  const data = req.body;
+  try {
+    await activityService.recordActivityAndAttendance(organizationId, activityTemplateId, data)
+    res.status(201).json({
+      data: "success",
+      error: null
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 router.get("/activities/:id", async (req, res, next) => {
   const activityId = req.path.id
 
@@ -30,13 +44,14 @@ router.get("/activities/:id", async (req, res, next) => {
   }
 })
 
-router.post("/activities", async (req, res, next) => {
-  const { organizationId, activityTemplateId } = req.query;
-  const data = req.body;
+router.put("/activities/:id", async (req, res, next) => {
+  const activityId = req.path.id
+  const data = req.body
+
   try {
-    await activityService.recordActivityAndAttendance(organizationId, activityTemplateId, data)
+    await activityService.updateActivityAndAttendance(activityId, data)
     res.status(201).json({
-      data: "successed",
+      data: "success",
       error: null
     })
   } catch (error) {
