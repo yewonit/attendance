@@ -38,6 +38,8 @@ const activityService = {
 		return {
 			activity: {
 				id: activity.id,
+				activityCategory: activity.activity_category,
+				location: activity.location,
 				startDateTime: activity.start_time,
 				endDateTime: activity.end_time,
 				notes: activity.description,
@@ -183,6 +185,31 @@ const activityService = {
 			})
 		);
 	},
+	deleteActivityAndAttendance: async (activityId) => {
+		await sequelize.transaction(async (t) => {
+			const activity = await models.Activity.findByPk(activityId);
+			if (activity) {
+				await activity.destroy();
+			}
+
+			const activityImage = await models.ActivityImage.findOne({
+				where: { activity_id: activityId },
+			});
+			if (activityImage) {
+				await activityImage.destroy();
+			}
+
+			const attendances = await models.Attendance.findAll({
+				where: {
+					activity_id: activityId
+				}
+			})
+			attendances.forEach((attendance) => {
+				await attendance.destroy();
+			})
+		});
+	}
+},
 };
 
 // 모듈을 내보내어 라우트 등 다른 파트에서 사용할 수 있도록 합니다.

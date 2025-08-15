@@ -3,7 +3,6 @@ import activityService from "../../services/activity/activity";
 
 const router = Router();
 
-// TODO: organization의활동 관련 라우터 여기로 수정 필요
 router.get("", async (req, res, next) => {
   res.status(200).json({
     data: activityService.getActivityTemplate(),
@@ -50,7 +49,21 @@ router.put("/activities/:id", async (req, res, next) => {
 
   try {
     await activityService.updateActivityAndAttendance(activityId, data)
-    res.status(201).json({
+    res.status(200).json({
+      data: "success",
+      error: null
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.delete("/activities/:id", async (req, res, next) => {
+  const activityId = req.path.id
+
+  try {
+    await activityService.deleteActivityAndAttendance(activityId)
+    res.status(200).json({
       data: "success",
       error: null
     })
