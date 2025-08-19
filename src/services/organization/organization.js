@@ -1,9 +1,8 @@
 // Organization.Ctrl.js
 
 import models from "../../models/models.js";
-import crudService from "../common/crud.js";
 import { NotFoundError } from "../../utils/errors.js";
-import { Op } from "sequelize";
+import crudService from "../common/crud.js";
 
 // 📝 조직 정보 유효성 검사 함수
 const validateOrganizationData = async (data) => {
@@ -29,11 +28,15 @@ const getMembersById = async (organizationId) => {
 		include: [
 			{
 				model: models.User,
+				as: "user",
+				required: true,
 				attributes: ["id", "name", "email"],
 				where: { is_deleted: false },
 			},
 			{
 				model: models.Role,
+				as: "role",
+				required: true,
 				attributes: ["id", "name"],
 			},
 		],
@@ -78,23 +81,29 @@ const organizationService = {
 			include: [
 				{
 					model: models.Activity,
+					as: "activities",
 					attributes: ["id", "name"],
-					where: { organization_id: organizationId, is_deleted: false },
+					where: { is_deleted: false },
+					required: false,
 					include: [
 						{
 							model: models.Attendance,
-							where: { activity_id: models.Activity.id },
+							as: "attendances",
+							required: false,
 							include: [
 								{
 									model: models.User,
-									where: { id: models.Attendance.user_id, is_deleted: false },
+									as: "user",
+									required: true,
+									where: { is_deleted: false },
 									attributes: ["id", "name", "email"],
 								},
 							],
 						},
 						{
 							model: models.ActivityImage,
-							where: { activity_id: models.Activity.id },
+							as: "images",
+							required: false,
 							attributes: ["id", "name", "path"],
 						},
 					],
@@ -109,7 +118,7 @@ const organizationService = {
 		}
 
 		// TODO: 추후 프론트에서 리뉴얼된 테이블 데이터에 맞춰 사용하도록 수정 필요
-		const activitiesData = organization.Activity.map((activity) => {
+		const activitiesData = organization.activities.map((activity) => {
 			return {
 				id: 1,
 				name: activity.name,
@@ -125,19 +134,19 @@ const organizationService = {
 					is_canceled: activity.is_deleted,
 					created_at: activity.created_at,
 					updated_at: activity.updated_at,
-					attendances: activity.Attendance.map((attendance) => {
+					attendances: activity.attendances.map((attendance) => {
 						return {
-							userId: attendance.User.id,
-							userName: attendance.User.name,
-							userEmail: attendance.User.email,
-							userPhoneNumber: attendance.User.phone_number,
+							userId: attendance.user.id,
+							userName: attendance.user.name,
+							userEmail: attendance.user.email,
+							userPhoneNumber: attendance.user.phone_number,
 							status: attendance.attendance_status,
 							check_in_time: activity.start_time,
 							check_out_time: activity.end_time,
 							note: null,
 						};
 					}),
-					images: activity.ActivityImage.map((image) => ({
+					images: activity.images.map((image) => ({
 						id: image.id,
 						fileName: image.name,
 						filePath: image.path,

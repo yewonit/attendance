@@ -7,7 +7,7 @@ import {
 	ValidationError,
 } from "../../utils/errors.js";
 import { hashPassword } from "../../utils/password.js";
-import { getCurrentSeason } from "../../utils/season.js";
+import { getCurrentSeasonId } from "../../utils/season.js";
 import crudService from "../common/crud.js";
 
 const validateUserInfo = async (data) => {
@@ -244,12 +244,13 @@ const userService = {
 };
 
 const getRoleAndOrganization = async (userId) => {
-	const currentSeason = getCurrentSeason();
+	const currentSeason = getCurrentSeasonId();
 
 	const result = await models.UserRole.findAll({
 		include: [
 			{
 				model: models.Role,
+				as: "role",
 				where: {
 					is_deleted: false
 				},
@@ -257,16 +258,16 @@ const getRoleAndOrganization = async (userId) => {
 			},
 			{
 				model: models.Organization,
+				as: "organization",
 				where: {
-					season_id: currentSeason.id,
+					season_id: currentSeason,
 					is_deleted: false
 				},
 				attributes: ['id', 'organization_code']
 			}
 		],
 		where: {
-			user_id: userId,
-			is_deleted: 'N'
+			user_id: userId
 		}
 	});
 
@@ -275,11 +276,11 @@ const getRoleAndOrganization = async (userId) => {
 	}
 
 	const rolesWithOrganization = result.map(userRole => ({
-		roleName: userRole.Role.name,
-		permissionName: userRole.Role.name, // TODO: 추후 api 수정 시 제거
-		organizationId: userRole.Organization.id,
-		organizationName: userRole.Organization.organization_code, // TODO: 추후 api 수정 시 제거
-		organizationCode: userRole.Organization.organization_code
+		roleName: userRole.role.name,
+		permissionName: userRole.role.name, // TODO: 추후 api 수정 시 제거
+		organizationId: userRole.organization.id,
+		organizationName: userRole.organization.organization_code, // TODO: 추후 api 수정 시 제거
+		organizationCode: userRole.organization.organization_code
 	}));
 
 	return rolesWithOrganization;

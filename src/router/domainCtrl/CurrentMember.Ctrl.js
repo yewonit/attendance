@@ -21,12 +21,16 @@ const CurrentMemberCtrl = {
 				include: [
 					{
 						model: models.User,
-						where: { id: models.UserRole.user_id, is_deleted: false },
+						as: "user",
+						required: true,
+						where: { is_deleted: false },
 						attributes: { exclude: ["password"] },
 					},
 					{
 						model: models.Role,
-						where: { id: models.UserRole.role_id, is_deleted: false },
+						as: "role",
+						required: true,
+						where: { is_deleted: false },
 					},
 				],
 			});
@@ -40,13 +44,13 @@ const CurrentMemberCtrl = {
 
 			// 필터링된 결과를 JSON 배열로 변환합니다.
 			const members = userRoles.map((userRole) => {
-				const { User: user, Role: role } = userRole;
+				const { user, role } = userRole;
 				return {
 					userId: user.id,
 					name: user.name,
 					email: user.email,
 					phoneNumber: user.phone_number,
-					churchRegistrationDate: user.church_registration_date,
+					churchRegistrationDate: user.registration_date,
 					isNewMember: user.is_new_member,
 					isLongTermAbsentee: user.is_long_term_absentee,
 					roleId: role.id,

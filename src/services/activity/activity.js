@@ -1,4 +1,6 @@
 import { activityTemplate } from "../../enums/activity_template.js";
+import models from "../../models/models.js";
+import { sequelize } from "../../utils/database.js";
 import { DataCreationError, ValidationError } from "../../utils/errors.js";
 
 // TODO: organization의 활동 관련 서비스 구현
@@ -15,17 +17,22 @@ const activityService = {
 			include: [
 				{
 					model: models.Attendance,
+					as: "attendances",
+					required: false,
 					include: [
 						{
 							model: models.User,
-							where: { id: models.Attendance.user_id },
+							as: "user",
+							required: true,
 							attributes: ["id", "name", "email"],
+							where: { is_deleted: false },
 						},
 					],
 				},
 				{
 					model: models.ActivityImage,
-					where: { activity_id: models.Activity.id },
+					as: "images",
+					required: false,
 				},
 			],
 		});
@@ -45,15 +52,15 @@ const activityService = {
 					notes: activity.description,
 					name: activity.name,
 					description: activity.description,
-					attendances: activity.Attendances.map((attendance) => ({
+					attendances: activity.attendances.map((attendance) => ({
 						id: attendance.id,
-						userId: attendance.User.id,
-						userName: attendance.User.name,
-						userEmail: attendance.User.email,
+						userId: attendance.user.id,
+						userName: attendance.user.name,
+						userEmail: attendance.user.email,
 						status: attendance.attendance_status,
 						note: attendance.description,
 					})),
-					images: activity.ActivityImages.map((image) => ({
+					images: activity.images.map((image) => ({
 						id: image.id,
 						name: image.name,
 						path: image.path,
@@ -70,17 +77,22 @@ const activityService = {
 			include: [
 				{
 					model: models.Attendance,
+					as: "attendances",
+					required: false,
 					include: [
 						{
 							model: models.User,
-							where: { id: models.Attendance.user_id },
+							as: "user",
+							required: true,
 							attributes: ["id", "name", "email"],
+							where: { is_deleted: false },
 						},
 					],
 				},
 				{
 					model: models.ActivityImage,
-					where: { activity_id: activityId },
+					as: "images",
+					required: false,
 				},
 			],
 		});
@@ -99,15 +111,15 @@ const activityService = {
 				notes: activity.description,
 				name: activity.name,
 				description: activity.description,
-				attendances: activity.Attendances.map((attendance) => ({
+				attendances: activity.attendances.map((attendance) => ({
 					id: attendance.id,
-					userId: attendance.User.id,
-					userName: attendance.User.name,
-					userEmail: attendance.User.email,
+					userId: attendance.user.id,
+					userName: attendance.user.name,
+					userEmail: attendance.user.email,
 					status: attendance.attendance_status,
 					note: attendance.description,
 				})),
-				images: activity.ActivityImages.map((image) => ({
+				images: activity.images.map((image) => ({
 					id: image.id,
 					name: image.name,
 					path: image.path,
@@ -142,18 +154,6 @@ const activityService = {
 		);
 		if (!template) {
 			throw new ValidationError("해당 활동 템플릿을 찾을 수 없습니다.");
-		}
-
-		if (
-			!(
-				imageInfo &&
-				typeof imageInfo === "object" &&
-				imageInfo.url &&
-				imageInfo.fileName &&
-				imageInfo.fileType
-			)
-		) {
-			throw new ValidationError("올바르지 않은 imageInfo : ", imageInfo);
 		}
 
 		try {

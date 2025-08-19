@@ -1,9 +1,4 @@
-import OrganizationModel from "../organization/organization.js";
-import PermissionGroupModel from "../permission/permission_group.js";
-
 export default (sequelize, Sequelize) => {
-	const Organization = OrganizationModel(sequelize, Sequelize);
-	const PermissionGroup = PermissionGroupModel(sequelize, Sequelize);
 
 	return sequelize.define(
 		"Role",
