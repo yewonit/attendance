@@ -43,29 +43,28 @@ const activityService = {
 
 		const result = activities.map((activity) => {
 			return {
-				activity: {
-					id: activity.id,
-					activityCategory: activity.activity_category,
-					location: activity.location,
-					startDateTime: activity.start_time,
-					endDateTime: activity.end_time,
-					notes: activity.description,
-					name: activity.name,
-					description: activity.description,
-					attendances: activity.attendances.map((attendance) => ({
-						id: attendance.id,
-						userId: attendance.user.id,
-						userName: attendance.user.name,
-						userEmail: attendance.user.email,
-						status: attendance.attendance_status,
-						note: attendance.description,
-					})),
-					images: activity.images.map((image) => ({
-						id: image.id,
-						name: image.name,
-						path: image.path,
-					})),
-				},
+				id: activity.id,
+				activityCategory: activity.activity_category,
+				location: activity.location,
+				startDateTime: activity.start_time,
+				endDateTime: activity.end_time,
+				notes: activity.description,
+				name: activity.name,
+				description: activity.description,
+				createdAt: activity.created_at,
+				attendances: activity.attendances.map((attendance) => ({
+					id: attendance.id,
+					userId: attendance.user.id,
+					userName: attendance.user.name,
+					userEmail: attendance.user.email,
+					status: attendance.attendance_status,
+					note: attendance.description,
+				})),
+				images: activity.images.map((image) => ({
+					id: image.id,
+					name: image.name,
+					path: image.path,
+				})),
 			};
 		});
 
@@ -102,29 +101,27 @@ const activityService = {
 		}
 
 		return {
-			activity: {
-				id: activity.id,
-				activityCategory: activity.activity_category,
-				location: activity.location,
-				startDateTime: activity.start_time,
-				endDateTime: activity.end_time,
-				notes: activity.description,
-				name: activity.name,
-				description: activity.description,
-				attendances: activity.attendances.map((attendance) => ({
-					id: attendance.id,
-					userId: attendance.user.id,
-					userName: attendance.user.name,
-					userEmail: attendance.user.email,
-					status: attendance.attendance_status,
-					note: attendance.description,
-				})),
-				images: activity.images.map((image) => ({
-					id: image.id,
-					name: image.name,
-					path: image.path,
-				})),
-			},
+			id: activity.id,
+			activityCategory: activity.activity_category,
+			location: activity.location,
+			startDateTime: activity.start_time,
+			endDateTime: activity.end_time,
+			notes: activity.description,
+			name: activity.name,
+			description: activity.description,
+			attendances: activity.attendances.map((attendance) => ({
+				id: attendance.id,
+				userId: attendance.user.id,
+				userName: attendance.user.name,
+				userEmail: attendance.user.email,
+				status: attendance.attendance_status,
+				note: attendance.description,
+			})),
+			images: activity.images.map((image) => ({
+				id: image.id,
+				name: image.name,
+				path: image.path,
+			})),
 		};
 	},
 	recordActivityAndAttendance: async (
