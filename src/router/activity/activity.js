@@ -44,7 +44,7 @@ router.get("/templates", async (req, res, next) => {
 });
 
 router.get("/:id", async (req, res, next) => {
-  const activityId = req.path.id;
+  const activityId = req.params.id;
 
   try {
     const data = await activityService.getActivityDetails(activityId);
@@ -63,7 +63,7 @@ router.get("/:id", async (req, res, next) => {
 });
 
 router.put("/:id", async (req, res, next) => {
-  const activityId = req.path.id;
+  const activityId = req.params.id;
   const data = req.body;
 
   try {
@@ -78,7 +78,7 @@ router.put("/:id", async (req, res, next) => {
 });
 
 router.delete("/:id", async (req, res, next) => {
-  const activityId = req.path.id;
+  const activityId = req.params.id;
 
   try {
     await activityService.deleteActivityAndAttendance(activityId);

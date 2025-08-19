@@ -35,7 +35,6 @@ const userService = {
 			const nullFields = [];
 			if (!userData) nullFields.push("userData");
 			if (!organizationId) nullFields.push("organizationId");
-			if (!idOfCreatingUser) nullFields.push("idOfCreatingUser");
 			throw new ValidationError(
 				`필수 필드가 누락되었습니다 : ${nullFields.join(", ")}`
 			);
@@ -263,7 +262,7 @@ const getRoleAndOrganization = async (userId) => {
 					season_id: currentSeason,
 					is_deleted: false
 				},
-				attributes: ['id', 'organization_code']
+				attributes: ['id', 'name']
 			}
 		],
 		where: {
@@ -277,10 +276,8 @@ const getRoleAndOrganization = async (userId) => {
 
 	const rolesWithOrganization = result.map(userRole => ({
 		roleName: userRole.role.name,
-		permissionName: userRole.role.name, // TODO: 추후 api 수정 시 제거
 		organizationId: userRole.organization.id,
-		organizationName: userRole.organization.organization_code, // TODO: 추후 api 수정 시 제거
-		organizationCode: userRole.organization.organization_code
+		organizationName: userRole.organization.name,
 	}));
 
 	return rolesWithOrganization;

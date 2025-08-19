@@ -11,11 +11,6 @@ const validateOrganizationData = async (data) => {
 		error.status = 400;
 		throw error;
 	}
-	if (!data.organization_code) {
-		const error = new Error("조직 코드가 누락되었습니다.");
-		error.status = 400;
-		throw error;
-	}
 	// ✅ 추가 유효성 검사 로직
 	// 추가적인 유효성 검사 로직을 구현할 수 있습니다.
 };
@@ -42,7 +37,12 @@ const getMembersById = async (organizationId) => {
 		],
 	});
 
-	return organizationMembers;
+	return organizationMembers.map((member) => ({
+		id: member.user.id,
+		name: member.user.name,
+		email: member.user.email,
+		roleName: member.role.name,
+	}));
 };
 
 // 📦 조직 관련 컨트롤러 모듈
@@ -159,19 +159,9 @@ const organizationService = {
 
 		return {
 			organizationId: organization.id,
-			organizationName: organization.organization_name,
+			organizationName: organization.name,
 			activities: activitiesData,
 		};
-	},
-	getCurrentSeasonCoramdeoOrg: async (seasonId) => {
-		const coramdeo = await models.Organization.findOne({
-			where: {
-				season_id: seasonId,
-				organization_code: "CORAMDEO",
-			},
-		});
-
-		return coramdeo;
 	},
 	getUnderOrganizationById: async (parentId) => {
 		const orgs = await models.Organization.findAll({

@@ -6,8 +6,6 @@ const router = Router();
 
 router.use("/", organizationCrudRouter);
 
-// TODO - DomainAttendanceCtrl service로 분리 필요
-
 // 조직 멤버 목록 조회
 router.get("/:id/members", async (req, res, next) => {
 	const organizationId = req.params.id;
@@ -16,12 +14,7 @@ router.get("/:id/members", async (req, res, next) => {
 			await organizationService.getOrganizationMembers(organizationId);
 
 		res.status(200).json({
-			members: organizationMembers.map((member) => ({
-				id: member.User.id,
-				name: member.User.name,
-				email: member.User.email,
-				roleName: member.Role.name,
-			})),
+			members: organizationMembers
 		});
 	} catch (error) {
 		next(error);
