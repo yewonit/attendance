@@ -48,13 +48,9 @@ router.get("/:id", async (req, res, next) => {
 
   try {
     const data = await activityService.getActivityDetails(activityId);
-    const response = {
-      data: data,
-      error: null,
-    };
 
     res.status(200).json({
-      data: response,
+      data: data,
       error: null,
     });
   } catch (error) {
