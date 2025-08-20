@@ -10,6 +10,7 @@ const activityService = {
 		for (let template of Object.values(activityTemplate)) {
 			result.push(template);
 		}
+		return result;
 	},
 	getAllOrganizationActivities: async (organizationId) => {
 		const activities = await models.Activity.findAll({
@@ -133,7 +134,7 @@ const activityService = {
 
 		if (!activityTemplateId || !activityData || !attendances) {
 			throw new ValidationError(
-				`필수 데이터가 누락되었습니다. activityId: ${activityId}, activityData: ${activityData}, attendances: ${attendances}`
+				`필수 데이터가 누락되었습니다. activityId: ${activityTemplateId}, activityData: ${activityData}, attendances: ${attendances}`
 			);
 		}
 
@@ -146,29 +147,37 @@ const activityService = {
 			throw new ValidationError("조직을 찾을 수 없습니다.");
 		}
 
+		const templateId = Number(activityTemplateId);
+		if (Number.isNaN(templateId)) {
+			throw new ValidationError("유효하지 않은 활동 템플릿 ID입니다.");
+		}
+
 		const template = Object.values(activityTemplate).find(
-			(at) => at.id === activityId
+			(at) => at.id === templateId
 		);
+
 		if (!template) {
 			throw new ValidationError("해당 활동 템플릿을 찾을 수 없습니다.");
 		}
 
 		try {
 			const activity = await models.Activity.create({
-				name: template.name,
+				name: template.name || activityData.name,
 				description: activityData.notes,
-				activity_category: template.activityCategory,
+				activity_category: template.activityCategory || activityData.activityCategory,
 				location: activityData.location,
 				organization_id: organizationId,
 				start_time: activityData.startDateTime,
 				end_time: activityData.endDateTime,
 			});
 
-			await models.ActivityImage.create({
-				activity_id: activity.id,
-				name: imageInfo.fileName,
-				path: imageInfo.url,
-			});
+			if (imageInfo) {
+				await models.ActivityImage.create({
+					activity_id: activity.id,
+					name: imageInfo.fileName,
+					path: imageInfo.url,
+				});
+			}
 
 			attendances.map((attendance) => {
 				models.Attendance.create({

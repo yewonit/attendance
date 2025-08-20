@@ -5,7 +5,7 @@
 	"description": "backend api servser for esg dashboard",
 	"main": "index.js",
 	"scripts": {
-		"run": "node index.js"
+		"serve": "node index.js"
 	},
 	"author": "",
 	"license": "ISC",
