@@ -196,6 +196,27 @@ const organizationService = {
 			attributes: ['id'],
 		});
 	},
+	getOrganizationsByGookAndGroup: async (gook, group, soon) => {
+		const seasonId = getCurrentSeasonId();
+		let name = getOrganizationNamePattern(gook, group, soon);
+		if (name) {
+			return await models.Organization.findAll({
+				where: {
+					season_id: seasonId,
+					is_deleted: false,
+					name: {
+						[Op.like]: `${name}%`,
+					}
+				},
+			});
+		}
+		return await models.Organization.findAll({
+			where: {
+				season_id: seasonId,
+				is_deleted: false,
+			},
+		});
+	},
 	getOrganizationNamePattern: (gook, group, soon) => {
 		if (gook && group && soon) {
 			return `${gook}국_${group}그룹_${soon}순`;

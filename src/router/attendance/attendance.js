@@ -1,10 +1,11 @@
 import { Router } from "express";
+import attendanceService from "../../services/attendance/attendance";
 
 
 const router = Router();
 
 router.get("/weekly", async (req, res, next) => {
-  const { gook, group } = req.query;
+  const { gook, group, soon } = req.query;
   try {
     const data = await attendanceService.getWeeklyAttendanceAggregation(gook, group);
     res.status(200).json({
@@ -17,7 +18,16 @@ router.get("/weekly", async (req, res, next) => {
 });
 
 router.get("/graph", async (req, res, next) => {
-  const { gook, group } = req.query;
+  const { gook, group, soon } = req.query;
+  try {
+    const data = await attendanceService.getWeeklyAttendanceGraph(gook, group)
+    res.status(200).json({
+      data: data,
+      error: null,
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.get("/continuous", async (req, res, next) => {
