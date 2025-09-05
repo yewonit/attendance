@@ -138,8 +138,8 @@ const attendanceService = {
 			],
 			include: [
 				{
-					model: Attendance,
-					as: "attendances", // 실제 association alias에 맞게 조정
+					model: models.Attendance,
+					as: "attendances",
 					attributes: [],
 					required: true,
 					where: { attendance_status: "출석" },
@@ -232,21 +232,21 @@ const attendanceService = {
 			include: [
 				{
 					model: Attendance,
-					as: "attendances", // 실제 association alias에 맞게 조정
+					as: "attendances",
 					required: true,
 					include: [
 						{
-							model: User,
-							as: "users", // 실제 association alias에 맞게 조정
+							model: models.User,
+							as: "users",
 							required: true,
 							include: [
 								{
-									model: UserRole,
+									model: models.UserRole,
 									as: "userRoles",
 									required: true,
 									include: [
 										{
-											model: role,
+											model: models.Role,
 											as: "roles",
 											required: true,
 										},
@@ -296,12 +296,11 @@ const attendanceService = {
 			attendanceData.filter((att) => att.name === "금요청년예배")
 		);
 
-		// 연속 결석자 목록을 주차별로 분류하는 함수
 		const categorizeAbsentees = (serviceData) => {
 			const result = {
-				4: [], // 4주 연속 결석자
-				3: [], // 3주 연속 결석자
-				2: [], // 2주 연속 결석자
+				4: [],
+				3: [],
+				2: [],
 			};
 
 			Object.keys(serviceData.absenceCount).forEach((userId) => {
@@ -328,12 +327,11 @@ const attendanceService = {
 			return result;
 		};
 
-		// 연속 출석자 수를 주차별로 집계하는 함수
 		const countAttendees = (serviceData) => {
 			const result = {
-				4: 0, // 4주 연속 출석자 수
-				3: 0, // 3주 연속 출석자 수
-				2: 0, // 2주 연속 출석자 수
+				4: 0,
+				3: 0,
+				2: 0,
 			};
 
 			Object.keys(serviceData.attendCount).forEach((userId) => {
@@ -351,7 +349,6 @@ const attendanceService = {
 			return result;
 		};
 
-		// 모든 서비스의 연속 결석자를 통합하여 주차별로 분류
 		const allAbsenteeData = {
 			sunday: categorizeAbsentees(sundayData),
 			sundayYoungAdult: categorizeAbsentees(sundayYoungAdultData),
@@ -359,14 +356,12 @@ const attendanceService = {
 			fridayYoungAdult: categorizeAbsentees(fridayYoungAdultData),
 		};
 
-		// 중복 제거를 위한 Set 사용
 		const absenteeList = {
 			4: new Set(),
 			3: new Set(),
 			2: new Set(),
 		};
 
-		// 모든 서비스의 결석자를 통합 (중복 제거)
 		Object.keys(allAbsenteeData).forEach((service) => {
 			[4, 3, 2].forEach((week) => {
 				allAbsenteeData[service][week].forEach((user) => {
@@ -376,7 +371,6 @@ const attendanceService = {
 			});
 		});
 
-		// Set을 배열로 변환
 		const finalAbsenteeList = {
 			4: Array.from(absenteeList[4]).map((userStr) => JSON.parse(userStr)),
 			3: Array.from(absenteeList[3]).map((userStr) => JSON.parse(userStr)),
@@ -413,18 +407,111 @@ const attendanceService = {
 			},
 		};
 	},
+
+	getYoungAdultAttendanceTrend: async () => {
+		const now = new Date();
+		const currentMonth = now.getMonth();
+
+		let targetYear;
+		if (currentMonth === 11) {
+			targetYear = now.getFullYear();
+		} else {
+			targetYear = now.getFullYear() - 1;
+		}
+
+		const decemberFirst = new Date(targetYear, 11, 1);
+		const firstSundayOfDecember = new Date(decemberFirst);
+
+		const dayOfWeek = decemberFirst.getDay();
+		if (dayOfWeek !== 0) {
+			firstSundayOfDecember.setDate(decemberFirst.getDate() + (7 - dayOfWeek));
+		}
+
+		const attendanceData = await models.Activity.findAll({
+			where: {
+				name: "청년예배",
+				start_time: {
+					[Op.gte]: firstSundayOfDecember,
+				},
+			},
+			include: [
+				{
+					model: models.Attendance,
+					as: "attendances",
+					required: true,
+					where: { attendance_status: "출석" },
+					attributes: [],
+				},
+			],
+			attributes: ["start_time", [fn("COUNT", col("attendances.id")), "count"]],
+			group: ["Activity.id", "Activity.start_time"],
+			order: [["start_time", "ASC"]],
+			raw: true,
+		});
+
+		const weeklyData = [];
+		const currentDate = new Date();
+
+		const sundayDates = [];
+		let currentSunday = new Date(firstSundayOfDecember);
+
+		while (currentSunday <= currentDate) {
+			sundayDates.push(new Date(currentSunday));
+			currentSunday.setDate(currentSunday.getDate() + 7);
+		}
+
+		sundayDates.forEach((sundayDate) => {
+			const weekStart = new Date(sundayDate);
+			const weekEnd = new Date(sundayDate);
+			weekEnd.setDate(weekEnd.getDate() + 6);
+
+			const weekAttendance = attendanceData.filter((activity) => {
+				const activityDate = new Date(activity.start_time);
+				return activityDate >= weekStart && activityDate <= weekEnd;
+			});
+
+			const totalCount = weekAttendance.reduce(
+				(sum, activity) => sum + parseInt(activity.count),
+				0
+			);
+
+			const month = sundayDate.getMonth() + 1;
+			const weekNumber = Math.ceil(
+				(sundayDate.getDate() +
+					new Date(
+						sundayDate.getFullYear(),
+						sundayDate.getMonth(),
+						0
+					).getDay()) /
+					7
+			);
+
+			weeklyData.push({
+				xAxisName: `${month}월 ${weekNumber}주차`,
+				count: totalCount,
+			});
+		});
+
+		const maxCount = Math.max(...weeklyData.map((item) => item.count));
+		const yAxisMax = Math.ceil(maxCount / 50) * 50;
+
+		return {
+			weeklySundayYoungAdultAttendanceTrends: {
+				xAxis: weeklyData,
+				yAxisMax: yAxisMax,
+			},
+		};
+	},
 };
 
 const aggregateContinuous = async (serviceAttendanceData) => {
 	const attendCount = {};
 	const absenceCount = {};
 
-	// 시간순으로 정렬 (최신 모임이 먼저 오도록)
 	const sortedData = serviceAttendanceData.sort(
 		(a, b) => new Date(b.start_time) - new Date(a.start_time)
 	);
 
-	// 각 유저별로 출석 기록을 시간순으로 정리
 	const userAttendanceMap = {};
 
 	sortedData.forEach((activity) => {
@@ -443,11 +530,9 @@ const aggregateContinuous = async (serviceAttendanceData) => {
 		});
 	});
 
-	// 각 유저별로 연속 출석/결석 횟수 계산
 	Object.keys(userAttendanceMap).forEach((userId) => {
 		const attendanceHistory = userAttendanceMap[userId];
 
-		// 최근 모임부터 연속성 확인
 		let currentStreak = 0;
 		let currentStatus = null;
 
@@ -455,21 +540,17 @@ const aggregateContinuous = async (serviceAttendanceData) => {
 			const { status } = attendanceHistory[i];
 
 			if (i === 0) {
-				// 첫 번째 모임 (가장 최근)
 				currentStatus = status;
 				currentStreak = 1;
 			} else {
-				// 이전 모임과 상태가 같으면 연속성 유지
 				if (status === currentStatus) {
 					currentStreak++;
 				} else {
-					// 상태가 바뀌면 연속성 종료
 					break;
 				}
 			}
 		}
 
-		// 연속 출석 또는 연속 결석 횟수 저장
 		if (currentStatus === "출석") {
 			attendCount[userId] = currentStreak;
 		} else if (currentStatus === "결석") {

@@ -50,7 +50,15 @@ router.get("/continuous", async (req, res, next) => {
 });
 
 router.get("/trend", async (req, res, next) => {
-	const { gook, group } = req.query;
+	try {
+		const data = await attendanceService.getYoungAdultAttendanceTrend();
+		res.status(200).json({
+			data: data,
+			error: null,
+		});
+	} catch (error) {
+		next(error);
+	}
 });
 
 export default router;
