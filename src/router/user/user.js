@@ -1,6 +1,7 @@
 import { Router } from "express";
 import userService from "../../services/user/user.js";
 import userCrudRouter from "./user.crud.js";
+import authMiddleware from "../../../middleware/auth.js";
 
 const router = Router();
 
@@ -159,6 +160,69 @@ router.get("/search", async (req, res, next) => {
 			success: true,
 			data: members,
 		});
+	} catch (error) {
+		next(error);
+	}
+});
+
+/**
+ * @swagger
+ * /api/users/accessable:
+ *   get:
+ *     summary: 사용자 역할에 따른 접근 가능한 조직 목록 조회
+ *     description: JWT 토큰을 통해 인증된 사용자의 역할에 따라 접근 가능한 조직 목록을 반환합니다.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 성공적으로 조직 목록을 조회했습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   name:
+ *                     type: string
+ *                     description: 국 이름
+ *                   group:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         name:
+ *                           type: string
+ *                           description: 그룹 이름
+ *                         soon:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: integer
+ *                                 description: 순 ID
+ *                               name:
+ *                                 type: string
+ *                                 description: 순 이름
+ *       401:
+ *         description: 인증이 필요합니다.
+ *       404:
+ *         description: 사용자를 찾을 수 없습니다.
+ *       500:
+ *         description: 서버 오류가 발생했습니다.
+ */
+router.get("/accessible", authMiddleware, async (req, res, next) => {
+	try {
+		const { email, name } = req.auth;
+
+		const organizations = await userService.getAccessibleOrganizations(
+			email,
+			name
+		);
+
+		return res.status(200).json(organizations);
 	} catch (error) {
 		next(error);
 	}

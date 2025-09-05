@@ -1,4 +1,3 @@
-// User.Ctrl.js
 import { Op } from "sequelize";
 import models from "../../models/models.js";
 import {
@@ -9,24 +8,6 @@ import {
 import { hashPassword } from "../../utils/password.js";
 import { getCurrentSeasonId } from "../../utils/season.js";
 import crudService from "../common/crud.js";
-
-const validateUserInfo = async (data) => {
-	if (!data.name) {
-		const error = new Error("사용자 이름이 누락되었습니다.");
-		error.status = 400;
-		throw error;
-	}
-	if (!data.email) {
-		const error = new Error("사용자 이메일 주소가 누락되었습니다.");
-		error.status = 400;
-		throw error;
-	}
-	if (!data.password) {
-		const error = new Error("사용자 비밀번호가 누락되었습니다.");
-		error.status = 400;
-		throw error;
-	}
-};
 
 const userService = {
 	createUser: async (userData, organizationId, idOfCreatingUser) => {
@@ -75,7 +56,7 @@ const userService = {
 		// 사용자와 역할 연결
 		await models.UserRole.create({
 			user_id: user.id,
-			role_id: 4,	// 순원
+			role_id: 4, // 순원
 			organization_id: organizationId,
 		});
 
@@ -239,7 +220,41 @@ const userService = {
 	getUserRoleOfCurrentSeason: async (userId) => {
 		const rolesWithOrganization = await getRoleAndOrganization(userId);
 		return rolesWithOrganization;
-	}
+	},
+
+	/**
+	 * 사용자의 역할에 따라 접근 가능한 조직 목록을 반환하는 메서드
+	 * @param {string} email - 사용자 이메일
+	 * @param {string} name - 사용자 이름
+	 * @returns {Array} 접근 가능한 조직 목록
+	 */
+	getAccessibleOrganizations: async (email, name) => {
+		// 이메일과 이름으로 사용자 찾기
+		const user = await models.User.findOne({
+			where: {
+				email: email,
+				name: name,
+				is_deleted: "N",
+			},
+		});
+
+		if (!user) {
+			throw new NotFoundError("사용자를 찾을 수 없습니다.");
+		}
+
+		// 사용자의 역할 정보 가져오기
+		const userRoles = await getRoleAndOrganization(user.id);
+
+		if (!userRoles || userRoles.length === 0) {
+			throw new NotFoundError("사용자의 역할 정보를 찾을 수 없습니다.");
+		}
+
+		// 가장 높은 권한의 역할 찾기
+		const highestRole = findHighestRole(userRoles);
+
+		// 역할에 따라 접근 가능한 조직 반환
+		return await getOrganizationsByRole(highestRole, userRoles);
+	},
 };
 
 const getRoleAndOrganization = async (userId) => {
@@ -251,37 +266,37 @@ const getRoleAndOrganization = async (userId) => {
 				model: models.Role,
 				as: "role",
 				where: {
-					is_deleted: false
+					is_deleted: false,
 				},
-				attributes: ['id', 'name']
+				attributes: ["id", "name"],
 			},
 			{
 				model: models.Organization,
 				as: "organization",
 				where: {
 					season_id: currentSeason,
-					is_deleted: false
+					is_deleted: false,
 				},
-				attributes: ['id', 'name']
-			}
+				attributes: ["id", "name"],
+			},
 		],
 		where: {
-			user_id: userId
-		}
+			user_id: userId,
+		},
 	});
 
 	if (!result || result.length === 0) {
 		throw new NotFoundError("해당 유저의 역할 정보를 찾을 수 없습니다.");
 	}
 
-	const rolesWithOrganization = result.map(userRole => ({
+	const rolesWithOrganization = result.map((userRole) => ({
 		roleName: userRole.role.name,
 		organizationId: userRole.organization.id,
 		organizationName: userRole.organization.name,
 	}));
 
 	return rolesWithOrganization;
-}
+};
 
 const formatPhoneNumber = (phoneNumber) => {
 	return phoneNumber.replaceAll(" ", "").replaceAll("-", "");
@@ -309,6 +324,190 @@ const passwordCheck = (password) => {
 	if (!passwordRegex.test(password)) {
 		throw new ValidationError("패스워드가 형식에 맞지 않습니다.");
 	}
+};
+
+const findHighestRole = (userRoles) => {
+	const rolePriority = {
+		학생회: 4,
+		교역자: 4,
+		국장: 3,
+		그룹장: 2,
+		순원: 1,
+	};
+
+	return userRoles.reduce((highest, current) => {
+		const currentPriority = rolePriority[current.roleName] || 0;
+		const highestPriority = rolePriority[highest.roleName] || 0;
+		return currentPriority > highestPriority ? current : highest;
+	});
+};
+
+const getOrganizationsByRole = async (role, userRoles) => {
+	const currentSeason = getCurrentSeasonId();
+
+	switch (role.roleName) {
+		case "그룹장":
+			return await getGroupLeaderOrganizations(
+				role.organizationId,
+				currentSeason
+			);
+
+		case "국장":
+			return await getGookLeaderOrganizations(
+				role.organizationId,
+				currentSeason
+			);
+
+		case "학생회":
+		case "교역자":
+			return await getAllOrganizations(currentSeason);
+
+		default:
+			// 순원의 경우 자신이 속한 조직만 반환
+			return await getMemberOrganizations(userRoles, currentSeason);
+	}
+};
+
+const getGroupLeaderOrganizations = async (groupId, seasonId) => {
+	// 그룹과 하위 순들 조회
+	const organizations = await models.Organization.findAll({
+		where: {
+			season_id: seasonId,
+			is_deleted: false,
+			[Op.or]: [{ id: groupId }, { upper_organization_id: groupId }],
+		},
+		order: [
+			["upper_organization_id", "ASC"],
+			["id", "ASC"],
+		],
+	});
+
+	return formatOrganizationHierarchy(organizations);
+};
+
+const getGookLeaderOrganizations = async (gookId, seasonId) => {
+	// 국의 모든 하위 그룹과 순들 조회
+	const organizations = await models.Organization.findAll({
+		where: {
+			season_id: seasonId,
+			is_deleted: false,
+			[Op.or]: [
+				{ id: gookId },
+				{ upper_organization_id: gookId },
+				// 2단계 하위 조직들 (순들)
+				{
+					upper_organization_id: {
+						[Op.in]: await models.Organization.findAll({
+							where: { upper_organization_id: gookId },
+							attributes: ["id"],
+						}).then((orgs) => orgs.map((org) => org.id)),
+					},
+				},
+			],
+		},
+		order: [
+			["upper_organization_id", "ASC"],
+			["id", "ASC"],
+		],
+	});
+
+	return formatOrganizationHierarchy(organizations);
+};
+
+const getAllOrganizations = async (seasonId) => {
+	const organizations = await models.Organization.findAll({
+		where: {
+			season_id: seasonId,
+			is_deleted: false,
+		},
+		order: [
+			["upper_organization_id", "ASC"],
+			["id", "ASC"],
+		],
+	});
+
+	return formatOrganizationHierarchy(organizations);
+};
+
+const getMemberOrganizations = async (userRoles, seasonId) => {
+	const organizationIds = userRoles.map((role) => role.organizationId);
+
+	const organizations = await models.Organization.findAll({
+		where: {
+			id: {
+				[Op.in]: organizationIds,
+			},
+			season_id: seasonId,
+			is_deleted: false,
+		},
+		order: [
+			["upper_organization_id", "ASC"],
+			["id", "ASC"],
+		],
+	});
+
+	return formatOrganizationHierarchy(organizations);
+};
+
+const formatOrganizationHierarchy = (organizations) => {
+	const hierarchy = {};
+
+	organizations.forEach((org) => {
+		if (!org.upper_organization_id) {
+			if (!hierarchy[org.id]) {
+				hierarchy[org.id] = {
+					name: org.name,
+					group: [],
+				};
+			}
+		} else {
+			const parentId = org.upper_organization_id;
+			if (!hierarchy[parentId]) {
+				hierarchy[parentId] = {
+					name: organizations.find((o) => o.id === parentId)?.name || "Unknown",
+					group: [],
+				};
+			}
+
+			const isSoon = organizations.some(
+				(o) => o.upper_organization_id === org.id
+			);
+
+			if (isSoon) {
+				const existingGroup = hierarchy[parentId].group.find(
+					(g) => g.name === org.name
+				);
+				if (!existingGroup) {
+					hierarchy[parentId].group.push({
+						name: org.name,
+						soon: [],
+					});
+				}
+			} else {
+				const parentGroup = organizations.find(
+					(o) => o.id === org.upper_organization_id
+				);
+				if (parentGroup) {
+					const grandParentId = parentGroup.upper_organization_id;
+					if (hierarchy[grandParentId]) {
+						let group = hierarchy[grandParentId].group.find(
+							(g) => g.name === parentGroup.name
+						);
+						if (!group) {
+							group = { name: parentGroup.name, soon: [] };
+							hierarchy[grandParentId].group.push(group);
+						}
+						group.soon.push({
+							id: org.id,
+							name: org.name,
+						});
+					}
+				}
+			}
+		}
+	});
+
+	return Object.values(hierarchy);
 };
 
 export default userService;
