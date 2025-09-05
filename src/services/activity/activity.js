@@ -271,6 +271,33 @@ const activityService = {
 			});
 		});
 	},
+	getLastSundayYoungAdultServiceIds: async (organizationIds) => {
+		const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+		const activities = await models.Activity.findAll({
+			attributes: ['id'],
+			where: {
+				start_time: { [Op.gt]: oneWeekAgo },
+				name: '청년예배',
+				organization_id: { [Op.in]: organizationIds }
+			},
+		});
+
+		return activities.map((activity) => activity.id);
+	},
+	get2WeeksAgoSundayYoungAdultServiceIds: async (organizationIds) => {
+		const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+		const twoWeekAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+		const activities = await models.Activity.findAll({
+			attributes: ['id'],
+			where: {
+				start_time: { [Op.lt]: oneWeekAgo, [Op.gt]: twoWeekAgo },
+				name: '청년예배',
+				organization_id: { [Op.in]: organizationIds }
+			},
+		});
+
+		return activities.map((activity) => activity.id);
+	}
 };
 
 // 모듈을 내보내어 라우트 등 다른 파트에서 사용할 수 있도록 합니다.

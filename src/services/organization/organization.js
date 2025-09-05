@@ -2,6 +2,7 @@
 
 import models from "../../models/models.js";
 import { NotFoundError } from "../../utils/errors.js";
+import { getCurrentSeasonId } from "../../utils/season.js";
 import crudService from "../common/crud.js";
 
 // 📝 조직 정보 유효성 검사 함수
@@ -172,6 +173,62 @@ const organizationService = {
 
 		return orgs;
 	},
+	getOrganizationIdsByGookAndGroup: async (gook, group, soon) => {
+		const seasonId = getCurrentSeasonId();
+		let name = getOrganizationNamePattern(gook, group, soon);
+		if (name) {
+			return await models.Organization.findAll({
+				where: {
+					season_id: seasonId,
+					is_deleted: false,
+					name: {
+						[Op.like]: `${name}%`,
+					}
+				},
+				attributes: ['id'],
+			});
+		}
+		return await models.Organization.findAll({
+			where: {
+				season_id: seasonId,
+				is_deleted: false,
+			},
+			attributes: ['id'],
+		});
+	},
+	getOrganizationsByGookAndGroup: async (gook, group, soon) => {
+		const seasonId = getCurrentSeasonId();
+		let name = getOrganizationNamePattern(gook, group, soon);
+		if (name) {
+			return await models.Organization.findAll({
+				where: {
+					season_id: seasonId,
+					is_deleted: false,
+					name: {
+						[Op.like]: `${name}%`,
+					}
+				},
+			});
+		}
+		return await models.Organization.findAll({
+			where: {
+				season_id: seasonId,
+				is_deleted: false,
+			},
+		});
+	},
+	getOrganizationNamePattern: (gook, group, soon) => {
+		if (gook && group && soon) {
+			return `${gook}국_${group}그룹_${soon}순`;
+		}
+		if (gook && group) {
+			return `${gook}국_${group}그룹`;
+		}
+		if (gook) {
+			return `${gook}국`;
+		}
+		return null;
+	}
 };
 
 export default organizationService;
