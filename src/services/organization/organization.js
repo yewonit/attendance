@@ -2,6 +2,7 @@
 
 import models from "../../models/models.js";
 import { NotFoundError } from "../../utils/errors.js";
+import { getOrganizationNamePattern } from "../../utils/organization.js";
 import { getCurrentSeasonId } from "../../utils/season.js";
 import crudService from "../common/crud.js";
 
@@ -216,18 +217,6 @@ const organizationService = {
 				is_deleted: false,
 			},
 		});
-	},
-	getOrganizationNamePattern: (gook, group, soon) => {
-		if (gook && group && soon) {
-			return `${gook}국_${group}그룹_${soon}순`;
-		}
-		if (gook && group) {
-			return `${gook}국_${group}그룹`;
-		}
-		if (gook) {
-			return `${gook}국`;
-		}
-		return null;
 	}
 };
 
