@@ -1,8 +1,9 @@
 import { Router } from "express";
 import activityRouter from "./activity/activity.js";
+import attendanceRouter from "./attendance/attendance.js";
+import CurrentMemberCtrl from "./domainCtrl/CurrentMember.Ctrl.js";
 import organizationRouter from "./organization/organization.js";
 import userRouter from "./user/user.js";
-import CurrentMemberCtrl from "./domainCtrl/CurrentMember.Ctrl.js";
 
 const router = Router();
 
@@ -29,6 +30,14 @@ router.use("/activities", activityRouter);
  *   description: 조직 관리 API
  */
 router.use("/organizations", organizationRouter);
+
+/**
+ * @swagger
+ * tags:
+ *   name: Attendances
+ *   description: 출석 집계
+ */
+router.use("/attendances", attendanceRouter);
 
 /**
  * @swagger

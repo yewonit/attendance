@@ -1,7 +1,7 @@
 import { Router } from "express";
+import authMiddleware from "../../../middleware/auth.js";
 import userService from "../../services/user/user.js";
 import userCrudRouter from "./user.crud.js";
-import authMiddleware from "../../../middleware/auth.js";
 
 const router = Router();
 
@@ -167,7 +167,7 @@ router.get("/search", async (req, res, next) => {
 
 /**
  * @swagger
- * /api/users/accessable:
+ * /api/users/accessible:
  *   get:
  *     summary: 사용자 역할에 따른 접근 가능한 조직 목록 조회
  *     description: JWT 토큰을 통해 인증된 사용자의 역할에 따라 접근 가능한 조직 목록을 반환합니다.
