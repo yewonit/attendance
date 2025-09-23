@@ -1,5 +1,5 @@
 import { Router } from "express";
-import attendanceService from "../../services/attendance/attendance";
+import attendanceService from "../../services/attendance/attendance.js";
 
 const router = Router();
 
