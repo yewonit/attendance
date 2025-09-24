@@ -27,8 +27,16 @@ const getWeeklyAttendanceAggregation = async (gook, group, soon) => {
 
 	// 총 인원
 	const allMemberIds = await models.UserRole.findAll({
+		include: [
+			{
+				model: models.Organization,
+				as: "organization",
+				where: {
+					season_id: seasonId,
+				},
+			},
+		],
 		where: {
-			season_id: seasonId,
 			organization_id: {
 				[Op.in]: organizationIds,
 			},
@@ -37,8 +45,16 @@ const getWeeklyAttendanceAggregation = async (gook, group, soon) => {
 	});
 	// 지난 주 기준 총 인원
 	const lastWeekAllMemberIds = await models.UserRole.findAll({
+		include: [
+			{
+				model: models.Organization,
+				as: "organization",
+				where: {
+					season_id: seasonId,
+				},
+			},
+		],
 		where: {
-			season_id: seasonId,
 			organization_id: {
 				[Op.in]: organizationIds,
 			},

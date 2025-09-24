@@ -1,5 +1,6 @@
 // Organization.Ctrl.js
 
+import { Op } from "sequelize";
 import models from "../../models/models.js";
 import { NotFoundError } from "../../utils/errors.js";
 import { getOrganizationNamePattern } from "../../utils/organization.js";
@@ -184,9 +185,9 @@ const organizationService = {
 					is_deleted: false,
 					name: {
 						[Op.like]: `${name}%`,
-					}
+					},
 				},
-				attributes: ['id'],
+				attributes: ["id"],
 			});
 		}
 		return await models.Organization.findAll({
@@ -194,7 +195,7 @@ const organizationService = {
 				season_id: seasonId,
 				is_deleted: false,
 			},
-			attributes: ['id'],
+			attributes: ["id"],
 		});
 	},
 	getOrganizationsByGookAndGroup: async (gook, group, soon) => {
@@ -207,7 +208,7 @@ const organizationService = {
 					is_deleted: false,
 					name: {
 						[Op.like]: `${name}%`,
-					}
+					},
 				},
 			});
 		}
@@ -217,7 +218,7 @@ const organizationService = {
 				is_deleted: false,
 			},
 		});
-	}
+	},
 };
 
 export default organizationService;

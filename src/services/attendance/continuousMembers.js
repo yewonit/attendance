@@ -101,7 +101,7 @@ const getContinuousMembers = async (gook, group, soon) => {
 				include: [
 					{
 						model: models.User,
-						as: "users",
+						as: "user",
 						required: true,
 						include: [
 							{
@@ -111,7 +111,7 @@ const getContinuousMembers = async (gook, group, soon) => {
 								include: [
 									{
 										model: models.Role,
-										as: "roles",
+										as: "role",
 										required: true,
 									},
 								],
@@ -138,9 +138,18 @@ const getContinuousMembers = async (gook, group, soon) => {
 		activity.attendances.forEach((attendance) => {
 			const userId = attendance.user_id;
 			if (!allUserMap[userId]) {
+				const userRoles = Array.isArray(attendance.user?.userRoles)
+					? attendance.user.userRoles
+					: [];
+
+				const primaryRoleName =
+					userRoles.length > 0 && userRoles[0]?.role
+						? userRoles[0].role.name
+						: null; // TODO: 다중 역할 처리 시 역할명 배열로 확장 고려
+
 				allUserMap[userId] = {
-					name: attendance.users.name,
-					role: attendance.users.userRoles.roles.name,
+					name: attendance.user.name,
+					role: primaryRoleName,
 					organization: organizationNameMap[activity.organization_id],
 				};
 			}
