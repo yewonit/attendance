@@ -101,7 +101,7 @@ const getContinuousMembers = async (gook, group, soon) => {
 				include: [
 					{
 						model: models.User,
-						as: "users",
+						as: "user",
 						required: true,
 						include: [
 							{
@@ -111,7 +111,7 @@ const getContinuousMembers = async (gook, group, soon) => {
 								include: [
 									{
 										model: models.Role,
-										as: "roles",
+										as: "role",
 										required: true,
 									},
 								],
@@ -139,8 +139,8 @@ const getContinuousMembers = async (gook, group, soon) => {
 			const userId = attendance.user_id;
 			if (!allUserMap[userId]) {
 				allUserMap[userId] = {
-					name: attendance.users.name,
-					role: attendance.users.userRoles.roles.name,
+					name: attendance.user.name,
+					role: attendance.user.userRoles.role.name,
 					organization: organizationNameMap[activity.organization_id],
 				};
 			}
