@@ -1,7 +1,8 @@
 import { activityTemplate } from "../../enums/activity_template.js";
+import { Op } from "sequelize";
 import models from "../../models/models.js";
 import { sequelize } from "../../utils/database.js";
-import { DataCreationError, ValidationError } from "../../utils/errors.js";
+import { DataCreationError, ValidationError, NotFoundError } from "../../utils/errors.js";
 
 // TODO: organization의 활동 관련 서비스 구현
 const activityService = {
@@ -192,6 +193,12 @@ const activityService = {
 		}
 	},
 
+	/**
+	 * 활동 및 출석 정보를 업데이트합니다.
+	 * @param {number} activityId - 활동 ID
+	 * @param {Object} data - 업데이트할 데이터 객체
+	 * @returns {Promise<void>}
+	 */
 	updateActivityAndAttendance: async (activityId, data) => {
 		const { activityData, attendances, imageInfo } = data;
 
@@ -203,7 +210,7 @@ const activityService = {
 			where: { id: activityId },
 		});
 		if (!activity) {
-			return res.status(404).json({ message: "활동을 찾을 수 없습니다." });
+			throw new NotFoundError("활동을 찾을 수 없습니다.");
 		}
 
 		await activity.update({
@@ -271,6 +278,11 @@ const activityService = {
 			});
 		});
 	},
+	/**
+	 * 최근 1주 이내 청년예배 활동 ID 목록을 조회합니다.
+	 * @param {number[]} organizationIds - 조직 ID 배열
+	 * @returns {Promise<number[]>} 활동 ID 배열
+	 */
 	getLastSundayYoungAdultServiceIds: async (organizationIds) => {
 		const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 		const activities = await models.Activity.findAll({
@@ -284,6 +296,11 @@ const activityService = {
 
 		return activities.map((activity) => activity.id);
 	},
+	/**
+	 * 1~2주 전 사이 청년예배 활동 ID 목록을 조회합니다.
+	 * @param {number[]} organizationIds - 조직 ID 배열
+	 * @returns {Promise<number[]>} 활동 ID 배열
+	 */
 	get2WeeksAgoSundayYoungAdultServiceIds: async (organizationIds) => {
 		const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 		const twoWeekAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
