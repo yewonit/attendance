@@ -138,9 +138,18 @@ const getContinuousMembers = async (gook, group, soon) => {
 		activity.attendances.forEach((attendance) => {
 			const userId = attendance.user_id;
 			if (!allUserMap[userId]) {
+				const userRoles = Array.isArray(attendance.user?.userRoles)
+					? attendance.user.userRoles
+					: [];
+
+				const primaryRoleName =
+					userRoles.length > 0 && userRoles[0]?.role
+						? userRoles[0].role.name
+						: null; // TODO: 다중 역할 처리 시 역할명 배열로 확장 고려
+
 				allUserMap[userId] = {
 					name: attendance.user.name,
-					role: attendance.user.userRoles.role.name,
+					role: primaryRoleName,
 					organization: organizationNameMap[activity.organization_id],
 				};
 			}
