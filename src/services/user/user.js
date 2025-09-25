@@ -328,7 +328,7 @@ const passwordCheck = (password) => {
 
 const findHighestRole = (userRoles) => {
 	const rolePriority = {
-		학생회: 4,
+		회장단: 4,
 		교역자: 4,
 		국장: 3,
 		그룹장: 2,
@@ -358,7 +358,7 @@ const getOrganizationsByRole = async (role, userRoles) => {
 				currentSeason
 			);
 
-		case "학생회":
+		case "회장단":
 		case "교역자":
 			return await getAllOrganizations(currentSeason);
 
