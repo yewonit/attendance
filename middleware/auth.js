@@ -9,8 +9,7 @@ export default async (req, res, next) => {
 			throw new AuthenticationError("token missing");
 		}
 
-		const response = await verifyWithToken(accessToken);
-		const { email, name } = response.data;
+		const { email, name } = await verifyWithToken(accessToken);
 		req.auth = { email, name };
 
 		// 다음 미들웨어로 전달

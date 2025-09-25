@@ -234,7 +234,7 @@ const userService = {
 			where: {
 				email: email,
 				name: name,
-				is_deleted: "N",
+				is_deleted: false,
 			},
 		});
 
