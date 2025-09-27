@@ -1,11 +1,11 @@
-import { activityTemplate } from "../../enums/activity_template.js";
 import { Op } from "sequelize";
+import { activityTemplate } from "../../enums/activity_template.js";
 import models from "../../models/models.js";
 import { sequelize } from "../../utils/database.js";
 import {
 	DataCreationError,
-	ValidationError,
 	NotFoundError,
+	ValidationError,
 } from "../../utils/errors.js";
 
 // TODO: organization의 활동 관련 서비스 구현

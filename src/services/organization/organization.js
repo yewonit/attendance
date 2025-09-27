@@ -179,7 +179,7 @@ const organizationService = {
 		const seasonId = getCurrentSeasonId();
 		let name = getOrganizationNamePattern(gook, group, soon);
 		if (name) {
-			return await models.Organization.findAll({
+			const result = await models.Organization.findAll({
 				where: {
 					season_id: seasonId,
 					is_deleted: false,
@@ -189,14 +189,18 @@ const organizationService = {
 				},
 				attributes: ["id"],
 			});
+
+			return result
 		}
-		return await models.Organization.findAll({
+		const result = await models.Organization.findAll({
 			where: {
 				season_id: seasonId,
 				is_deleted: false,
 			},
 			attributes: ["id"],
 		});
+
+		return result
 	},
 	getOrganizationsByGookAndGroup: async (gook, group, soon) => {
 		const seasonId = getCurrentSeasonId();
