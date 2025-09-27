@@ -253,7 +253,7 @@ const userService = {
 		const highestRole = findHighestRole(userRoles);
 
 		// 역할에 따라 접근 가능한 조직 반환
-		return await getOrganizationsByRole(highestRole, userRoles);
+		return await getOrganizationsByRole(highestRole);
 	},
 };
 
@@ -332,7 +332,7 @@ const findHighestRole = (userRoles) => {
 		교역자: 4,
 		국장: 3,
 		그룹장: 2,
-		순원: 1,
+		순장: 1,
 	};
 
 	return userRoles.reduce((highest, current) => {
@@ -342,172 +342,58 @@ const findHighestRole = (userRoles) => {
 	});
 };
 
-const getOrganizationsByRole = async (role, userRoles) => {
-	const currentSeason = getCurrentSeasonId();
+const getOrganizationsByRole = async (highestRole) => {
+	const seasonId = getCurrentSeasonId();
+	const highestRoleOrgName = highestRole.organizationName;
+	const [currentGook, currentGroup, currentSoon] = highestRoleOrgName.split("_");
+	const organizationNameDto = (gook, group) => { return { gook, group } };
+	const organizationNames = await models.Organization.findAll({
+		where: {
+			season_id: seasonId,
+			is_deleted: false,
+		},
+		attributes: ["name"],
+	}).then((orgs) => orgs.map((org) => {
+		let [gook, group] = org.name.split("_");
+		return organizationNameDto(gook, group);
+	}));
 
-	switch (role.roleName) {
+	const result = {
+		gook: [],
+		group: [],
+	};
+
+	switch (highestRole.roleName) {
 		case "그룹장":
-			return await getGroupLeaderOrganizations(
-				role.organizationId,
-				currentSeason
-			);
+			result.gook.push(currentGook);
+			result.group.push(currentGroup);
+			return result;
 
 		case "국장":
-			return await getGookLeaderOrganizations(
-				role.organizationId,
-				currentSeason
-			);
+			result.gook.push(currentGook);
+			organizationNames
+				.filter((orgDto) => orgDto.gook === currentGook)
+				.map((orgDto) => orgDto.group)
+				.forEach((group) => {
+					if (group) { result.group.push(group) }
+				});
+			return result;
 
 		case "회장단":
 		case "교역자":
-			return await getAllOrganizations(currentSeason);
+			organizationNames.forEach((orgDto) => {
+				if (!result.gook.includes(orgDto.gook) && orgDto.gook.endsWith("국")) {
+					result.gook.push(orgDto.gook);
+				}
+				if (orgDto.group && !result.group.includes(orgDto.group)) {
+					result.group.push(orgDto.group);
+				}
+			});
+			return result;
 
 		default:
-			// 순원의 경우 자신이 속한 조직만 반환
-			return await getMemberOrganizations(userRoles, currentSeason);
+			return result;
 	}
-};
-
-const getGroupLeaderOrganizations = async (groupId, seasonId) => {
-	// 그룹과 하위 순들 조회
-	const organizations = await models.Organization.findAll({
-		where: {
-			season_id: seasonId,
-			is_deleted: false,
-			[Op.or]: [{ id: groupId }, { upper_organization_id: groupId }],
-		},
-		order: [
-			["upper_organization_id", "ASC"],
-			["id", "ASC"],
-		],
-	});
-
-	return formatOrganizationHierarchy(organizations);
-};
-
-const getGookLeaderOrganizations = async (gookId, seasonId) => {
-	// 국의 모든 하위 그룹과 순들 조회
-	const organizations = await models.Organization.findAll({
-		where: {
-			season_id: seasonId,
-			is_deleted: false,
-			[Op.or]: [
-				{ id: gookId },
-				{ upper_organization_id: gookId },
-				// 2단계 하위 조직들 (순들)
-				{
-					upper_organization_id: {
-						[Op.in]: await models.Organization.findAll({
-							where: { upper_organization_id: gookId },
-							attributes: ["id"],
-						}).then((orgs) => orgs.map((org) => org.id)),
-					},
-				},
-			],
-		},
-		order: [
-			["upper_organization_id", "ASC"],
-			["id", "ASC"],
-		],
-	});
-
-	return formatOrganizationHierarchy(organizations);
-};
-
-const getAllOrganizations = async (seasonId) => {
-	const organizations = await models.Organization.findAll({
-		where: {
-			season_id: seasonId,
-			is_deleted: false,
-		},
-		order: [
-			["upper_organization_id", "ASC"],
-			["id", "ASC"],
-		],
-	});
-
-	return formatOrganizationHierarchy(organizations);
-};
-
-const getMemberOrganizations = async (userRoles, seasonId) => {
-	const organizationIds = userRoles.map((role) => role.organizationId);
-
-	const organizations = await models.Organization.findAll({
-		where: {
-			id: {
-				[Op.in]: organizationIds,
-			},
-			season_id: seasonId,
-			is_deleted: false,
-		},
-		order: [
-			["upper_organization_id", "ASC"],
-			["id", "ASC"],
-		],
-	});
-
-	return formatOrganizationHierarchy(organizations);
-};
-
-const formatOrganizationHierarchy = (organizations) => {
-	const hierarchy = {};
-
-	organizations.forEach((org) => {
-		if (!org.upper_organization_id) {
-			if (!hierarchy[org.id]) {
-				hierarchy[org.id] = {
-					name: org.name,
-					group: [],
-				};
-			}
-		} else {
-			const parentId = org.upper_organization_id;
-			if (!hierarchy[parentId]) {
-				hierarchy[parentId] = {
-					name: organizations.find((o) => o.id === parentId)?.name || "Unknown",
-					group: [],
-				};
-			}
-
-			const isSoon = organizations.some(
-				(o) => o.upper_organization_id === org.id
-			);
-
-			if (isSoon) {
-				const existingGroup = hierarchy[parentId].group.find(
-					(g) => g.name === org.name
-				);
-				if (!existingGroup) {
-					hierarchy[parentId].group.push({
-						name: org.name,
-						soon: [],
-					});
-				}
-			} else {
-				const parentGroup = organizations.find(
-					(o) => o.id === org.upper_organization_id
-				);
-				if (parentGroup) {
-					const grandParentId = parentGroup.upper_organization_id;
-					if (hierarchy[grandParentId]) {
-						let group = hierarchy[grandParentId].group.find(
-							(g) => g.name === parentGroup.name
-						);
-						if (!group) {
-							group = { name: parentGroup.name, soon: [] };
-							hierarchy[grandParentId].group.push(group);
-						}
-						group.soon.push({
-							id: org.id,
-							name: org.name,
-						});
-					}
-				}
-			}
-		}
-	});
-
-	return Object.values(hierarchy);
 };
 
 export default userService;
