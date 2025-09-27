@@ -346,7 +346,9 @@ const getOrganizationsByRole = async (highestRole) => {
 	const seasonId = getCurrentSeasonId();
 	const highestRoleOrgName = highestRole.organizationName;
 	const [currentGook, currentGroup, currentSoon] = highestRoleOrgName.split("_");
-	const organizationNameDto = (gook, group) => { return { gook, group } };
+	const organizationNameDto = (gook, group) => {
+		return { gook, group }
+	};
 	const organizationNames = await models.Organization.findAll({
 		where: {
 			season_id: seasonId,
@@ -355,6 +357,7 @@ const getOrganizationsByRole = async (highestRole) => {
 		attributes: ["name"],
 	}).then((orgs) => orgs.map((org) => {
 		let [gook, group] = org.name.split("_");
+
 		return organizationNameDto(gook, group);
 	}));
 
@@ -365,28 +368,30 @@ const getOrganizationsByRole = async (highestRole) => {
 
 	switch (highestRole.roleName) {
 		case "그룹장":
-			result.gook.push(currentGook);
-			result.group.push(currentGroup);
+			result.gook.push(currentGook.slice(0, -1));
+			result.group.push(currentGroup.slice(0. - 2));
 			return result;
 
 		case "국장":
-			result.gook.push(currentGook);
-			organizationNames
-				.filter((orgDto) => orgDto.gook === currentGook)
-				.map((orgDto) => orgDto.group)
-				.forEach((group) => {
-					if (group) { result.group.push(group) }
-				});
+			result.gook.push(currentGook.slice(0, -1));
+			result.group.push(
+				Array.from(new Set(organizationNames
+					.filter((orgDto) => orgDto.gook === currentGook && orgDto.group)
+					.map((orgDto) => orgDto.group.slice(0, -2)))))
 			return result;
 
 		case "회장단":
 		case "교역자":
 			organizationNames.forEach((orgDto) => {
-				if (!result.gook.includes(orgDto.gook) && orgDto.gook.endsWith("국")) {
-					result.gook.push(orgDto.gook);
-				}
-				if (orgDto.group && !result.group.includes(orgDto.group)) {
-					result.group.push(orgDto.group);
+				if (orgDto.gook.endsWith('국')) {
+					if (!result.gook.includes(orgDto.gook.slice(0, -1))) {
+						result.gook.push(orgDto.gook.slice(0, -1));
+						result.group.push(
+							Array.from(new Set(organizationNames
+								.filter((dto) => orgDto.gook === dto.gook && dto.group)
+								.map((dto) => dto.group.slice(0, -2))))
+						)
+					}
 				}
 			});
 			return result;

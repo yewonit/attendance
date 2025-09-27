@@ -202,20 +202,26 @@ const getContinuousMembers = async (gook, group, soon) => {
 
 	const countAttendees = (serviceData) => {
 		const result = {
-			4: 0,
-			3: 0,
-			2: 0,
+			4: [],
+			3: [],
+			2: [],
 		};
 
 		Object.keys(serviceData.attendCount).forEach((userId) => {
 			const continuousCount = serviceData.attendCount[userId];
+			const userInfo = allUserMap[userId]
+			const userData = {
+				name: userInfo.name,
+				role: userInfo.role,
+				organization: userInfo.organization,
+			}
 
 			if (continuousCount >= 4) {
-				result[4]++;
+				result[4].push(userData);
 			} else if (continuousCount >= 3) {
-				result[3]++;
+				result[3].push(userData);
 			} else if (continuousCount >= 2) {
-				result[2]++;
+				result[2].push(userData);
 			}
 		});
 
