@@ -89,7 +89,7 @@ router.get("/login", async (req, res, next) => {
 		};
 
 		res.json({
-			user: userData,
+			userData,
 		});
 	} catch (error) {
 		next(error);
