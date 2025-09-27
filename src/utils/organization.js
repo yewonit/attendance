@@ -1,8 +1,7 @@
-import { ValidationError } from "./errors.js"
 
 const getOrganizationNamePattern = (gook, group, soon) => {
   if (!gook) {
-    throw new ValidationError("gook must be provided.")
+    return ""
   }
 
   if (!group) {
