@@ -61,15 +61,15 @@ const getWeeklyAttendanceGraph = async (gook, group, soon) => {
 			? Math.floor(Math.max(attendanceData.map((data) => data.count)) / 10) + 1
 			: 10;
 	const attendanceCounts = [];
-	const attendanceAggregationSum = initServiceData;
-	const attendanceAggregationAverage = initServiceData;
+	const attendanceAggregationSum = buildServiceData(0, 0, 0, 0);
+	const attendanceAggregationAverage = buildServiceData(0, 0, 0, 0);
 
 	organizationIds.forEach((id) => {
 		attendanceXAxis.push(
 			organizations.filter((org) => org.id === id).map((org) => org.name)
 		);
 
-		const serviceMap = initServiceData;
+		const serviceMap = buildServiceData(0, 0, 0, 0);
 		attendanceData
 			.filter((att) => att.organization_id === id)
 			.map((att) => {
