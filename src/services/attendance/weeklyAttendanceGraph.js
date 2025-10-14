@@ -29,8 +29,17 @@ const initServiceData = buildServiceData(0, 0, 0, 0);
  * @returns {Object} 주간 출석 그래프 데이터
  */
 const getWeeklyAttendanceGraph = async (gook, group, soon) => {
-	const organizations =
-		await organizationService.getOrganizationsByGookAndGroup(gook, group, soon);
+	let organizations = await organizationService.getOrganizationsByGookAndGroup(
+		gook,
+		group,
+		soon
+	);
+
+	// gook과 group이 모두 있을 때는 '순'으로 끝나는 조직만 포함
+	if (gook && group) {
+		organizations = organizations.filter((org) => org.name.endsWith("순"));
+	}
+
 	const organizationIds = organizations.map((org) => org.id);
 	const attendanceData = await models.Activity.findAll({
 		attributes: [
@@ -65,9 +74,10 @@ const getWeeklyAttendanceGraph = async (gook, group, soon) => {
 	const attendanceAggregationAverage = buildServiceData(0, 0, 0, 0);
 
 	organizationIds.forEach((id) => {
-		attendanceXAxis.push(
-			organizations.filter((org) => org.id === id).map((org) => org.name)
-		);
+		const orgName = organizations.find((org) => org.id === id)?.name;
+		if (orgName) {
+			attendanceXAxis.push(orgName);
+		}
 
 		const serviceMap = buildServiceData(0, 0, 0, 0);
 		attendanceData
