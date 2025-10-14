@@ -187,11 +187,12 @@ const getContinuousMembers = async (gook, group, soon) => {
 					organization: userInfo.organization,
 				};
 
-				if (continuousCount >= 4) {
+				// 정확히 N주 연속 결석자만 해당 카테고리에 포함
+				if (continuousCount === 4) {
 					result[4].push(userData);
-				} else if (continuousCount >= 3) {
+				} else if (continuousCount === 3) {
 					result[3].push(userData);
-				} else if (continuousCount >= 2) {
+				} else if (continuousCount === 2) {
 					result[2].push(userData);
 				}
 			}
@@ -209,18 +210,19 @@ const getContinuousMembers = async (gook, group, soon) => {
 
 		Object.keys(serviceData.attendCount).forEach((userId) => {
 			const continuousCount = serviceData.attendCount[userId];
-			const userInfo = allUserMap[userId]
+			const userInfo = allUserMap[userId];
 			const userData = {
 				name: userInfo.name,
 				role: userInfo.role,
 				organization: userInfo.organization,
-			}
+			};
 
-			if (continuousCount >= 4) {
+			// 정확히 N주 연속 출석자만 해당 카테고리에 포함
+			if (continuousCount === 4) {
 				result[4].push(userData);
-			} else if (continuousCount >= 3) {
+			} else if (continuousCount === 3) {
 				result[3].push(userData);
-			} else if (continuousCount >= 2) {
+			} else if (continuousCount === 2) {
 				result[2].push(userData);
 			}
 		});
