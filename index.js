@@ -5,18 +5,18 @@ import express from "express";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpecs from "./config/swagger.js";
 
-import healthCheck from "./healthcheck.js";
+import healthCheck from "./src/router/healthcheck.js";
 import globalError from "./middleware/global_error.js";
 import {
 	errorLogger,
 	requestLogger,
 	setupGlobalLogging,
 } from "./middleware/logging.js";
-import router from "./router/apigateway.js";
-import authRouter from "./router/auth/auth.js";
-import { initDatabase } from "./utils/database.js";
-import { NotFoundError } from "./utils/errors.js";
-import logger from "./utils/logger.js";
+import router from "./src/router/apigateway.js";
+import authRouter from "./src/router/auth/auth.js";
+import { initDatabase } from "./src/utils/database.js";
+import { NotFoundError } from "./src/utils/errors.js";
+import logger from "./src/utils/logger.js";
 
 const app = express();
 
