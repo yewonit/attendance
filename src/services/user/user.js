@@ -56,7 +56,7 @@ const userService = {
 		// 사용자와 역할 연결
 		await models.UserRole.create({
 			user_id: user.id,
-			role_id: 4, // 순원
+			role_id: 5, // 순원
 			organization_id: organizationId,
 		});
 
