@@ -8,7 +8,13 @@ import {
 import { hashPassword } from "../../utils/password.js";
 import { getCurrentSeasonId } from "../../utils/season.js";
 import crudService from "../common/crud.js";
+import { sequelize } from "../../utils/database.js";
 
+/**
+ * 사용자 관련 서비스
+ * @description 사용자 생성/수정 등 CUD 작업에 트랜잭션을 적용합니다.
+ * TODO: 이메일/전화번호 변경 시 감사 로그 남기기
+ */
 const userService = {
 	createUser: async (userData, organizationId, idOfCreatingUser) => {
 		// 필수 필드 검증
@@ -34,34 +40,37 @@ const userService = {
 			);
 		}
 
-		// 사용자 생성
-		const user = await models.User.create({
-			name: userData.name,
-			name_suffix: userData.name_suffix,
-			gender_type: userData.gender_type,
-			birth_date: userData.birth_date,
-			phone_number: formatPhoneNumber(userData.phone_number),
-			church_registration_date: userData.church_registration_date,
-			is_new_member: userData.is_new_member,
-		});
+		return await sequelize.transaction(async (t) => {
+			// 사용자 생성
+			const user = await models.User.create({
+				name: userData.name,
+				name_suffix: userData.name_suffix,
+				gender_type: userData.gender_type,
+				birth_date: userData.birth_date,
+				phone_number: formatPhoneNumber(userData.phone_number),
+				church_registration_date: userData.church_registration_date,
+				is_new_member: userData.is_new_member,
+			}, { transaction: t });
 
-		const organization = await models.Organization.findOne({
-			where: {
-				id: organizationId,
-			},
-		});
-		if (!organization)
-			throw new NotFoundError("존재하지 않는 organization입니다.");
+			const organization = await models.Organization.findOne({
+				where: {
+					id: organizationId,
+				},
+				transaction: t,
+			});
+			if (!organization)
+				throw new NotFoundError("존재하지 않는 organization입니다.");
 
-		// 사용자와 역할 연결
-		await models.UserRole.create({
-			user_id: user.id,
-			role_id: 5, // 순원
-			organization_id: organizationId,
-		});
+			// 사용자와 역할 연결
+			await models.UserRole.create({
+				user_id: user.id,
+				role_id: 5, // 순원
+				organization_id: organizationId,
+			}, { transaction: t });
 
-		// 생성된 사용자 정보 반환
-		return user;
+			// 생성된 사용자 정보 반환
+			return user;
+		});
 	},
 
 	findUsers: crudService.findAll(models.User),
@@ -89,11 +98,14 @@ const userService = {
 			user.phone_number = formatPhoneNumber(user.phone_number);
 		}
 
-		const [updated] = await models.User.update(user, {
-			where: { id: id },
-		});
+		return await sequelize.transaction(async (t) => {
+			const [updated] = await models.User.update(user, {
+				where: { id: id },
+				transaction: t,
+			});
 
-		return updated;
+			return updated;
+		});
 	},
 
 	setEmailAndPassword: async (id, email, password) => {
@@ -110,18 +122,21 @@ const userService = {
 		passwordCheck(password);
 		const encodedPassword = await hashPassword(password);
 
-		const [updated] = await models.User.update(
-			{
-				id,
-				email,
-				password: encodedPassword,
-			},
-			{
-				where: { id: id },
-			}
-		);
+		return await sequelize.transaction(async (t) => {
+			const [updated] = await models.User.update(
+				{
+					id,
+					email,
+					password: encodedPassword,
+				},
+				{
+					where: { id: id },
+					transaction: t,
+				}
+			);
 
-		return updated;
+			return updated;
+		});
 	},
 
 	deleteUser: crudService.delete(models.User),
