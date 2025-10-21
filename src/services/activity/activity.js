@@ -17,34 +17,37 @@ const activityService = {
 		}
 		return result;
 	},
-    /**
-    * 조직 활동 목록 조회 서비스
-    * @description 조회 전용. 트랜잭션 미사용.
-    */
-    getAllOrganizationActivities: async (organizationId) => {
-		const activities = await models.Activity.findAll({
-			where: { organization_id: organizationId },
-			include: [
-				{
-					model: models.Attendance,
-					as: "attendances",
-					required: false,
-					include: [
-						{
-							model: models.User,
-							as: "user",
-							required: true,
-							attributes: ["id", "name", "email"],
-							where: { is_deleted: false },
-						},
-					],
-				},
-				{
-					model: models.ActivityImage,
-					as: "images",
-					required: false,
-				},
-			],
+	/**
+	 * 조직 활동 목록 조회 서비스
+	 * @description 조회 전용. 트랜잭션 미사용.
+	 */
+	getAllOrganizationActivities: async (organizationId) => {
+		const activities = await sequelize.transaction(async (t) => {
+			return await models.Activity.findAll({
+				where: { organization_id: organizationId },
+				include: [
+					{
+						model: models.Attendance,
+						as: "attendances",
+						required: false,
+						include: [
+							{
+								model: models.User,
+								as: "user",
+								required: true,
+								attributes: ["id", "name", "email"],
+								where: { is_deleted: false },
+							},
+						],
+					},
+					{
+						model: models.ActivityImage,
+						as: "images",
+						required: false,
+					},
+				],
+				transaction: t,
+			});
 		});
 
 		if (!activities || activities.length === 0) {
@@ -81,29 +84,32 @@ const activityService = {
 		return result;
 	},
 	getActivityDetails: async (activityId) => {
-		const activity = await models.Activity.findOne({
-			where: { id: activityId },
-			include: [
-				{
-					model: models.Attendance,
-					as: "attendances",
-					required: false,
-					include: [
-						{
-							model: models.User,
-							as: "user",
-							required: true,
-							attributes: ["id", "name", "email"],
-							where: { is_deleted: false },
-						},
-					],
-				},
-				{
-					model: models.ActivityImage,
-					as: "images",
-					required: false,
-				},
-			],
+		const activity = await sequelize.transaction(async (t) => {
+			return await models.Activity.findOne({
+				where: { id: activityId },
+				include: [
+					{
+						model: models.Attendance,
+						as: "attendances",
+						required: false,
+						include: [
+							{
+								model: models.User,
+								as: "user",
+								required: true,
+								attributes: ["id", "name", "email"],
+								where: { is_deleted: false },
+							},
+						],
+					},
+					{
+						model: models.ActivityImage,
+						as: "images",
+						required: false,
+					},
+				],
+				transaction: t,
+			});
 		});
 
 		if (!activity) {
@@ -134,12 +140,12 @@ const activityService = {
 			})),
 		};
 	},
-    /**
-    * 활동과 출석 동시 생성 서비스
-    * @description 활동(Activity), 이미지(ActivityImage), 출석(Attendance) 생성을 하나의 트랜잭션으로 묶습니다.
-    * TODO: 참석자 대량 삽입 시 bulkCreate로 최적화 및 성능 테스트
-    */
-    recordActivityAndAttendance: async (
+	/**
+	 * 활동과 출석 동시 생성 서비스
+	 * @description 활동(Activity), 이미지(ActivityImage), 출석(Attendance) 생성을 하나의 트랜잭션으로 묶습니다.
+	 * TODO: 참석자 대량 삽입 시 bulkCreate로 최적화 및 성능 테스트
+	 */
+	recordActivityAndAttendance: async (
 		organizationId,
 		activityTemplateId,
 		data
@@ -174,36 +180,47 @@ const activityService = {
 			throw new ValidationError("해당 활동 템플릿을 찾을 수 없습니다.");
 		}
 
-        try {
-            await sequelize.transaction(async (t) => {
-                const activity = await models.Activity.create({
-				name: template.name || activityData.name,
-				description: activityData.notes,
-				activity_category:
-					template.activityCategory || activityData.activityCategory,
-				location: activityData.location,
-				organization_id: organizationId,
-				start_time: activityData.startDateTime,
-				end_time: activityData.endDateTime,
-                }, { transaction: t });
+		try {
+			await sequelize.transaction(async (t) => {
+				const activity = await models.Activity.create(
+					{
+						name: template.name || activityData.name,
+						description: activityData.notes,
+						activity_category:
+							template.activityCategory || activityData.activityCategory,
+						location: activityData.location,
+						organization_id: organizationId,
+						start_time: activityData.startDateTime,
+						end_time: activityData.endDateTime,
+					},
+					{ transaction: t }
+				);
 
-                if (imageInfo) {
-                    await models.ActivityImage.create({
-                        activity_id: activity.id,
-                        name: imageInfo.fileName,
-                        path: imageInfo.url,
-                    }, { transaction: t });
-                }
+				if (imageInfo) {
+					await models.ActivityImage.create(
+						{
+							activity_id: activity.id,
+							name: imageInfo.fileName,
+							path: imageInfo.url,
+						},
+						{ transaction: t }
+					);
+				}
 
-                await Promise.all(attendances.map((attendance) => {
-                    return models.Attendance.create({
-                        activity_id: activity.id,
-                        user_id: attendance.userId,
-                        attendance_status: attendance.status,
-                        description: attendance.note,
-                    }, { transaction: t });
-                }));
-            });
+				await Promise.all(
+					attendances.map((attendance) => {
+						return models.Attendance.create(
+							{
+								activity_id: activity.id,
+								user_id: attendance.userId,
+								attendance_status: attendance.status,
+								description: attendance.note,
+							},
+							{ transaction: t }
+						);
+					})
+				);
+			});
 		} catch (error) {
 			throw new DataCreationError("활동 정보 저장 중 에러 발생 : ", error);
 		}
@@ -215,11 +232,11 @@ const activityService = {
 	 * @param {Object} data - 업데이트할 데이터 객체
 	 * @returns {Promise<void>}
 	 */
-    /**
-    * 활동과 출석 동시 업데이트 서비스
-    * @description 활동(Activity), 이미지(ActivityImage), 출석(Attendance) 변경을 하나의 트랜잭션으로 묶습니다.
-    */
-    updateActivityAndAttendance: async (activityId, data) => {
+	/**
+	 * 활동과 출석 동시 업데이트 서비스
+	 * @description 활동(Activity), 이미지(ActivityImage), 출석(Attendance) 변경을 하나의 트랜잭션으로 묶습니다.
+	 */
+	updateActivityAndAttendance: async (activityId, data) => {
 		const { activityData, attendances, imageInfo } = data;
 
 		if (!activityId || !activityData || !attendances) {
@@ -233,76 +250,87 @@ const activityService = {
 			throw new NotFoundError("활동을 찾을 수 없습니다.");
 		}
 
-        await sequelize.transaction(async (t) => {
-            await activity.update({
-			location: activityData.location,
-			start_time: activityData.startDateTime,
-			end_time: activityData.endDateTime,
-			description: activityData.notes,
-            }, { transaction: t });
+		await sequelize.transaction(async (t) => {
+			await activity.update(
+				{
+					location: activityData.location,
+					start_time: activityData.startDateTime,
+					end_time: activityData.endDateTime,
+					description: activityData.notes,
+				},
+				{ transaction: t }
+			);
 
-            if (imageInfo && imageInfo.url && imageInfo.fileName) {
-                const existingFile = await models.ActivityImage.findOne({
-                    where: { activity_id: activityId },
-                });
+			if (imageInfo && imageInfo.url && imageInfo.fileName) {
+				const existingFile = await models.ActivityImage.findOne({
+					where: { activity_id: activityId },
+				});
 
-                await existingFile.update({
-                    name: imageInfo.fileName,
-                    path: imageInfo.url,
-                }, { transaction: t });
-            }
+				await existingFile.update(
+					{
+						name: imageInfo.fileName,
+						path: imageInfo.url,
+					},
+					{ transaction: t }
+				);
+			}
 
-            await Promise.all(
-                attendances.map(async (attendance) => {
-                    const [attendanceRecord, created] =
-                        await models.Attendance.findOrCreate({
-                            where: {
-                                activity_id: activityId,
-                                user_id: attendance.userId,
-                            },
-                            defaults: {
-                                attendance_status: attendance.status,
-                                description: attendance.note || null,
-                            },
-                            transaction: t,
-                        });
+			await Promise.all(
+				attendances.map(async (attendance) => {
+					const [attendanceRecord, created] =
+						await models.Attendance.findOrCreate({
+							where: {
+								activity_id: activityId,
+								user_id: attendance.userId,
+							},
+							defaults: {
+								attendance_status: attendance.status,
+								description: attendance.note || null,
+							},
+							transaction: t,
+						});
 
-                    if (!created) {
-                        await attendanceRecord.update({
-                            attendance_status: attendance.status,
-                            description: attendance.note || null,
-                        }, { transaction: t });
-                    }
-                })
-            );
-        });
+					if (!created) {
+						await attendanceRecord.update(
+							{
+								attendance_status: attendance.status,
+								description: attendance.note || null,
+							},
+							{ transaction: t }
+						);
+					}
+				})
+			);
+		});
 	},
-    /**
-    * 활동과 출석 동시 삭제 서비스
-    * @description 활동(Activity), 이미지(ActivityImage), 출석(Attendance) 삭제를 하나의 트랜잭션으로 묶습니다.
-    */
-    deleteActivityAndAttendance: async (activityId) => {
-        await sequelize.transaction(async (t) => {
-            const activity = await models.Activity.findByPk(activityId);
-            if (activity) {
-                await activity.destroy({ transaction: t });
-            }
+	/**
+	 * 활동과 출석 동시 삭제 서비스
+	 * @description 활동(Activity), 이미지(ActivityImage), 출석(Attendance) 삭제를 하나의 트랜잭션으로 묶습니다.
+	 */
+	deleteActivityAndAttendance: async (activityId) => {
+		await sequelize.transaction(async (t) => {
+			const activity = await models.Activity.findByPk(activityId);
+			if (activity) {
+				await activity.destroy({ transaction: t });
+			}
 
-            const activityImage = await models.ActivityImage.findOne({
-                where: { activity_id: activityId },
-            });
-            if (activityImage) {
-                await activityImage.destroy({ transaction: t });
-            }
+			const activityImage = await models.ActivityImage.findOne({
+				where: { activity_id: activityId },
+			});
+			if (activityImage) {
+				await activityImage.destroy({ transaction: t });
+			}
 
-            const attendances = await models.Attendance.findAll({
-                where: {
-                    activity_id: activityId,
-                },
-            });
-            await Promise.all(attendances.map((attendance) => attendance.destroy({ transaction: t })));
-        });
-    },
+			const attendances = await models.Attendance.findAll({
+				where: {
+					activity_id: activityId,
+				},
+			});
+			await Promise.all(
+				attendances.map((attendance) => attendance.destroy({ transaction: t }))
+			);
+		});
+	},
 	/**
 	 * 최근 1주 이내 청년예배 활동 ID 목록을 조회합니다.
 	 * @param {number[]} organizationIds - 조직 ID 배열

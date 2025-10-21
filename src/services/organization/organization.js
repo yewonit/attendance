@@ -6,6 +6,7 @@ import { NotFoundError } from "../../utils/errors.js";
 import { getOrganizationNamePattern } from "../../utils/organization.js";
 import { getCurrentSeasonId } from "../../utils/season.js";
 import crudService from "../common/crud.js";
+import { sequelize } from "../../utils/database.js";
 
 // 📝 조직 정보 유효성 검사 함수
 const validateOrganizationData = async (data) => {
@@ -73,45 +74,50 @@ const organizationService = {
 
 	// 조직 멤버 목록 조회
 	getOrganizationMembers: async (organizationId) =>
-		await getMembersById(organizationId),
+		await sequelize.transaction(async (t) => {
+			return await getMembersById(organizationId);
+		}),
 
 	getOrganizationActivities: async (organizationId) => {
 		if (!organizationId) {
 			throw new Error("조직 ID가 제공되지 않았습니다.");
 		}
 
-		const organization = await models.Organization.findByPk(organizationId, {
-			include: [
-				{
-					model: models.Activity,
-					as: "activities",
-					attributes: ["id", "name"],
-					where: { is_deleted: false },
-					required: false,
-					include: [
-						{
-							model: models.Attendance,
-							as: "attendances",
-							required: false,
-							include: [
-								{
-									model: models.User,
-									as: "user",
-									required: true,
-									where: { is_deleted: false },
-									attributes: ["id", "name", "email"],
-								},
-							],
-						},
-						{
-							model: models.ActivityImage,
-							as: "images",
-							required: false,
-							attributes: ["id", "name", "path"],
-						},
-					],
-				},
-			],
+		const organization = await sequelize.transaction(async (t) => {
+			return await models.Organization.findByPk(organizationId, {
+				include: [
+					{
+						model: models.Activity,
+						as: "activities",
+						attributes: ["id", "name"],
+						where: { is_deleted: false },
+						required: false,
+						include: [
+							{
+								model: models.Attendance,
+								as: "attendances",
+								required: false,
+								include: [
+									{
+										model: models.User,
+										as: "user",
+										required: true,
+										where: { is_deleted: false },
+										attributes: ["id", "name", "email"],
+									},
+								],
+							},
+							{
+								model: models.ActivityImage,
+								as: "images",
+								required: false,
+								attributes: ["id", "name", "path"],
+							},
+						],
+					},
+				],
+				transaction: t,
+			});
 		});
 
 		if (!organization) {
@@ -190,7 +196,7 @@ const organizationService = {
 				attributes: ["id"],
 			});
 
-			return result
+			return result;
 		}
 		const result = await models.Organization.findAll({
 			where: {
@@ -200,7 +206,7 @@ const organizationService = {
 			attributes: ["id"],
 		});
 
-		return result
+		return result;
 	},
 	getOrganizationsByGookAndGroup: async (gook, group, soon) => {
 		const seasonId = getCurrentSeasonId();

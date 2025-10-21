@@ -9,6 +9,7 @@ import { hashPassword } from "../../utils/password.js";
 import { getCurrentSeasonId } from "../../utils/season.js";
 import crudService from "../common/crud.js";
 import { sequelize } from "../../utils/database.js";
+import { sequelize } from "../../utils/database.js";
 
 /**
  * 사용자 관련 서비스
@@ -42,15 +43,18 @@ const userService = {
 
 		return await sequelize.transaction(async (t) => {
 			// 사용자 생성
-			const user = await models.User.create({
-				name: userData.name,
-				name_suffix: userData.name_suffix,
-				gender_type: userData.gender_type,
-				birth_date: userData.birth_date,
-				phone_number: formatPhoneNumber(userData.phone_number),
-				church_registration_date: userData.church_registration_date,
-				is_new_member: userData.is_new_member,
-			}, { transaction: t });
+			const user = await models.User.create(
+				{
+					name: userData.name,
+					name_suffix: userData.name_suffix,
+					gender_type: userData.gender_type,
+					birth_date: userData.birth_date,
+					phone_number: formatPhoneNumber(userData.phone_number),
+					church_registration_date: userData.church_registration_date,
+					is_new_member: userData.is_new_member,
+				},
+				{ transaction: t }
+			);
 
 			const organization = await models.Organization.findOne({
 				where: {
@@ -62,11 +66,14 @@ const userService = {
 				throw new NotFoundError("존재하지 않는 organization입니다.");
 
 			// 사용자와 역할 연결
-			await models.UserRole.create({
-				user_id: user.id,
-				role_id: 5, // 순원
-				organization_id: organizationId,
-			}, { transaction: t });
+			await models.UserRole.create(
+				{
+					user_id: user.id,
+					role_id: 5, // 순원
+					organization_id: organizationId,
+				},
+				{ transaction: t }
+			);
 
 			// 생성된 사용자 정보 반환
 			return user;
@@ -233,7 +240,9 @@ const userService = {
 	},
 
 	getUserRoleOfCurrentSeason: async (userId) => {
-		const rolesWithOrganization = await getRoleAndOrganization(userId);
+		const rolesWithOrganization = await sequelize.transaction(async (t) => {
+			return await getRoleAndOrganization(userId);
+		});
 		return rolesWithOrganization;
 	},
 
@@ -360,9 +369,10 @@ const findHighestRole = (userRoles) => {
 const getOrganizationsByRole = async (highestRole) => {
 	const seasonId = getCurrentSeasonId();
 	const highestRoleOrgName = highestRole.organizationName;
-	const [currentGook, currentGroup, currentSoon] = highestRoleOrgName.split("_");
+	const [currentGook, currentGroup, currentSoon] =
+		highestRoleOrgName.split("_");
 	const organizationNameDto = (gook, group) => {
-		return { gook, group }
+		return { gook, group };
 	};
 	const organizationNames = await models.Organization.findAll({
 		where: {
@@ -370,11 +380,13 @@ const getOrganizationsByRole = async (highestRole) => {
 			is_deleted: false,
 		},
 		attributes: ["name"],
-	}).then((orgs) => orgs.map((org) => {
-		let [gook, group] = org.name.split("_");
+	}).then((orgs) =>
+		orgs.map((org) => {
+			let [gook, group] = org.name.split("_");
 
-		return organizationNameDto(gook, group);
-	}));
+			return organizationNameDto(gook, group);
+		})
+	);
 
 	const result = {
 		gook: [],
@@ -384,28 +396,37 @@ const getOrganizationsByRole = async (highestRole) => {
 	switch (highestRole.roleName) {
 		case "그룹장":
 			result.gook.push(currentGook.slice(0, -1));
-			result.group.push(currentGroup.slice(0. - 2));
+			result.group.push(currentGroup.slice(0 - 2));
 			return result;
 
 		case "국장":
 			result.gook.push(currentGook.slice(0, -1));
 			result.group.push(
-				Array.from(new Set(organizationNames
-					.filter((orgDto) => orgDto.gook === currentGook && orgDto.group)
-					.map((orgDto) => orgDto.group.slice(0, -2)))))
+				Array.from(
+					new Set(
+						organizationNames
+							.filter((orgDto) => orgDto.gook === currentGook && orgDto.group)
+							.map((orgDto) => orgDto.group.slice(0, -2))
+					)
+				)
+			);
 			return result;
 
 		case "회장단":
 		case "교역자":
 			organizationNames.forEach((orgDto) => {
-				if (orgDto.gook.endsWith('국')) {
+				if (orgDto.gook.endsWith("국")) {
 					if (!result.gook.includes(orgDto.gook.slice(0, -1))) {
 						result.gook.push(orgDto.gook.slice(0, -1));
 						result.group.push(
-							Array.from(new Set(organizationNames
-								.filter((dto) => orgDto.gook === dto.gook && dto.group)
-								.map((dto) => dto.group.slice(0, -2))))
-						)
+							Array.from(
+								new Set(
+									organizationNames
+										.filter((dto) => orgDto.gook === dto.gook && dto.group)
+										.map((dto) => dto.group.slice(0, -2))
+								)
+							)
+						);
 					}
 				}
 			});
