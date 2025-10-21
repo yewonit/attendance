@@ -14,8 +14,20 @@ router.get("/:id/members", async (req, res, next) => {
 			await organizationService.getOrganizationMembers(organizationId);
 
 		res.status(200).json({
-			members: organizationMembers
+			members: organizationMembers,
 		});
+	} catch (error) {
+		next(error);
+	}
+});
+
+router.get("/:id/members/roles", async (req, res, next) => {
+	const organizationId = req.params.id;
+	try {
+		const organizationMembers =
+			await organizationService.getMembersByIdWithRoles(organizationId);
+
+		res.status(200).json(organizationMembers);
 	} catch (error) {
 		next(error);
 	}

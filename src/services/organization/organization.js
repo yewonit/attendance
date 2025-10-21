@@ -49,6 +49,52 @@ const getMembersById = async (organizationId) => {
 	}));
 };
 
+const getMembersByIdWithRoles = async (organizationId) => {
+	const userRoles = await models.UserRole.findAll({
+		where: { organization_id: organizationId },
+		include: [
+			{
+				model: models.User,
+				as: "user",
+				required: true,
+				where: { is_deleted: false },
+				attributes: { exclude: ["password"] },
+			},
+			{
+				model: models.Role,
+				as: "role",
+				required: true,
+				where: { is_deleted: false },
+			},
+		],
+	});
+
+	// 필터링된 결과가 없는 경우 404 상태 코드와 메시지를 반환합니다.
+	if (userRoles.length === 0) {
+		return res
+			.status(404)
+			.json({ message: "해당 조직에 소속된 멤버가 없습니다." });
+	}
+
+	// 필터링된 결과를 JSON 배열로 변환합니다.
+	const members = userRoles.map((userRole) => {
+		const { user, role } = userRole;
+		return {
+			userId: user.id,
+			name: user.name,
+			email: user.email,
+			phoneNumber: user.phone_number,
+			churchRegistrationDate: user.registration_date,
+			isNewMember: user.is_new_member,
+			isLongTermAbsentee: user.is_long_term_absentee,
+			roleId: role.id,
+			roleName: role.name,
+		};
+	});
+
+	return members;
+};
+
 // 📦 조직 관련 컨트롤러 모듈
 const organizationService = {
 	// ✨ 조직 생성
@@ -76,6 +122,11 @@ const organizationService = {
 	getOrganizationMembers: async (organizationId) =>
 		await sequelize.transaction(async (t) => {
 			return await getMembersById(organizationId);
+		}),
+
+	getMembersByIdWithRoles: async (organizationId) =>
+		await sequelize.transaction(async (t) => {
+			return await getMembersByIdWithRoles(organizationId);
 		}),
 
 	getOrganizationActivities: async (organizationId) => {

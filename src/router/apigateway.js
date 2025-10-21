@@ -54,35 +54,5 @@ router.use("/attendances", attendanceRouter);
  */
 router.get("/current-members", CurrentMemberCtrl.getMembersWithRoles);
 
-/**
- * @swagger
- * /api/current-members:
- *   post:
- *     summary: 새로운 회원 생성
- *     description: 새로운 회원을 생성합니다.
- *     tags: [Current Members]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               role:
- *                 type: string
- *     responses:
- *       201:
- *         description: 성공적으로 회원이 생성되었습니다.
- *       400:
- *         description: 잘못된 요청입니다.
- *       500:
- *         description: 서버 오류가 발생했습니다.
- */
-router.post("/current-members", CurrentMemberCtrl.createMember);
-
 // 설정된 라우터 모듈을 내보냅니다.
 export default router;
