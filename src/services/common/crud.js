@@ -26,35 +26,38 @@ const crudService = {
 	},
 
 	/**
-	 * 조회 트랜잭션 래퍼
-	 * @description 조회 작업을 일반 트랜잭션으로 감쌉니다.
+	 * 📖 전체 조회 서비스 (성능 최적화 버전)
+	 * - 불필요한 트랜잭션 제거 (읽기 전용)
+	 *
+	 * @param {Model} model - Sequelize 모델
+	 * @returns {Function} 전체 조회 함수
 	 */
 	findAll: (model) => async () => {
 		try {
-			return await sequelize.transaction(async (t) => {
-				return await model.findAll({ transaction: t });
-			});
+			return await model.findAll();
 		} catch (error) {
 			await handleError(error);
 		}
 	},
 
 	/**
-	 * 단건 조회 트랜잭션 래퍼
+	 * 🔍 단건 조회 서비스 (성능 최적화 버전)
+	 * - 불필요한 트랜잭션 제거 (읽기 전용)
+	 *
+	 * @param {Model} model - Sequelize 모델
+	 * @returns {Function} 단건 조회 함수
 	 */
 	findOne: (model) => async (id) => {
 		try {
-			return await sequelize.transaction(async (t) => {
-				const data = await model.findByPk(id, { transaction: t });
+			const data = await model.findByPk(id);
 
-				if (data) {
-					return data;
-				} else {
-					const error = new Error("리소스(DB데이터를)를 찾을 수 없음");
-					error.status = 404;
-					throw error;
-				}
-			});
+			if (data) {
+				return data;
+			} else {
+				const error = new Error("리소스(DB데이터를)를 찾을 수 없음");
+				error.status = 404;
+				throw error;
+			}
 		} catch (error) {
 			await handleError(error);
 		}

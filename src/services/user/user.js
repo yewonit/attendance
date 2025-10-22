@@ -195,6 +195,16 @@ const userService = {
 		return userData;
 	},
 
+	/**
+	 * 👥 이름으로 멤버 검색 (성능 최적화 버전)
+	 * - N+1 쿼리 문제 해결: for loop 내 DB 조회 제거
+	 * - 사용자 역할 정보를 일괄 조회 후 메모리에서 매핑
+	 *
+	 * @param {string} name - 검색할 이름
+	 * @returns {Array} 검색된 멤버 목록
+	 *
+	 * TODO: 검색 결과가 많을 경우 페이지네이션 고려
+	 */
 	searchMembersByName: async (name) => {
 		if (!name) {
 			const error = new Error("이름이 제공되지 않았습니다.");
@@ -204,7 +214,7 @@ const userService = {
 
 		const decodedName = decodeURIComponent(name);
 
-		// 사용자 테이블에서 이름으로 검색 - Op.like 직접 사용
+		// 1️⃣ 사용자 테이블에서 이름으로 검색
 		const users = await models.User.findAll({
 			where: {
 				name: {
@@ -212,25 +222,61 @@ const userService = {
 				},
 				is_deleted: "N",
 			},
-			attributes: { exclude: ["password"] },
+			attributes: ["id", "name", "email", "phone_number"],
 		});
 
 		if (users.length === 0) {
 			return [];
 		}
 
-		// 각 사용자의 역할 및 조직 정보 조회
-		const formattedMembers = [];
-		for (let user of users) {
-			const rolesWithOrganization = await getRoleAndOrganization(user.id);
-			formattedMembers.push({
-				id: user.id,
-				name: user.name,
-				email: user.email,
-				phoneNumber: user.phone_number,
-				roles: rolesWithOrganization,
+		const userIds = users.map((u) => u.id);
+		const currentSeason = getCurrentSeasonId();
+
+		// 2️⃣ 모든 사용자의 역할 및 조직 정보를 일괄 조회
+		const userRoles = await models.UserRole.findAll({
+			where: {
+				user_id: userIds,
+			},
+			include: [
+				{
+					model: models.Role,
+					as: "role",
+					where: { is_deleted: false },
+					attributes: ["id", "name"],
+				},
+				{
+					model: models.Organization,
+					as: "organization",
+					where: {
+						season_id: currentSeason,
+						is_deleted: false,
+					},
+					attributes: ["id", "name"],
+				},
+			],
+		});
+
+		// 3️⃣ userId를 키로 하는 Map 생성 (O(1) lookup)
+		const rolesByUserId = userRoles.reduce((map, userRole) => {
+			if (!map[userRole.user_id]) {
+				map[userRole.user_id] = [];
+			}
+			map[userRole.user_id].push({
+				roleName: userRole.role.name,
+				organizationId: userRole.organization.id,
+				organizationName: userRole.organization.name,
 			});
-		}
+			return map;
+		}, {});
+
+		// 4️⃣ 최종 데이터 조합
+		const formattedMembers = users.map((user) => ({
+			id: user.id,
+			name: user.name,
+			email: user.email,
+			phoneNumber: user.phone_number,
+			roles: rolesByUserId[user.id] || [],
+		}));
 
 		return formattedMembers;
 	},
@@ -239,11 +285,15 @@ const userService = {
 		await emailCheck(email);
 	},
 
+	/**
+	 * 🎭 현재 시즌의 사용자 역할 조회 (성능 최적화 버전)
+	 * - 불필요한 트랜잭션 제거 (읽기 전용)
+	 *
+	 * @param {number} userId - 사용자 ID
+	 * @returns {Array} 사용자의 역할 및 조직 정보
+	 */
 	getUserRoleOfCurrentSeason: async (userId) => {
-		const rolesWithOrganization = await sequelize.transaction(async (t) => {
-			return await getRoleAndOrganization(userId);
-		});
-		return rolesWithOrganization;
+		return await getRoleAndOrganization(userId);
 	},
 
 	/**

@@ -118,57 +118,49 @@ const organizationService = {
 	// 🗑️ 조직 삭제
 	deleteOrganization: crudService.delete(models.Organization),
 
-	// 조직 멤버 목록 조회
-	getOrganizationMembers: async (organizationId) =>
-		await sequelize.transaction(async (t) => {
-			return await getMembersById(organizationId);
-		}),
+	/**
+	 * 👥 조직 멤버 목록 조회 (성능 최적화 버전)
+	 * - 불필요한 트랜잭션 제거 (읽기 전용)
+	 *
+	 * @param {number} organizationId - 조직 ID
+	 * @returns {Array} 멤버 목록
+	 */
+	getOrganizationMembers: async (organizationId) => {
+		return await getMembersById(organizationId);
+	},
 
-	getMembersByIdWithRoles: async (organizationId) =>
-		await sequelize.transaction(async (t) => {
-			return await getMembersByIdWithRoles(organizationId);
-		}),
+	/**
+	 * 👥 조직 멤버와 역할 정보 조회 (성능 최적화 버전)
+	 * - 불필요한 트랜잭션 제거 (읽기 전용)
+	 *
+	 * @param {number} organizationId - 조직 ID
+	 * @returns {Array} 멤버 및 역할 정보
+	 */
+	getMembersByIdWithRoles: async (organizationId) => {
+		return await getMembersByIdWithRoles(organizationId);
+	},
 
+	/**
+	 * 📊 조직의 활동 정보를 조회합니다 (성능 최적화 버전)
+	 * - 쿼리를 분리하여 Cartesian Product 문제 해결
+	 * - 불필요한 트랜잭션 제거 (읽기 전용)
+	 * - 필요한 attributes만 선택하여 네트워크 전송량 감소
+	 *
+	 * @param {number} organizationId - 조직 ID
+	 * @returns {Object} 조직 정보와 활동 목록
+	 * @throws {NotFoundError} 조직을 찾을 수 없는 경우
+	 *
+	 * TODO: 데이터가 계속 증가하면 페이지네이션 추가 고려 필요
+	 * TODO: Redis 캐싱 전략 고려 (자주 조회되는 데이터라면)
+	 */
 	getOrganizationActivities: async (organizationId) => {
 		if (!organizationId) {
 			throw new Error("조직 ID가 제공되지 않았습니다.");
 		}
 
-		const organization = await sequelize.transaction(async (t) => {
-			return await models.Organization.findByPk(organizationId, {
-				include: [
-					{
-						model: models.Activity,
-						as: "activities",
-						attributes: ["id", "name"],
-						where: { is_deleted: false },
-						required: false,
-						include: [
-							{
-								model: models.Attendance,
-								as: "attendances",
-								required: false,
-								include: [
-									{
-										model: models.User,
-										as: "user",
-										required: true,
-										where: { is_deleted: false },
-										attributes: ["id", "name", "email"],
-									},
-								],
-							},
-							{
-								model: models.ActivityImage,
-								as: "images",
-								required: false,
-								attributes: ["id", "name", "path"],
-							},
-						],
-					},
-				],
-				transaction: t,
-			});
+		// 1️⃣ 조직 존재 여부 확인 (가벼운 쿼리)
+		const organization = await models.Organization.findByPk(organizationId, {
+			attributes: ["id", "name"],
 		});
 
 		if (!organization) {
@@ -177,8 +169,91 @@ const organizationService = {
 			);
 		}
 
+		// 2️⃣ 활동 목록 조회 (필요한 필드만)
+		const activities = await models.Activity.findAll({
+			where: {
+				organization_id: organizationId,
+				is_deleted: false,
+			},
+			attributes: [
+				"id",
+				"name",
+				"description",
+				"category",
+				"start_time",
+				"end_time",
+				"created_at",
+				"updated_at",
+			],
+			order: [["start_time", "DESC"]], // 최신순 정렬
+		});
+
+		// 활동이 없으면 빈 배열 반환
+		if (activities.length === 0) {
+			return {
+				organizationId: organization.id,
+				organizationName: organization.name,
+				activities: [],
+			};
+		}
+
+		const activityIds = activities.map((a) => a.id);
+
+		// 3️⃣ 출석 정보 일괄 조회 (separate query로 N+1 방지)
+		const attendances = await models.Attendance.findAll({
+			where: {
+				activity_id: activityIds,
+			},
+			attributes: [
+				"id",
+				"activity_id",
+				"user_id",
+				"attendance_status",
+				"check_in_time",
+				"check_out_time",
+			],
+			include: [
+				{
+					model: models.User,
+					as: "user",
+					required: true,
+					where: { is_deleted: false },
+					attributes: ["id", "name", "email", "phone_number"],
+				},
+			],
+		});
+
+		// 4️⃣ 이미지 정보 일괄 조회
+		const images = await models.ActivityImage.findAll({
+			where: {
+				activity_id: activityIds,
+			},
+			attributes: ["id", "activity_id", "name", "path"],
+		});
+
+		// 5️⃣ 데이터 매핑을 위한 Map 생성 (O(1) lookup)
+		const attendancesByActivityId = attendances.reduce((map, att) => {
+			if (!map[att.activity_id]) {
+				map[att.activity_id] = [];
+			}
+			map[att.activity_id].push(att);
+			return map;
+		}, {});
+
+		const imagesByActivityId = images.reduce((map, img) => {
+			if (!map[img.activity_id]) {
+				map[img.activity_id] = [];
+			}
+			map[img.activity_id].push(img);
+			return map;
+		}, {});
+
+		// 6️⃣ 최종 데이터 조합
 		// TODO: 추후 프론트에서 리뉴얼된 테이블 데이터에 맞춰 사용하도록 수정 필요
-		const activitiesData = organization.activities.map((activity) => {
+		const activitiesData = activities.map((activity) => {
+			const activityAttendances = attendancesByActivityId[activity.id] || [];
+			const activityImages = imagesByActivityId[activity.id] || [];
+
 			return {
 				id: 1,
 				name: activity.name,
@@ -191,22 +266,20 @@ const organizationService = {
 					start_datetime: activity.start_time,
 					end_datetime: activity.end_time,
 					notes: activity.description,
-					is_canceled: activity.is_deleted,
+					is_canceled: false, // is_deleted가 false인 것만 조회했으므로
 					created_at: activity.created_at,
 					updated_at: activity.updated_at,
-					attendances: activity.attendances.map((attendance) => {
-						return {
-							userId: attendance.user.id,
-							userName: attendance.user.name,
-							userEmail: attendance.user.email,
-							userPhoneNumber: attendance.user.phone_number,
-							status: attendance.attendance_status,
-							check_in_time: activity.start_time,
-							check_out_time: activity.end_time,
-							note: null,
-						};
-					}),
-					images: activity.images.map((image) => ({
+					attendances: activityAttendances.map((attendance) => ({
+						userId: attendance.user.id,
+						userName: attendance.user.name,
+						userEmail: attendance.user.email,
+						userPhoneNumber: attendance.user.phone_number,
+						status: attendance.attendance_status,
+						check_in_time: attendance.check_in_time || activity.start_time,
+						check_out_time: attendance.check_out_time || activity.end_time,
+						note: null,
+					})),
+					images: activityImages.map((image) => ({
 						id: image.id,
 						fileName: image.name,
 						filePath: image.path,
