@@ -33,4 +33,18 @@ router.get("/:id/members/roles", async (req, res, next) => {
 	}
 });
 
+router.get("/member-counts", async (req, res, next) => {
+	try {
+		const memberCounts =
+			await organizationService.getAllOrganizationMemberCounts();
+
+		res.status(200).json({
+			data: memberCounts,
+		});
+	} catch (error) {
+		console.error("조직별 멤버 수 조회 실패:", error);
+		next(error);
+	}
+});
+
 export default router;

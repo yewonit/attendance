@@ -9,7 +9,6 @@ import { hashPassword } from "../../utils/password.js";
 import { getCurrentSeasonId } from "../../utils/season.js";
 import crudService from "../common/crud.js";
 import { sequelize } from "../../utils/database.js";
-import { sequelize } from "../../utils/database.js";
 
 /**
  * 사용자 관련 서비스
@@ -328,6 +327,113 @@ const userService = {
 
 		// 역할에 따라 접근 가능한 조직 반환
 		return await getOrganizationsByRole(highestRole);
+	},
+
+	/**
+	 * 👶 모든 조직의 새가족을 한 번에 조회 (성능 최적화)
+	 * - 단일 SQL 쿼리로 모든 새가족 조회
+	 * - JOIN을 활용하여 조직 정보와 역할 정보 포함
+	 * - 프론트엔드의 N+1 쿼리 문제 해결
+	 *
+	 * @returns {Array<Object>} 새가족 목록 (조직 정보 포함)
+	 *
+	 * @example
+	 * // 반환 예시:
+	 * [
+	 *   {
+	 *     userId: 123,
+	 *     name: "홍길동",
+	 *     nameSuffix: "A",
+	 *     phoneNumber: "01012345678",
+	 *     gender: "M",
+	 *     email: "hong@example.com",
+	 *     birthDate: "1990-05-15",
+	 *     isNewMember: true,
+	 *     isLongTermAbsentee: false,
+	 *     registrationDate: "2024-01-15T00:00:00.000Z",
+	 *     roleId: 5,
+	 *     roleName: "순원",
+	 *     organizationId: 10,
+	 *     organizationName: "3국_김보연그룹_1순"
+	 *   }
+	 * ]
+	 *
+	 * TODO: 필요시 시즌별 필터링 추가 고려
+	 * TODO: 페이지네이션 추가 고려 (새가족이 매우 많아질 경우)
+	 */
+	getAllNewMembers: async () => {
+		const currentSeason = getCurrentSeasonId();
+
+		// UserRole을 통해 User, Role, Organization 정보를 한 번에 조회
+		const newMembers = await models.UserRole.findAll({
+			include: [
+				{
+					model: models.User,
+					as: "user",
+					required: true,
+					where: {
+						is_new_member: true, // 새가족만 조회
+						is_deleted: false, // 삭제되지 않은 사용자만
+					},
+					attributes: [
+						"id",
+						"name",
+						"name_suffix",
+						"phone_number",
+						"gender",
+						"email",
+						"birth_date",
+						"is_new_member",
+						"is_long_term_absentee",
+						"registration_date",
+					],
+				},
+				{
+					model: models.Role,
+					as: "role",
+					required: false, // 역할이 없을 수도 있으므로 LEFT JOIN
+					where: { is_deleted: false },
+					attributes: ["id", "name"],
+				},
+				{
+					model: models.Organization,
+					as: "organization",
+					required: true, // 조직은 반드시 있어야 함
+					where: {
+						season_id: currentSeason,
+						is_deleted: false,
+					},
+					attributes: ["id", "name"],
+				},
+			],
+			order: [
+				[{ model: models.User, as: "user" }, "registration_date", "DESC"],
+			],
+		});
+
+		// 데이터 변환 및 포맷팅
+		return newMembers.map((userRole) => {
+			const user = userRole.user;
+			const role = userRole.role;
+			const organization = userRole.organization;
+
+			return {
+				userId: user.id,
+				name: user.name,
+				nameSuffix: user.name_suffix || "",
+				phoneNumber: user.phone_number,
+				gender: user.gender || null,
+				email: user.email || null,
+				birthDate: user.birth_date || null,
+				isNewMember: user.is_new_member,
+				isLongTermAbsentee: user.is_long_term_absentee,
+				registrationDate: user.registration_date,
+				roleId: role?.id || null,
+				roleName: role?.name || "순원",
+				organizationId: organization.id,
+				organizationName: organization.name,
+			};
+		});
 	},
 };
 

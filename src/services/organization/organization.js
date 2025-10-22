@@ -353,6 +353,66 @@ const organizationService = {
 			},
 		});
 	},
+
+	/**
+	 * 📊 모든 조직의 멤버 수를 한 번에 조회 (성능 최적화)
+	 * - 단일 SQL 쿼리로 모든 조직의 멤버 수 집계
+	 * - GROUP BY와 COUNT를 활용한 효율적인 집계
+	 * - 프론트엔드의 N+1 쿼리 문제 해결
+	 *
+	 * @returns {Array<Object>} [{ organizationId, memberCount }, ...]
+	 *
+	 * @example
+	 * // 반환 예시:
+	 * [
+	 *   { organizationId: 1, memberCount: 15 },
+	 *   { organizationId: 2, memberCount: 23 },
+	 *   { organizationId: 3, memberCount: 0 }
+	 * ]
+	 *
+	 * TODO: 필요시 시즌별 필터링 추가 고려
+	 * TODO: 캐싱 전략 고려 (Redis, 5분 TTL 등)
+	 */
+	getAllOrganizationMemberCounts: async () => {
+		const result = await models.Organization.findAll({
+			attributes: [
+				["id", "organizationId"],
+				[
+					sequelize.fn("COUNT", sequelize.col("userRoles.user_id")),
+					"memberCount",
+				],
+			],
+			include: [
+				{
+					model: models.UserRole,
+					as: "userRoles",
+					attributes: [],
+					required: false, // LEFT JOIN - 멤버가 없는 조직도 포함
+					include: [
+						{
+							model: models.User,
+							as: "user",
+							attributes: [],
+							where: { is_deleted: false }, // 삭제되지 않은 사용자만
+							required: false,
+						},
+					],
+				},
+			],
+			where: {
+				is_deleted: false, // 삭제되지 않은 조직만
+			},
+			group: ["Organization.id"],
+			order: [["id", "ASC"]],
+			raw: true,
+		});
+
+		// COUNT 결과를 숫자로 변환 (일부 DB에서 문자열로 반환될 수 있음)
+		return result.map((item) => ({
+			organizationId: item.organizationId,
+			memberCount: parseInt(item.memberCount) || 0,
+		}));
+	},
 };
 
 export default organizationService;
