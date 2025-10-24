@@ -5,107 +5,19 @@ import userCrudRouter from "./user.crud.js";
 
 const router = Router();
 
-/**
- * @swagger
- * tags:
- *   name: Users
- *   description: 사용자 관리 API
- */
+router.get("/new-members", async (req, res, next) => {
+	try {
+		const newMembers = await userService.getAllNewMembers();
 
-/**
- * @swagger
- * /api/users/name:
- *   get:
- *     summary: 이름으로 사용자 존재 여부 확인
- *     description: 특정 이름을 가진 사용자가 존재하는지 확인합니다.
- *     tags: [Users]
- *     parameters:
- *       - in: query
- *         name: name
- *         required: true
- *         schema:
- *           type: string
- *         description: 확인할 사용자 이름
- *     responses:
- *       200:
- *         description: 사용자가 존재합니다.
- *       404:
- *         description: 사용자가 존재하지 않습니다.
- *       500:
- *         description: 서버 오류가 발생했습니다.
- */
+		res.status(200).json({
+			data: newMembers,
+		});
+	} catch (error) {
+		console.error("새가족 조회 실패:", error);
+		next(error);
+	}
+});
 
-/**
- * @swagger
- * /api/users/phone-number:
- *   post:
- *     summary: 전화번호로 사용자 확인
- *     description: 이름과 전화번호로 사용자를 확인합니다.
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 description: 사용자 이름
- *               phoneNumber:
- *                 type: string
- *                 description: 사용자 전화번호
- *     responses:
- *       200:
- *         description: 성공적으로 사용자를 확인했습니다.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 isMatched:
- *                   type: boolean
- *                   description: 전화번호가 일치하는지 여부
- *                 userData:
- *                   type: object
- *                   description: 사용자 정보
- *       500:
- *         description: 서버 오류가 발생했습니다.
- */
-
-/**
- * @swagger
- * /api/users/search:
- *   post:
- *     summary: 이름으로 사용자 찾기
- *     description: 입력 값이 이름에 포함되는 모든 교인 데이터를 반환합니다.
- *     tags: [Users]
- *     parameters:
- *       - in: query
- *         name: name
- *         required: true
- *         schema:
- *           type: string
- *         description: 확인할 사용자 이름
- *     responses:
- *       200:
- *         description: 성공적으로 사용자를 확인했습니다.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 isMatched:
- *                   type: boolean
- *                   description: 전화번호가 일치하는지 여부
- *                 userData:
- *                   type: object
- *                   description: 사용자 정보
- *       500:
- *         description: 서버 오류가 발생했습니다.
- */
-
-// 구체적인 경로를 먼저 정의
 router.get("/name", async (req, res, next) => {
 	const name = req.query.name;
 
@@ -165,54 +77,6 @@ router.get("/search", async (req, res, next) => {
 	}
 });
 
-/**
- * @swagger
- * /api/users/accessible:
- *   get:
- *     summary: 사용자 역할에 따른 접근 가능한 조직 목록 조회
- *     description: JWT 토큰을 통해 인증된 사용자의 역할에 따라 접근 가능한 조직 목록을 반환합니다.
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: 성공적으로 조직 목록을 조회했습니다.
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   name:
- *                     type: string
- *                     description: 국 이름
- *                   group:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         name:
- *                           type: string
- *                           description: 그룹 이름
- *                         soon:
- *                           type: array
- *                           items:
- *                             type: object
- *                             properties:
- *                               id:
- *                                 type: integer
- *                                 description: 순 ID
- *                               name:
- *                                 type: string
- *                                 description: 순 이름
- *       401:
- *         description: 인증이 필요합니다.
- *       404:
- *         description: 사용자를 찾을 수 없습니다.
- *       500:
- *         description: 서버 오류가 발생했습니다.
- */
 router.get("/accessible", authMiddleware, async (req, res, next) => {
 	try {
 		const { email, name } = req.auth;

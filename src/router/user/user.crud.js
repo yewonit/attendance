@@ -191,8 +191,14 @@ router.post("", async (req, res, next) => {
 });
 
 router.get("", async (req, res, next) => {
+	const { organizationId } = req.query;
+
+	if (!organizationId) {
+		return res.status(400).json({ message: "조직 ID가 제공되지 않았습니다." });
+	}
+
 	try {
-		const datas = await userService.findUsers();
+		const datas = await userService.findUsers(organizationId);
 		res.status(200).json({ data: datas });
 	} catch (error) {
 		next(error);

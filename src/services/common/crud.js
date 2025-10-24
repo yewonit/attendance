@@ -3,20 +3,35 @@ import {
 	UniqueConstraintError,
 	ValidationError,
 } from "sequelize";
+import { sequelize } from "../../utils/database.js";
 
 const crudService = {
+	/**
+	 * 생성 트랜잭션 래퍼
+	 * @description 단일 레코드 생성 시 트랜잭션을 적용합니다. 유효성 검증 함수가 제공되면 먼저 검증을 수행합니다.
+	 * TODO: 다중 레코드 생성 시 배치 트랜잭션 옵션 및 고립 수준(isolation level) 확장
+	 */
 	create: (model, validateData) => async (newModel) => {
 		try {
 			if (validateData) {
 				await validateData(newModel);
 			}
 
-			return await model.create(newModel);
+			return await sequelize.transaction(async (t) => {
+				return await model.create(newModel, { transaction: t });
+			});
 		} catch (error) {
 			await handleError(error);
 		}
 	},
 
+	/**
+	 * 📖 전체 조회 서비스 (성능 최적화 버전)
+	 * - 불필요한 트랜잭션 제거 (읽기 전용)
+	 *
+	 * @param {Model} model - Sequelize 모델
+	 * @returns {Function} 전체 조회 함수
+	 */
 	findAll: (model) => async () => {
 		try {
 			return await model.findAll();
@@ -25,6 +40,13 @@ const crudService = {
 		}
 	},
 
+	/**
+	 * 🔍 단건 조회 서비스 (성능 최적화 버전)
+	 * - 불필요한 트랜잭션 제거 (읽기 전용)
+	 *
+	 * @param {Model} model - Sequelize 모델
+	 * @returns {Function} 단건 조회 함수
+	 */
 	findOne: (model) => async (id) => {
 		try {
 			const data = await model.findByPk(id);
@@ -41,6 +63,11 @@ const crudService = {
 		}
 	},
 
+	/**
+	 * 업데이트 트랜잭션 래퍼
+	 * @description 단일 레코드 업데이트 시 트랜잭션을 적용합니다. 유효성 검증 함수가 필수로 제공되어야 합니다.
+	 * TODO: 부분 업데이트 시 변경 필드 목록 검증 로직 강화
+	 */
 	update: (model, validateData) => async (id, newModel) => {
 		try {
 			if (validateData) {
@@ -51,33 +78,46 @@ const crudService = {
 				throw error;
 			}
 
-			const [updated] = await model.update(newModel, {
-				where: { id: id },
-			});
+			return await sequelize.transaction(async (t) => {
+				const [updated] = await model.update(newModel, {
+					where: { id: id },
+					transaction: t,
+				});
 
-			if (updated) {
-				return updated;
-			} else {
-				const error = new Error("리소스(해당 ID의 데이터)를 찾을 수 없음");
-				error.status = 404;
-				throw error;
-			}
+				if (updated) {
+					return updated;
+				} else {
+					const error = new Error("리소스(해당 ID의 데이터)를 찾을 수 없음");
+					error.status = 404;
+					throw error;
+				}
+			});
 		} catch (error) {
 			await handleError(error);
 		}
 	},
 
+	/**
+	 * 삭제 트랜잭션 래퍼
+	 * @description 단일 레코드 삭제 시 트랜잭션을 적용합니다.
+	 * TODO: 연쇄 삭제가 필요한 경우(외래키 참조) CASCADE 정책/수동 삭제 보완
+	 */
 	delete: (model) => async (id) => {
 		try {
-			const deleted = await model.destroy({ where: { id: id } });
+			return await sequelize.transaction(async (t) => {
+				const deleted = await model.destroy({
+					where: { id: id },
+					transaction: t,
+				});
 
-			if (deleted) {
-				return deleted;
-			} else {
-				const error = new Error("리소스(해당 ID의 데이터)를 찾을 수 없음");
-				error.status = 404;
-				throw error;
-			}
+				if (deleted) {
+					return deleted;
+				} else {
+					const error = new Error("리소스(해당 ID의 데이터)를 찾을 수 없음");
+					error.status = 404;
+					throw error;
+				}
+			});
 		} catch (error) {
 			await handleError(error);
 		}
