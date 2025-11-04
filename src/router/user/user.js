@@ -18,35 +18,6 @@ router.get("/new-members", async (req, res, next) => {
 	}
 });
 
-router.get("/name", async (req, res, next) => {
-	const name = req.query.name;
-
-	try {
-		const isExists = await userService.findUserByName(name);
-		if (isExists) {
-			res.status(200).json({ message: "이름이 있습니다." });
-		} else {
-			res.status(404).json({ message: "이름이 없습니다." });
-		}
-	} catch (error) {
-		next(error);
-	}
-});
-
-router.post("/phone-number", async (req, res, next) => {
-	const { name, phoneNumber } = req.body;
-
-	try {
-		const userData = await userService.checkUserPhoneNumber(name, phoneNumber);
-		res.status(200).json({
-			isMatched: true,
-			userData: userData,
-		});
-	} catch (error) {
-		next(error);
-	}
-});
-
 // 이름으로 회원 검색 API 추가
 router.get("/search", async (req, res, next) => {
 	try {
