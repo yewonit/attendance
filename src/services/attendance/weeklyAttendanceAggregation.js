@@ -9,13 +9,18 @@ const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
 
 /**
- * 주간 출석 집계 데이터를 조회하는 메서드
+ * 주간 출석 집계 데이터를 조회하는 메서드 (성능 최적화 버전)
+ * - 독립적인 쿼리들을 병렬 실행하여 응답 시간 단축
+ * - Promise.all을 활용한 동시 처리
+ * 
  * 이번 주와 지난 주의 출석 현황을 비교하여 제공합니다.
  *
  * @param {string} gook - 구역 정보
  * @param {string} group - 그룹 정보
  * @param {string} soon - 순 정보
  * @returns {Object} 주간 출석 집계 데이터
+ * 
+ * TODO: 결과 캐싱 고려 (1시간 TTL)
  */
 const getWeeklyAttendanceAggregation = async (gook, group, soon) => {
 	const organizationIds =
@@ -28,96 +33,90 @@ const getWeeklyAttendanceAggregation = async (gook, group, soon) => {
 	// 배열에서 ID 값들만 추출
 	const organizationIdArray = organizationIds.map(org => org.id);
 
-	// 총 인원
-	const allMemberIds = await models.UserRole.findAll({
-		include: [
-			{
-				model: models.Organization,
-				as: "organization",
-				where: {
-					season_id: seasonId,
+	// 1️⃣ 독립적인 쿼리들을 병렬로 실행
+	const [
+		allMemberIds,
+		lastWeekAllMemberIds,
+		lastSundayYoungAdultServiceIds,
+		twoWeeksAgoSundayYoungAdultServiceIds,
+		weeklyNewMemberCount,
+		lastWeekNewMemberCount
+	] = await Promise.all([
+		// 총 인원
+		models.UserRole.findAll({
+			include: [
+				{
+					model: models.Organization,
+					as: "organization",
+					attributes: [],
+					where: { season_id: seasonId },
+				},
+			],
+			where: { organization_id: { [Op.in]: organizationIdArray } },
+			attributes: ["user_id"],
+		}),
+		// 지난 주 기준 총 인원
+		models.UserRole.findAll({
+			include: [
+				{
+					model: models.Organization,
+					as: "organization",
+					attributes: [],
+					where: { season_id: seasonId },
+				},
+			],
+			where: {
+				organization_id: { [Op.in]: organizationIdArray },
+				created_at: { [Op.lt]: oneWeekAgo },
+			},
+			attributes: ["user_id"],
+		}),
+		// 이번 주 청년예배 활동 ID
+		activityService.getLastSundayYoungAdultServiceIds(organizationIdArray),
+		// 지난 주 청년예배 활동 ID
+		activityService.get2WeeksAgoSundayYoungAdultServiceIds(organizationIdArray),
+		// 이번 주 신규 가족
+		models.User.findAll({
+			where: {
+				is_new_member: true,
+				registration_date: { [Op.gte]: oneWeekAgo },
+			},
+			attributes: ["id"],
+		}),
+		// 지난 주 신규 가족
+		models.User.findAll({
+			where: {
+				is_new_member: true,
+				registration_date: {
+					[Op.gte]: twoWeeksAgo,
+					[Op.lt]: oneWeekAgo,
 				},
 			},
-		],
-		where: {
-			organization_id: {
-				[Op.in]: organizationIdArray,
-			},
-		},
-		attributes: ["user_id"],
-	});
-	// 지난 주 기준 총 인원
-	const lastWeekAllMemberIds = await models.UserRole.findAll({
-		include: [
-			{
-				model: models.Organization,
-				as: "organization",
-				where: {
-					season_id: seasonId,
-				},
-			},
-		],
-		where: {
-			organization_id: {
-				[Op.in]: organizationIdArray,
-			},
-			created_at: {
-				[Op.lt]: oneWeekAgo,
-			},
-		},
-		attributes: ["user_id"],
-	});
-	// 이번 주 출석 인원
-	const lastSundayYoungAdultServiceIds =
-		await activityService.getLastSundayYoungAdultServiceIds(organizationIdArray);
+			attributes: ["id"],
+		}),
+	]);
 
-	const weeklyAttendanceMemberCount = await models.Attendance.findAll({
-		where: {
-			user_id: {
-				[Op.in]: allMemberIds.map(member => member.user_id),
+	// 2️⃣ 출석 인원 조회도 병렬로 실행
+	const [weeklyAttendanceMemberCount, lastWeekAttendanceMemberCount] = await Promise.all([
+		// 이번 주 출석 인원
+		models.Attendance.findAll({
+			where: {
+				user_id: { [Op.in]: allMemberIds.map(member => member.user_id) },
+				activity_id: { [Op.in]: lastSundayYoungAdultServiceIds },
+				attendance_status: "출석",
 			},
-			activity_id: {
-				[Op.in]: lastSundayYoungAdultServiceIds,
+			attributes: ["id"],
+		}),
+		// 지난 주 출석 인원
+		models.Attendance.findAll({
+			where: {
+				user_id: { [Op.in]: lastWeekAllMemberIds.map(member => member.user_id) },
+				activity_id: { [Op.in]: twoWeeksAgoSundayYoungAdultServiceIds },
+				attendance_status: "출석",
 			},
-			attendance_status: "출석",
-		},
-	});
-
-	// 지난 주 출석 인원
-	const twoWeeksAgoSundayYoungAdultServiceIds =
-		await activityService.get2WeeksAgoSundayYoungAdultServiceIds(
-			organizationIdArray
-		);
-	const lastWeekAttendanceMemberCount = await models.Attendance.findAll({
-		where: {
-			user_id: {
-				[Op.in]: lastWeekAllMemberIds.map(member => member.user_id),
-			},
-			activity_id: {
-				[Op.in]: twoWeeksAgoSundayYoungAdultServiceIds,
-			},
-			attendance_status: "출석",
-		},
-	});
-	// 이번 주 신규 가족
-	const weeklyNewMemberCount = await models.User.findAll({
-		where: {
-			is_new_member: true,
-			registration_date: {
-				[Op.gte]: oneWeekAgo,
-			},
-		},
-	});
-	// 지난 주 신규 가족
-	const lastWeekNewMemberCount = await models.User.findAll({
-		where: {
-			is_new_member: true,
-			registration_date: {
-				[Op.gte]: twoWeeksAgo,
-				[Op.lt]: oneWeekAgo,
-			},
-		},
-	});
+			attributes: ["id"],
+		}),
+	]);
 
 	return {
 		allMemberCount: allMemberIds.length,
