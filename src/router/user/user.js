@@ -18,35 +18,6 @@ router.get("/new-members", async (req, res, next) => {
 	}
 });
 
-router.get("/name", async (req, res, next) => {
-	const name = req.query.name;
-
-	try {
-		const isExists = await userService.findUserByName(name);
-		if (isExists) {
-			res.status(200).json({ message: "이름이 있습니다." });
-		} else {
-			res.status(404).json({ message: "이름이 없습니다." });
-		}
-	} catch (error) {
-		next(error);
-	}
-});
-
-router.post("/phone-number", async (req, res, next) => {
-	const { name, phoneNumber } = req.body;
-
-	try {
-		const userData = await userService.checkUserPhoneNumber(name, phoneNumber);
-		res.status(200).json({
-			isMatched: true,
-			userData: userData,
-		});
-	} catch (error) {
-		next(error);
-	}
-});
-
 // 이름으로 회원 검색 API 추가
 router.get("/search", async (req, res, next) => {
 	try {
@@ -87,6 +58,31 @@ router.get("/accessible", authMiddleware, async (req, res, next) => {
 		);
 
 		return res.status(200).json(organizations);
+	} catch (error) {
+		next(error);
+	}
+});
+
+router.patch("/:id/change-organization", async (req, res, next) => {
+	const id = req.params.id;
+	const { organizationId, roleName } = req.body;
+
+	try {
+		await userService.changeOrganization(id, organizationId, roleName);
+		res.status(200).json({ message: "success" });
+	} catch (error) {
+		next(error);
+	}
+});
+
+router.patch("/bulk-change-organization", async (req, res, next) => {
+	const { data } = req.body;
+
+	try {
+		for (let item of data) {
+			await userService.changeOrganization(item.id, item.organizationId, item.roleName);
+		}
+		res.status(200).json({ message: "success" });
 	} catch (error) {
 		next(error);
 	}
