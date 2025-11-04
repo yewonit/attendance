@@ -359,6 +359,7 @@ const organizationService = {
 	 * - 단일 SQL 쿼리로 모든 조직의 멤버 수 집계
 	 * - GROUP BY와 COUNT를 활용한 효율적인 집계
 	 * - 프론트엔드의 N+1 쿼리 문제 해결
+	 * - 현재 시즌의 조직만 조회
 	 *
 	 * @returns {Array<Object>} [{ organizationId, memberCount }, ...]
 	 *
@@ -370,10 +371,10 @@ const organizationService = {
 	 *   { organizationId: 3, memberCount: 0 }
 	 * ]
 	 *
-	 * TODO: 필요시 시즌별 필터링 추가 고려
 	 * TODO: 캐싱 전략 고려 (Redis, 5분 TTL 등)
 	 */
 	getAllOrganizationMemberCounts: async () => {
+		const seasonId = getCurrentSeasonId();
 		const result = await models.Organization.findAll({
 			attributes: [
 				["id", "organizationId"],
@@ -400,6 +401,7 @@ const organizationService = {
 				},
 			],
 			where: {
+				season_id: seasonId, // 현재 시즌의 조직만
 				is_deleted: false, // 삭제되지 않은 조직만
 			},
 			group: ["Organization.id"],
