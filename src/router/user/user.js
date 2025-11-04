@@ -63,6 +63,18 @@ router.get("/accessible", authMiddleware, async (req, res, next) => {
 	}
 });
 
+router.patch("/:id/change-organization", async (req, res, next) => {
+	const id = req.params.id;
+	const { organizationId, roleName } = req.body;
+
+	try {
+		await userService.changeOrganization(id, organizationId, roleName);
+		res.status(200).json({ message: "success" });
+	} catch (error) {
+		next(error);
+	}
+});
+
 // CRUD 라우터는 마지막에 통합
 router.use("/", userCrudRouter);
 
