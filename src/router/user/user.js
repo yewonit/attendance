@@ -75,6 +75,19 @@ router.patch("/:id/change-organization", async (req, res, next) => {
 	}
 });
 
+router.patch("/bulk-change-organization", async (req, res, next) => {
+	const { data } = req.body;
+
+	try {
+		for (let item of data) {
+			await userService.changeOrganization(item.id, item.organizationId, item.roleName);
+		}
+		res.status(200).json({ message: "success" });
+	} catch (error) {
+		next(error);
+	}
+});
+
 // CRUD 라우터는 마지막에 통합
 router.use("/", userCrudRouter);
 
