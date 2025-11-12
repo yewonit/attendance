@@ -46,10 +46,10 @@ const userService = {
 				{
 					name: userData.name,
 					name_suffix: userData.name_suffix,
-					gender_type: userData.gender_type,
+					gender: userData.gender_type,
 					birth_date: userData.birth_date,
 					phone_number: formatPhoneNumber(userData.phone_number),
-					church_registration_date: userData.church_registration_date,
+					registration_date: userData.church_registration_date,
 					is_new_member: userData.is_new_member,
 				},
 				{ transaction: t }
@@ -433,6 +433,41 @@ const userService = {
 				organizationId: organization.id,
 				organizationName: organization.name,
 			};
+		});
+	},
+	changeOrganization: async (id, organizationId, roleName) => {
+		const currentSeason = getCurrentSeasonId();
+		
+		const userRole = await models.UserRole.findOne({
+			where: { user_id: id},
+			include: [
+				{
+					model: models.Organization,
+					as: "organization",
+					where: {
+						season_id: currentSeason,
+						is_deleted: false,
+					},
+					attributes: ["id", "name"],
+				},
+			],
+		});
+		if (!userRole) throw new NotFoundError("해당 유저의 역할을 찾을 수 없습니다.");
+
+		const role = await models.Role.findOne({
+			where: { name: roleName },
+			attributes: ["id", "name"],
+		});
+		if (!role) throw new NotFoundError("해당 역할을 찾을 수 없습니다.");
+
+		await sequelize.transaction(async (t) => {
+			await models.UserRole.update({
+				role_id: role.id,
+				organization_id: organizationId,
+			}, {
+				where: { id: userRole.id },
+				transaction: t,
+			});
 		});
 	},
 };

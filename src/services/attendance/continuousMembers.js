@@ -76,13 +76,19 @@ const aggregateContinuous = async (serviceAttendanceData) => {
 };
 
 /**
- * 최근 4주간의 연속 출석/결석 멤버 정보를 조회하는 메서드
+ * 최근 4주간의 연속 출석/결석 멤버 정보를 조회하는 메서드 (성능 최적화 버전)
+ * - 쿼리를 분리하여 Cartesian Product 문제 해결
+ * - 3중 include 제거로 DB 부하 감소
+ * - 필요한 데이터만 선택적으로 조회
+ * 
  * 각 서비스(주일예배, 청년예배, 수요청년예배, 금요청년예배)별로 연속 출석/결석 멤버를 분류합니다.
  *
  * @param {string} gook - 구역 정보
  * @param {string} group - 그룹 정보
  * @param {string} soon - 순 정보
  * @returns {Object} 각 서비스별 연속 출석/결석 멤버 데이터
+ * 
+ * TODO: 캐싱 전략 고려 (4주 데이터는 변경 빈도가 낮음)
  */
 const getContinuousMembers = async (gook, group, soon) => {
 	const organizations =
@@ -92,68 +98,69 @@ const getContinuousMembers = async (gook, group, soon) => {
 	organizations.forEach((org) => {
 		organizationNameMap[org.id] = org.name;
 	});
+
+	// 1️⃣ 활동과 출석 정보만 먼저 조회 (User 정보는 제외)
 	const attendanceData = await models.Activity.findAll({
+		attributes: ["id", "name", "organization_id", "start_time"],
 		include: [
 			{
 				model: models.Attendance,
 				as: "attendances",
+				attributes: ["id", "user_id", "attendance_status"],
 				required: true,
-				include: [
-					{
-						model: models.User,
-						as: "user",
-						required: true,
-						include: [
-							{
-								model: models.UserRole,
-								as: "userRoles",
-								required: true,
-								include: [
-									{
-										model: models.Role,
-										as: "role",
-										required: true,
-									},
-								],
-							},
-						],
-					},
-				],
+				where: { attendance_status: { [Op.in]: ["출석", "결석"] } },
 			},
 		],
 		where: {
-			organization_id: {
-				[Op.in]: organizationIds,
-			},
+			organization_id: { [Op.in]: organizationIds },
 			is_deleted: false,
-			start_time: {
-				[Op.gte]: fourWeeksAgo,
-			},
+			start_time: { [Op.gte]: fourWeeksAgo },
 		},
 		order: [["start_time", "DESC"]],
 	});
 
-	const allUserMap = {};
+	// 2️⃣ 출석 데이터에서 사용자 ID 목록 추출
+	const userIds = new Set();
 	attendanceData.forEach((activity) => {
 		activity.attendances.forEach((attendance) => {
-			const userId = attendance.user_id;
-			if (!allUserMap[userId]) {
-				const userRoles = Array.isArray(attendance.user?.userRoles)
-					? attendance.user.userRoles
-					: [];
-
-				const primaryRoleName =
-					userRoles.length > 0 && userRoles[0]?.role
-						? userRoles[0].role.name
-						: null; // TODO: 다중 역할 처리 시 역할명 배열로 확장 고려
-
-				allUserMap[userId] = {
-					name: attendance.user.name,
-					role: primaryRoleName,
-					organization: organizationNameMap[activity.organization_id],
-				};
-			}
+			userIds.add(attendance.user_id);
 		});
+	});
+
+	// 3️⃣ 사용자 정보와 역할 정보를 한 번에 조회
+	const users = await models.User.findAll({
+		attributes: ["id", "name"],
+		where: { id: { [Op.in]: Array.from(userIds) }, is_deleted: false },
+		include: [
+			{
+				model: models.UserRole,
+				as: "userRoles",
+				attributes: ["organization_id"],
+				required: true,
+				where: { organization_id: { [Op.in]: organizationIds } },
+				include: [
+					{
+						model: models.Role,
+						as: "role",
+						attributes: ["name"],
+						required: true,
+					},
+				],
+			},
+		],
+	});
+
+	// 4️⃣ 사용자 정보를 Map으로 변환 (빠른 조회를 위해)
+	const allUserMap = {};
+	users.forEach((user) => {
+		const userRoles = Array.isArray(user.userRoles) ? user.userRoles : [];
+		const primaryRole = userRoles.length > 0 ? userRoles[0] : null;
+
+		allUserMap[user.id] = {
+			name: user.name,
+			role: primaryRole?.role?.name || null,
+			organization: primaryRole ? organizationNameMap[primaryRole.organization_id] : null,
+		};
 	});
 
 	const sundayData = await aggregateContinuous(
