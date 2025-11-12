@@ -46,10 +46,10 @@ const userService = {
 				{
 					name: userData.name,
 					name_suffix: userData.name_suffix,
-					gender_type: userData.gender_type,
+					gender: userData.gender_type,
 					birth_date: userData.birth_date,
 					phone_number: formatPhoneNumber(userData.phone_number),
-					church_registration_date: userData.church_registration_date,
+					registration_date: userData.church_registration_date,
 					is_new_member: userData.is_new_member,
 				},
 				{ transaction: t }
