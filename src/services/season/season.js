@@ -324,7 +324,7 @@ const createUserRole = async (item, organizationId, allUsers, allRoles) => {
   const users = allUsers.filter(user => user.name === item.name);
   // 만약 한 명이 아니라면 name_suffix와 phone_number를 사용하여 특정 사용자를 찾음
   if (users.length > 1) {
-    user = allUsers.find(user => (user.name === item.name && user.name_suffix === item.name_suffix) || (user.name === item.name && user.phone_number === item.phone));
+    user = allUsers.find(user => (user.name === item.name && user.name_suffix === item.name_suffix) || (user.name === item.name && user.phone_number === item.phone_number));
     if (!user) {
       throw new ValidationError(`${item.name} ${item.phone} 사용자를 찾을 수 없거나 한 명으로 특정이 불가능합니다.`);
     }
