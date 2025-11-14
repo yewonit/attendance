@@ -323,13 +323,24 @@ const activityService = {
 					where: { activity_id: activityId },
 				});
 
-				await existingFile.update(
-					{
-						name: imageInfo.fileName,
-						path: imageInfo.url,
-					},
-					{ transaction: t }
-				);
+				if (existingFile) {
+					await existingFile.update(
+						{
+							name: imageInfo.fileName,
+							path: imageInfo.url,
+						},
+						{ transaction: t }
+					);
+				} else {
+					await models.ActivityImage.create(
+						{
+							activity_id: activityId,
+							name: imageInfo.fileName,
+							path: imageInfo.url,
+						},
+						{ transaction: t }
+					);
+				}
 			}
 
 			await Promise.all(
