@@ -89,24 +89,24 @@ const validateSoon = (data) => {
 }
 
 /**
- * 전화번호(phone) 데이터 검증 및 변환
- * - phone 값이 있다면 전화번호 형식인지 체크
+ * 전화번호(phone_number) 데이터 검증 및 변환
+ * - phone_number 값이 있다면 전화번호 형식인지 체크
  * - 모든 '-'를 제거하여 숫자만 남김
  */
 const validatePhone = (data) => {
   const phoneRegex = /^[\d-]+$/;
   
   data.forEach((item, index) => {
-    if (item.phone && item.phone.trim() !== '') {
+    if (item.phone_number && item.phone_number.trim() !== '') {
       // 전화번호 형식 체크 (숫자와 '-'만 허용)
-      if (!phoneRegex.test(item.phone)) {
+      if (!phoneRegex.test(item.phone_number)) {
         throw new ValidationError(
-          `${index + 1}번째 데이터의 phone 값이 올바른 전화번호 형식이 아닙니다. (현재 값: ${item.phone})`
+          `${index + 1}번째 데이터의 phone_number 값이 올바른 전화번호 형식이 아닙니다. (현재 값: ${item.phone_number})`
         );
       }
       
       // 모든 '-' 제거
-      item.phone = item.phone.replaceAll("-", "");
+      item.phone_number = item.phone_number.replaceAll("-", "");
     }
   });
   
@@ -236,7 +236,7 @@ const deleteBeforeCreateOrganization = async (seasonId) => {
 }
 
 // 조직 생성을 위한 헬퍼 함수
-const findOrCreateOrganization = async (name, upperOrgId) => {
+const findOrCreateOrganization = async (name, upperOrgId, seasonId) => {
   let org = await models.Organization.findOne({
     where: {
       season_id: seasonId,
@@ -292,7 +292,7 @@ const createOrganizationAndUserRole = async (data, seasonId) => {
     
     // 1단계: 국(gook) 조직 생성 또는 조회
     if (!gookOrganizations.has(gook)) {
-      const gookOrg = await findOrCreateOrganization(gook, rootOrganization.id);
+      const gookOrg = await findOrCreateOrganization(gook, rootOrganization.id, seasonId);
       gookOrganizations.set(gook, gookOrg);
     }
     const gookOrganization = gookOrganizations.get(gook);
@@ -300,7 +300,7 @@ const createOrganizationAndUserRole = async (data, seasonId) => {
     // 2단계: 그룹 조직 생성 또는 조회
     const groupKey = `${gook}_${group}`;
     if (!groupOrganizations.has(groupKey)) {
-      const groupOrg = await findOrCreateOrganization(groupKey, gookOrganization.id);
+      const groupOrg = await findOrCreateOrganization(groupKey, gookOrganization.id, seasonId);
       groupOrganizations.set(groupKey, groupOrg);
     }
     const groupOrganization = groupOrganizations.get(groupKey);
@@ -308,7 +308,7 @@ const createOrganizationAndUserRole = async (data, seasonId) => {
     // 3단계: 순 조직 생성 (항상 생성, 중복 체크는 이름으로만)
     const soonKey = `${gook}_${group}_${soon}`;
     if (!soonOrganizations.has(soonKey)) {
-      const soonOrg = await findOrCreateOrganization(soonKey, groupOrganization.id);
+      const soonOrg = await findOrCreateOrganization(soonKey, groupOrganization.id, seasonId);
       soonOrganizations.set(soonKey, soonOrg);
     }
     const soonOrganization = soonOrganizations.get(soonKey);
@@ -322,11 +322,16 @@ const createUserRole = async (item, organizationId, allUsers, allRoles) => {
   // 우선 allUser에서 item의 이름을 가진 사용자가 한 명인지 확인
   let user = null;
   const users = allUsers.filter(user => user.name === item.name);
+  
+  // 사용자를 찾을 수 없는 경우
+  if (users.length === 0) {
+    throw new ValidationError(`${item.name} (전화번호: ${item.phone_number}) 사용자를 찾을 수 없습니다.`);
+  }
   // 만약 한 명이 아니라면 name_suffix와 phone_number를 사용하여 특정 사용자를 찾음
-  if (users.length > 1) {
-    user = allUsers.find(user => (user.name === item.name && user.name_suffix === item.name_suffix) || (user.name === item.name && user.phone_number === item.phone));
+  else if (users.length > 1) {
+    user = allUsers.find(user => (user.name === item.name && user.name_suffix === item.name_suffix) || (user.name === item.name && user.phone_number === item.phone_number));
     if (!user) {
-      throw new ValidationError(`${item.name} ${item.phone} 사용자를 찾을 수 없거나 한 명으로 특정이 불가능합니다.`);
+      throw new ValidationError(`${item.name} (전화번호: ${item.phone_number}) 한 명으로 특정이 불가능합니다.`);
     }
   } else {
     user = users[0];
