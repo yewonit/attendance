@@ -199,9 +199,9 @@ router.get("", async (req, res, next) => {
 	}
 });
 
-router.put("", async (req, res, next) => {
+router.put("/:id", async (req, res, next) => {
 	const newModel = req.body;
-	const id = newModel.id; // 추후에 params에서 가져오도록 수정 필요
+	const id = req.params.id;
 
 	try {
 		const updated = await userService.updateUser(id, newModel);
@@ -211,8 +211,8 @@ router.put("", async (req, res, next) => {
 	}
 });
 
-router.delete("", async (req, res, next) => {
-	const id = req.body.id; // 추후에 params에서 가져오도록 수정 필요
+router.delete("/:id", async (req, res, next) => {
+	const id = req.params.id;
 
 	try {
 		const deleted = await userService.deleteUser(id);

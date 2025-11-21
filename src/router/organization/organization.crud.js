@@ -32,9 +32,9 @@ router.get("/:id", async (req, res, next) => {
 	}
 });
 
-router.put("", async (req, res, next) => {
+router.put("/:id", async (req, res, next) => {
 	const newModel = req.body;
-	const id = newModel.id;
+	const id = req.params.id;
 	try {
 		const updated = await organizationService.updateOrganization(id, newModel);
 		res.status(200).json(updated);
@@ -43,8 +43,8 @@ router.put("", async (req, res, next) => {
 	}
 });
 
-router.delete("", async (req, res, next) => {
-	const id = req.body.id;
+router.delete("/:id", async (req, res, next) => {
+	const id = req.params.id;
 	try {
 		const deleted = await organizationService.deleteOrganization(id);
 		res.status(200).json(deleted);
