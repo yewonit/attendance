@@ -31,5 +31,20 @@ router.post("", async (req, res, next) => {
   }
 });
 
+/**
+ * GET /api/seasons/next
+ * 특정 유저의 다음 회기 소속 조직을 조회합니다.
+ * (청년의 밤 다음 순 발표)
+ */
+router.get("/next", async (req, res, next) => {
+  const name = req.query.name;
+  try {
+    const result = await seasonService.getNextOrganization(name);
+    res.status(200).json({ data: result });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
 

@@ -1,5 +1,6 @@
-import { ValidationError } from "../../utils/errors.js";
+import { ValidationError, NotFoundError } from "../../utils/errors.js";
 import models from "../../models/models.js";
+import { getCurrentSeasonId } from "../../utils/season.js";
 
 const seasonService = {
   createNewSeason: async (data) => {
@@ -13,7 +14,179 @@ const seasonService = {
     
     // 새로운 조직 및 사용자 역할 생성
     await createOrganizationAndUserRole(data, seasonId);
-  }
+  },
+
+  /**
+   * 다음 회기에서 사용자의 조직 정보를 조회
+   * - 동명이인이 있을 경우 모든 사용자의 정보를 배열로 반환
+   * - 프론트엔드에서 이름과 생일로 본인을 선택할 수 있도록 birth_date 포함
+   * 
+   * @param {string} name - 조회할 사용자 이름
+   * @returns {Promise<Array<Object>>} 사용자들의 조직 정보 및 조직 구성원 목록 배열
+   * @throws {NotFoundError} 다음 회기가 없거나 사용자를 찾을 수 없는 경우
+   */
+  getNextOrganization: async (name) => {
+    const currentSeason = getCurrentSeasonId();
+    const nextSeason = currentSeason + 1;
+
+    // 다음 회기 존재 여부 확인
+    const season = await models.Season.findOne({
+      where: {
+        id: nextSeason,
+      },
+    });
+    if (!season) {
+      throw new NotFoundError("다음 회기를 찾을 수 없습니다.");
+    }
+
+    // 다음 회기에서 해당 이름을 가진 사용자 조회 (조직 포함)
+    const users = await models.User.findAll({
+      where: {
+        name: name,
+      },
+      include: [
+        {
+          model: models.UserRole,
+          as: "user_role",
+          required: true, // INNER JOIN으로 변경하여 user_role이 있는 경우만 조회
+          include: [
+            {
+              model: models.Organization,
+              as: "organization",
+              required: true, // INNER JOIN으로 변경하여 organization이 있는 경우만 조회
+              where: {
+                season_id: nextSeason,
+                is_deleted: false,
+              },
+              attributes: ["id", "name", "upper_organization_id"],
+            },
+            {
+              model: models.Role,
+              as: "role",
+              required: true,
+              attributes: ["id", "name"],
+            },
+          ],
+        },
+      ],
+      attributes: ["id", "name", "phone_number", "birth_date"],
+    });
+
+    // 사용자를 찾을 수 없는 경우
+    if (!users || users.length === 0) {
+      throw new NotFoundError(`다음 회기에 ${name} 사용자를 찾을 수 없습니다.`);
+    }
+
+    // 각 사용자의 조직 정보를 조회하여 배열로 반환
+    const results = [];
+    
+    for (const user of users) {
+      const userOrgId = user.user_role.organization.id;
+      const userOrgUpperOrgId = user.user_role.organization.upper_organization_id;
+
+      // 그룹장 조회
+      const groupLeader = await models.User.findOne({
+        include: [
+          {
+            model: models.UserRole,
+            as: "user_role",
+            required: true,
+            include: [
+              {
+                model: models.Organization,
+                as: "organization",
+                required: true,
+                where: {
+                  upper_organization_id: userOrgUpperOrgId,
+                },
+                attributes: ["id", "name"],
+              },
+              {
+                model: models.Role,
+                as: "role",
+                required: true,
+                where: {
+                  id: 1, // 그룹장
+                },
+                attributes: ["id", "name", "sort_order"],
+              },
+            ],
+          },
+        ],
+        attributes: ["id", "name", "phone_number", "birth_date"],
+      });
+
+      // 그룹장을 찾을 수 없는 경우 해당 사용자는 건너뜀
+      if (!groupLeader) {
+        continue;
+      }
+
+      // 같은 조직의 구성원들 조회
+      const sameOrgUsers = await models.User.findAll({
+        include: [
+          {
+            model: models.UserRole,
+            as: "user_role",
+            required: true,
+            include: [
+              {
+                model: models.Organization,
+                as: "organization",
+                required: true,
+                where: {
+                  id: userOrgId,
+                },
+                attributes: ["id", "name"],
+              },
+              {
+                model: models.Role,
+                as: "role",
+                required: true,
+                attributes: ["id", "name", "sort_order"],
+              },
+            ],
+          },
+        ],
+        attributes: ["id", "name", "phone_number", "birth_date"],
+        order: [
+          ["name", "ASC"],
+          [{ model: models.UserRole, as: "user_role" }, { model: models.Role, as: "role" }, "sort_order", "ASC"],
+        ],
+      });
+
+      // 조직 구성원 목록 생성 (그룹장 + 같은 조직 구성원)
+      const orgPeople = [
+        {
+          name: groupLeader.name,
+          role: groupLeader.user_role.role.name,
+          phone_number: groupLeader.phone_number,
+          birth_year: groupLeader.birth_date 
+            ? groupLeader.birth_date.getFullYear().toString().slice(-2) 
+            : null,
+        },
+        ...sameOrgUsers.map((member) => ({
+          name: member.name,
+          role: member.user_role.role.name,
+          phone_number: member.phone_number,
+          birth_year: member.birth_date 
+            ? member.birth_date.getFullYear().toString().slice(-2) 
+            : null,
+        })),
+      ];
+
+      // 결과에 추가
+      results.push({
+        name: user.name,
+        birth_year: user.birth_date ? user.birth_date.getFullYear().toString().slice(-2) : null, // 프론트엔드에서 동명이인 구분용
+        phone_number: user.phone_number,
+        role: user.user_role.role.name,
+        organization: user.user_role.organization.name,
+        organization_people: orgPeople,
+      });
+    }
+
+    return results;
+  },
 };
 
 const validateNewSeasonData = (data) => {
