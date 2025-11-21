@@ -83,6 +83,7 @@ const getMembersByIdWithRoles = async (organizationId) => {
 			userId: user.id,
 			name: user.name,
 			email: user.email,
+			birthYear: user.birth_date ? new Date(user.birth_date).getFullYear().toString().slice(-2) : null,
 			phoneNumber: user.phone_number,
 			churchRegistrationDate: user.registration_date,
 			isNewMember: user.is_new_member,

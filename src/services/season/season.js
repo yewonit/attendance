@@ -161,7 +161,7 @@ const seasonService = {
           role: groupLeader.user_role.role.name,
           phone_number: groupLeader.phone_number,
           birth_year: groupLeader.birth_date 
-            ? groupLeader.birth_date.getFullYear().toString().slice(-2) 
+            ? new Date(groupLeader.birth_date).getFullYear().toString().slice(-2) 
             : null,
         },
         ...sameOrgUsers.map((member) => ({
@@ -169,7 +169,7 @@ const seasonService = {
           role: member.user_role.role.name,
           phone_number: member.phone_number,
           birth_year: member.birth_date 
-            ? member.birth_date.getFullYear().toString().slice(-2) 
+            ? new Date(member.birth_date).getFullYear().toString().slice(-2) 
             : null,
         })),
       ];
@@ -177,7 +177,7 @@ const seasonService = {
       // 결과에 추가
       results.push({
         name: user.name,
-        birth_year: user.birth_date ? user.birth_date.getFullYear().toString().slice(-2) : null, // 프론트엔드에서 동명이인 구분용
+        birth_year: user.birth_date ? new Date(user.birth_date).getFullYear().toString().slice(-2) : null, // 프론트엔드에서 동명이인 구분용
         phone_number: user.phone_number,
         role: user.user_role.role.name,
         organization: user.user_role.organization.name,
