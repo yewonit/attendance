@@ -595,12 +595,17 @@ const createUserRole = async (item, organizationId, allUsers, allRoles, transact
   }
   // 만약 한 명이 아니라면 name_suffix와 phone_number를 사용하여 특정 사용자를 찾음
   else if (users.length > 1) {
-    user = users.find(u => u.name_suffix === item.name_suffix);
-    if (!user) {
+    // name_suffix로 먼저 찾기 (item.name_suffix가 없으면 undefined === "" 비교가 false가 됨)
+    if (item.name_suffix) {
+      user = users.find(u => u.name_suffix === item.name_suffix);
+    }
+
+    if (!user && item.phone_number) {
       user = users.find(u => u.phone_number === item.phone_number);
     }
-    if (!user) {
-      user = users.find(u => new Date(u.birth_date).getFullYear().toString().slice(-2) === item.birth_date);
+
+    if (!user && item.birth_date) {
+      user = users.find(u => u.birth_date === item.birth_date);
     }
 
     if (!user) {
