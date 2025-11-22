@@ -610,8 +610,44 @@ const userService = {
 			limit: limitNum
 		};
 
+		// 4️⃣ 응답 데이터 포맷팅
+		const formattedMembers = users.map((user) => {
+			// 각 사용자의 주요 역할 및 조직 정보 (첫 번째 UserRole 사용)
+			const primaryUserRole = user.user_role && user.user_role.length > 0 
+				? user.user_role[0] 
+				: null;
+
+			const organization = primaryUserRole?.organization;
+			const role = primaryUserRole?.role;
+
+			// 조직명 파싱
+			const orgInfo = organization 
+				? parseOrganizationName(organization.name)
+				: { department: null, group: null, team: null };
+
+			// 생년월일을 생일연도(YY)로 변환
+			let birthYear = null;
+			if (user.birth_date) {
+				const year = new Date(user.birth_date).getFullYear();
+				birthYear = year.toString().slice(-2); // 마지막 2자리만 추출
+			}
+
+			return {
+				id: user.id,
+				name: user.name,
+				birthYear: birthYear,
+				phoneNumber: user.phone_number,
+				affiliation: {
+					department: orgInfo.department || null,
+					group: orgInfo.group || null,
+					team: orgInfo.team || null
+				},
+				role: role?.name || null
+			};
+		});
+
 		return {
-			members: users,
+			members: formattedMembers,
 			pagination
 		};
 	},
