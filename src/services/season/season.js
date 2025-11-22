@@ -595,11 +595,14 @@ const createUserRole = async (item, organizationId, allUsers, allRoles, transact
   }
   // 만약 한 명이 아니라면 name_suffix와 phone_number를 사용하여 특정 사용자를 찾음
   else if (users.length > 1) {
-    users = allUsers.filter(user => (new Date(user.birth_date).getFullYear().toString().slice(-2) === item.birth_date))
-    if (users.length > 1)
-      user = allUsers.find(user => (user.name === item.name && user.name_suffix === item.name_suffix) || (user.name === item.name && user.phone_number === item.phone_number));
-    else
-      user = users[0]
+    user = allUsers.find(user => (user.name === item.name && user.name_suffix === item.name_suffix));
+    if (!user) {
+      user = allUsers.find(user => (user.name === item.name && user.phone_number === item.phone_number));
+    }
+    if (!user) {
+      user = allUsers.find(user => (new Date(user.birth_date).getFullYear().toString().slice(-2) === item.birth_date));
+    }
+
     if (!user) {
       throw new ValidationError(`${item.name} (전화번호: ${item.phone_number}) 한 명으로 특정이 불가능합니다.`);
     }
