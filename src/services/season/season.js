@@ -1,5 +1,6 @@
 import { Op } from "sequelize";
 import models from "../../models/models.js";
+import { sequelize } from "../../utils/database.js";
 import { NotFoundError, ValidationError } from "../../utils/errors.js";
 import { getCurrentSeasonId } from "../../utils/season.js";
 
@@ -10,11 +11,11 @@ const seasonService = {
     // 새로운 회기 생성 또는 조회
     const seasonId = await createNewSeason();
 
-    // 중복 생성 방지를 위한 기존 데이터 삭제
-    await deleteBeforeCreateOrganization(seasonId);
-
-    // 새로운 조직 및 사용자 역할 생성
-    await createOrganizationAndUserRole(data, seasonId);
+    // 중복 생성 방지를 위한 기존 데이터 삭제 및 새로운 조직 및 사용자 역할 생성을 하나의 트랜잭션으로 처리
+    await sequelize.transaction(async (t) => {
+      await deleteBeforeCreateOrganization(seasonId, t);
+      await createOrganizationAndUserRole(data, seasonId, t);
+    });
   },
 
   /**
@@ -463,7 +464,7 @@ const createNewSeason = async () => {
   return season.id;
 }
 
-const deleteBeforeCreateOrganization = async (seasonId) => {
+const deleteBeforeCreateOrganization = async (seasonId, transaction) => {
   // 해당 seasonId를 가진 기존 데이터 삭제
   // 1. 해당 seasonId를 가진 모든 organization 조회
   const existingOrganizations = await models.Organization.findAll({
@@ -472,6 +473,7 @@ const deleteBeforeCreateOrganization = async (seasonId) => {
       is_deleted: false,
     },
     attributes: ['id'],
+    transaction,
   });
 
   const organizationIds = existingOrganizations.map(org => org.id);
@@ -482,6 +484,7 @@ const deleteBeforeCreateOrganization = async (seasonId) => {
       where: {
         organization_id: organizationIds,
       },
+      transaction,
     });
 
     // 3. 해당 seasonId를 가진 organization 삭제
@@ -490,12 +493,13 @@ const deleteBeforeCreateOrganization = async (seasonId) => {
         season_id: seasonId,
         is_deleted: false,
       },
+      transaction,
     });
   }
 }
 
 // 조직 생성을 위한 헬퍼 함수
-const findOrCreateOrganization = async (name, upperOrgId, seasonId) => {
+const findOrCreateOrganization = async (name, upperOrgId, seasonId, transaction) => {
   let org = await models.Organization.findOne({
     where: {
       season_id: seasonId,
@@ -503,6 +507,7 @@ const findOrCreateOrganization = async (name, upperOrgId, seasonId) => {
       upper_organization_id: upperOrgId,
       is_deleted: false,
     },
+    transaction,
   });
 
   if (!org) {
@@ -511,26 +516,27 @@ const findOrCreateOrganization = async (name, upperOrgId, seasonId) => {
       name: name,
       upper_organization_id: upperOrgId,
       is_deleted: false,
-    });
+    }, { transaction });
   }
 
   return org;
 };
 
-const createOrganizationAndUserRole = async (data, seasonId) => {
+const createOrganizationAndUserRole = async (data, seasonId, transaction) => {
   // 루트 조직 (코람데오 청년선교회) 생성
   const rootOrganization = await models.Organization.create({
     season_id: seasonId,
     name: '코람데오 청년선교회',
     upper_organization_id: 1,
     is_deleted: false,
-  });
+  }, { transaction });
 
   const allUsers = await models.User.findAll({
     where: {
       is_deleted: false,
     },
-    attributes: ['id', 'name', 'name_suffix', 'phone_number'],
+    attributes: ['id', 'name', 'name_suffix', 'phone_number', 'birth_date'],
+    transaction,
   });
 
   const allRoles = await models.Role.findAll({
@@ -538,6 +544,7 @@ const createOrganizationAndUserRole = async (data, seasonId) => {
       is_deleted: false,
     },
     attributes: ['id', 'name'],
+    transaction,
   });
 
   // 이미 생성된 조직을 추적하기 위한 Map
@@ -551,7 +558,7 @@ const createOrganizationAndUserRole = async (data, seasonId) => {
 
     // 1단계: 국(gook) 조직 생성 또는 조회
     if (!gookOrganizations.has(gook)) {
-      const gookOrg = await findOrCreateOrganization(gook, rootOrganization.id, seasonId);
+      const gookOrg = await findOrCreateOrganization(gook, rootOrganization.id, seasonId, transaction);
       gookOrganizations.set(gook, gookOrg);
     }
     const gookOrganization = gookOrganizations.get(gook);
@@ -559,7 +566,7 @@ const createOrganizationAndUserRole = async (data, seasonId) => {
     // 2단계: 그룹 조직 생성 또는 조회
     const groupKey = `${gook}_${group}`;
     if (!groupOrganizations.has(groupKey)) {
-      const groupOrg = await findOrCreateOrganization(groupKey, gookOrganization.id, seasonId);
+      const groupOrg = await findOrCreateOrganization(groupKey, gookOrganization.id, seasonId, transaction);
       groupOrganizations.set(groupKey, groupOrg);
     }
     const groupOrganization = groupOrganizations.get(groupKey);
@@ -567,20 +574,20 @@ const createOrganizationAndUserRole = async (data, seasonId) => {
     // 3단계: 순 조직 생성 (항상 생성, 중복 체크는 이름으로만)
     const soonKey = `${gook}_${group}_${soon}`;
     if (!soonOrganizations.has(soonKey)) {
-      const soonOrg = await findOrCreateOrganization(soonKey, groupOrganization.id, seasonId);
+      const soonOrg = await findOrCreateOrganization(soonKey, groupOrganization.id, seasonId, transaction);
       soonOrganizations.set(soonKey, soonOrg);
     }
     const soonOrganization = soonOrganizations.get(soonKey);
 
     // 4단계: 사용자 역할 생성
-    await createUserRole(item, soonOrganization.id, allUsers, allRoles);
+    await createUserRole(item, soonOrganization.id, allUsers, allRoles, transaction);
   }
 }
 
-const createUserRole = async (item, organizationId, allUsers, allRoles) => {
+const createUserRole = async (item, organizationId, allUsers, allRoles, transaction) => {
   // 우선 allUser에서 item의 이름을 가진 사용자가 한 명인지 확인
   let user = null;
-  const users = allUsers.filter(user => user.name === item.name);
+  let users = allUsers.filter(user => user.name === item.name);
 
   // 사용자를 찾을 수 없는 경우
   if (users.length === 0) {
@@ -588,7 +595,11 @@ const createUserRole = async (item, organizationId, allUsers, allRoles) => {
   }
   // 만약 한 명이 아니라면 name_suffix와 phone_number를 사용하여 특정 사용자를 찾음
   else if (users.length > 1) {
-    user = allUsers.find(user => (user.name === item.name && user.name_suffix === item.name_suffix) || (user.name === item.name && user.phone_number === item.phone_number));
+    users = allUsers.filter(user => (new Date(user.birth_date).getFullYear().toString().slice(-2) === item.birth_date))
+    if (users.length > 1)
+      user = allUsers.find(user => (user.name === item.name && user.name_suffix === item.name_suffix) || (user.name === item.name && user.phone_number === item.phone_number));
+    else
+      user = users[0]
     if (!user) {
       throw new ValidationError(`${item.name} (전화번호: ${item.phone_number}) 한 명으로 특정이 불가능합니다.`);
     }
@@ -605,8 +616,7 @@ const createUserRole = async (item, organizationId, allUsers, allRoles) => {
     user_id: user.id,
     role_id: role.id,
     organization_id: organizationId,
-  });
+  }, { transaction });
 }
 
 export default seasonService;
-
