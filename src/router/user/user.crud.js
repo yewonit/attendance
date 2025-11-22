@@ -209,25 +209,32 @@ router.get("", async (req, res, next) => {
 	try {
 		const { search, department, group, team, page, limit } = req.query;
 
+		// 빈 문자열 필터링 및 정규화
+		const normalizedSearch = search && search.trim() ? search.trim() : undefined;
+		const normalizedDepartment = department && department.trim() ? department.trim() : undefined;
+		const normalizedGroup = group && group.trim() ? group.trim() : undefined;
+		const normalizedTeam = team && team.trim() ? team.trim() : undefined;
+		const normalizedPage = page && parseInt(page) > 0 ? parseInt(page) : undefined;
+		const normalizedLimit = limit && parseInt(limit) > 0 ? parseInt(limit) : undefined;
+
 		// 쿼리스트링이 있고 유효한 값이 있으면 필터링된 결과 반환
 		const hasFilters = 
-			(search && search.trim()) || 
-			(department && department.trim()) || 
-			(group && group.trim()) || 
-			(team && team.trim()) || 
-			(page && parseInt(page) > 0) || 
-			(limit && parseInt(limit) > 0);
+			normalizedSearch || 
+			normalizedDepartment || 
+			normalizedGroup || 
+			normalizedTeam || 
+			normalizedPage || 
+			normalizedLimit;
 
 		if (hasFilters) {
-			// 필터링된 결과 반환
-			const filters = {
-				search,
-				department,
-				group,
-				team,
-				page,
-				limit
-			};
+			// 필터링된 결과 반환 (빈 값은 제외)
+			const filters = {};
+			if (normalizedSearch) filters.search = normalizedSearch;
+			if (normalizedDepartment) filters.department = normalizedDepartment;
+			if (normalizedGroup) filters.group = normalizedGroup;
+			if (normalizedTeam) filters.team = normalizedTeam;
+			if (normalizedPage) filters.page = normalizedPage;
+			if (normalizedLimit) filters.limit = normalizedLimit;
 
 			const result = await userService.getMembersWithFilters(filters);
 

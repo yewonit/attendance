@@ -537,7 +537,7 @@ const userService = {
 			include: [
 				{
 					model: models.UserRole,
-					as: "user_role",
+					as: "userRoles",
 					required: true,
 					include: [
 						{
@@ -568,7 +568,7 @@ const userService = {
 			include: [
 				{
 					model: models.UserRole,
-					as: "user_role",
+					as: "userRoles",
 					required: true,
 					include: [
 						{
@@ -613,8 +613,8 @@ const userService = {
 		// 4️⃣ 응답 데이터 포맷팅
 		const formattedMembers = users.map((user) => {
 			// 각 사용자의 주요 역할 및 조직 정보 (첫 번째 UserRole 사용)
-			const primaryUserRole = user.user_role && user.user_role.length > 0 
-				? user.user_role[0] 
+			const primaryUserRole = user.userRoles && user.userRoles.length > 0 
+				? user.userRoles[0] 
 				: null;
 
 			const organization = primaryUserRole?.organization;
