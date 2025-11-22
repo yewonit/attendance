@@ -9,6 +9,7 @@ import { hashPassword } from "../../utils/password.js";
 import { getCurrentSeasonId } from "../../utils/season.js";
 import crudService from "../common/crud.js";
 import { sequelize } from "../../utils/database.js";
+import { buildOrganizationNamePattern } from "../../utils/organization.js";
 
 /**
  * 사용자 관련 서비스
@@ -469,6 +470,76 @@ const userService = {
 				transaction: t,
 			});
 		});
+	},
+
+	/**
+	 * 👥 구성원 목록 조회 (검색/필터링/페이지네이션 지원)
+	 * - 이름 검색 기능
+	 * - 소속국/소속그룹/소속순 필터링
+	 * - 페이지네이션 지원
+	 * - 소속 정보 포함 응답
+	 *
+	 * @param {Object} filters - 필터 조건
+	 * @param {string} filters.search - 이름 검색어
+	 * @param {string} filters.department - 소속국 필터 (예: "1국")
+	 * @param {string} filters.group - 소속그룹 필터 (예: "김민수그룹")
+	 * @param {string} filters.team - 소속순 필터 (예: "이용걸순")
+	 * @param {number} filters.page - 페이지 번호 (기본값: 1)
+	 * @param {number} filters.limit - 페이지당 항목 수 (기본값: 10)
+	 * @returns {Promise<{members: Array, pagination: Object}>} 구성원 목록 및 페이지네이션 정보
+	 */
+	getMembersWithFilters: async (filters = {}) => {
+		const {
+			search,
+			department,
+			group,
+			team,
+			page = 1,
+			limit = 10
+		} = filters;
+
+		// 페이지네이션 파라미터 유효성 검증
+		const pageNum = Math.max(1, parseInt(page) || 1);
+		const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+		const offset = (pageNum - 1) * limitNum;
+
+		const currentSeason = getCurrentSeasonId();
+
+		// 기본 WHERE 조건 구성
+		const userWhere = {
+			is_deleted: false
+		};
+
+		// 이름 검색 조건 추가
+		if (search && search.trim()) {
+			userWhere.name = {
+				[Op.like]: `%${search.trim()}%`
+			};
+		}
+
+		// 조직 필터 조건 구성
+		const organizationWhere = {
+			season_id: currentSeason,
+			is_deleted: false
+		};
+
+		// 조직명 필터링
+		const orgNamePattern = buildOrganizationNamePattern(department, group, team);
+		if (orgNamePattern) {
+			organizationWhere.name = {
+				[Op.like]: `${orgNamePattern}%`
+			};
+		}
+
+		// 기본 쿼리 구조 (나중에 확장)
+		return {
+			userWhere,
+			organizationWhere,
+			pageNum,
+			limitNum,
+			offset,
+			currentSeason
+		};
 	},
 };
 
