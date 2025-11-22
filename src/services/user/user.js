@@ -646,6 +646,14 @@ const userService = {
 			};
 		});
 
+		// 빈 결과 처리
+		if (formattedMembers.length === 0) {
+			return {
+				members: [],
+				pagination
+			};
+		}
+
 		return {
 			members: formattedMembers,
 			pagination
