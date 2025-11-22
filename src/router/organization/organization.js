@@ -52,24 +52,6 @@ router.get("/:id/members/roles", async (req, res, next) => {
 	}
 });
 
-/**
- * 필터 옵션 조회
- * GET /api/organizations/filter-options
- * 
- * 현재 시즌의 소속국/소속그룹/소속순 목록을 조회합니다.
- */
-router.get("/filter-options", async (req, res, next) => {
-	try {
-		const filterOptions = await organizationService.getFilterOptions();
-
-		res.status(200).json({
-			data: filterOptions
-		});
-	} catch (error) {
-		next(error);
-	}
-});
-
 // CRUD 라우터는 마지막에 통합 (가장 일반적인 패턴이므로)
 router.use("/", organizationCrudRouter);
 
