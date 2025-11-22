@@ -9,7 +9,7 @@ import { hashPassword } from "../../utils/password.js";
 import { getCurrentSeasonId } from "../../utils/season.js";
 import crudService from "../common/crud.js";
 import { sequelize } from "../../utils/database.js";
-import { buildOrganizationNamePattern } from "../../utils/organization.js";
+import { buildOrganizationNamePattern, parseOrganizationName } from "../../utils/organization.js";
 
 /**
  * 사용자 관련 서비스
