@@ -1,17 +1,18 @@
-import { ValidationError, NotFoundError } from "../../utils/errors.js";
+import { Op } from "sequelize";
 import models from "../../models/models.js";
+import { NotFoundError, ValidationError } from "../../utils/errors.js";
 import { getCurrentSeasonId } from "../../utils/season.js";
 
 const seasonService = {
   createNewSeason: async (data) => {
     validateNewSeasonData(data);
-    
+
     // 새로운 회기 생성 또는 조회
     const seasonId = await createNewSeason();
-    
+
     // 중복 생성 방지를 위한 기존 데이터 삭제
     await deleteBeforeCreateOrganization(seasonId);
-    
+
     // 새로운 조직 및 사용자 역할 생성
     await createOrganizationAndUserRole(data, seasonId);
   },
@@ -21,11 +22,12 @@ const seasonService = {
    * - 동명이인이 있을 경우 모든 사용자의 정보를 배열로 반환
    * - 프론트엔드에서 이름과 생일로 본인을 선택할 수 있도록 birth_date 포함
    * 
-   * @param {string} name - 조회할 사용자 이름
+   * @param {string} name - 조회할 사용자 이름 (userId가 없을 때 사용)
+   * @param {number} userId - 조회할 사용자 ID (우선순위: userId > name)
    * @returns {Promise<Array<Object>>} 사용자들의 조직 정보 및 조직 구성원 목록 배열
    * @throws {NotFoundError} 다음 회기가 없거나 사용자를 찾을 수 없는 경우
    */
-  getNextOrganization: async (name) => {
+  getNextOrganization: async (name, userId) => {
     const currentSeason = getCurrentSeasonId();
     const nextSeason = currentSeason + 1;
 
@@ -39,82 +41,103 @@ const seasonService = {
       throw new NotFoundError("다음 회기를 찾을 수 없습니다.");
     }
 
-    // 다음 회기에서 해당 이름을 가진 사용자 조회 (조직 포함)
-    const users = await models.User.findAll({
-      where: {
-        name: name,
-      },
+    // userId 또는 name 기반으로 사용자 조회 조건 설정
+    const userWhere = userId
+      ? { id: userId }
+      : { name: name };
+
+    // 다음 회기에서 해당 사용자 조회 (조직 포함)
+    // UserRole을 먼저 조회하고 User, Organization, Role을 include하는 방식으로 변경
+    const userRoles = await models.UserRole.findAll({
       include: [
         {
-          model: models.UserRole,
-          as: "user_role",
-          required: true, // INNER JOIN으로 변경하여 user_role이 있는 경우만 조회
-          include: [
-            {
-              model: models.Organization,
-              as: "organization",
-              required: true, // INNER JOIN으로 변경하여 organization이 있는 경우만 조회
-              where: {
-                season_id: nextSeason,
-                is_deleted: false,
-              },
-              attributes: ["id", "name", "upper_organization_id"],
-            },
-            {
-              model: models.Role,
-              as: "role",
-              required: true,
-              attributes: ["id", "name"],
-            },
-          ],
+          model: models.User,
+          as: "user",
+          required: true,
+          where: userWhere,
+          attributes: ["id", "name", "phone_number", "birth_date"],
+        },
+        {
+          model: models.Organization,
+          as: "organization",
+          required: true,
+          where: {
+            season_id: nextSeason,
+            is_deleted: false,
+          },
+          attributes: ["id", "name", "upper_organization_id"],
+        },
+        {
+          model: models.Role,
+          as: "role",
+          required: true,
+          attributes: ["id", "name"],
         },
       ],
-      attributes: ["id", "name", "phone_number", "birth_date"],
     });
+
+    // UserRole을 User별로 그룹화
+    const usersMap = new Map();
+    for (const userRole of userRoles) {
+      const userId = userRole.user.id;
+      if (!usersMap.has(userId)) {
+        usersMap.set(userId, {
+          ...userRole.user.toJSON(),
+          userRoles: [],
+        });
+      }
+      usersMap.get(userId).userRoles.push(userRole);
+    }
+    const users = Array.from(usersMap.values());
 
     // 사용자를 찾을 수 없는 경우
     if (!users || users.length === 0) {
-      throw new NotFoundError(`다음 회기에 ${name} 사용자를 찾을 수 없습니다.`);
+      const searchCriteria = userId ? `userId: ${userId}` : `이름: ${name}`;
+      throw new NotFoundError(`다음 회기에 ${searchCriteria} 사용자를 찾을 수 없습니다.`);
     }
 
     // 각 사용자의 조직 정보를 조회하여 배열로 반환
     const results = [];
-    
+
     for (const user of users) {
-      const userOrgId = user.user_role.organization.id;
-      const userOrgUpperOrgId = user.user_role.organization.upper_organization_id;
+      const userRole = user.userRoles[0]; // 해당 season의 UserRole (배열의 첫 번째 요소)
+      const userOrgId = userRole.organization.id;
+      const userOrgUpperOrgId = userRole.organization.upper_organization_id;
 
       // 그룹장 조회
-      const groupLeader = await models.User.findOne({
+      const groupLeaderRole = await models.UserRole.findOne({
         include: [
           {
-            model: models.UserRole,
-            as: "user_role",
+            model: models.User,
+            as: "user",
             required: true,
-            include: [
-              {
-                model: models.Organization,
-                as: "organization",
-                required: true,
-                where: {
-                  upper_organization_id: userOrgUpperOrgId,
-                },
-                attributes: ["id", "name"],
-              },
-              {
-                model: models.Role,
-                as: "role",
-                required: true,
-                where: {
-                  id: 1, // 그룹장
-                },
-                attributes: ["id", "name", "sort_order"],
-              },
-            ],
+            attributes: ["id", "name", "phone_number", "birth_date"],
+          },
+          {
+            model: models.Organization,
+            as: "organization",
+            required: true,
+            where: {
+              upper_organization_id: userOrgUpperOrgId,
+            },
+            attributes: ["id", "name"],
+          },
+          {
+            model: models.Role,
+            as: "role",
+            required: true,
+            where: {
+              id: 1, // 그룹장
+            },
+            attributes: ["id", "name", "sort_order"],
           },
         ],
-        attributes: ["id", "name", "phone_number", "birth_date"],
       });
+
+      const groupLeader = groupLeaderRole ? {
+        ...groupLeaderRole.user.toJSON(),
+        userRoles: [groupLeaderRole],
+      } : null;
 
       // 그룹장을 찾을 수 없는 경우 해당 사용자는 건너뜀
       if (!groupLeader) {
@@ -122,54 +145,86 @@ const seasonService = {
       }
 
       // 같은 조직의 구성원들 조회
-      const sameOrgUsers = await models.User.findAll({
+      const sameOrgUserRoles = await models.UserRole.findAll({
         include: [
           {
-            model: models.UserRole,
-            as: "user_role",
+            model: models.User,
+            as: "user",
             required: true,
-            include: [
-              {
-                model: models.Organization,
-                as: "organization",
-                required: true,
-                where: {
-                  id: userOrgId,
-                },
-                attributes: ["id", "name"],
-              },
-              {
-                model: models.Role,
-                as: "role",
-                required: true,
-                attributes: ["id", "name", "sort_order"],
-              },
-            ],
+            attributes: ["id", "name", "phone_number", "birth_date"],
           },
-        ],
-        attributes: ["id", "name", "phone_number", "birth_date"],
-        order: [
-          ["name", "ASC"],
-          [{ model: models.UserRole, as: "user_role" }, { model: models.Role, as: "role" }, "sort_order", "ASC"],
+          {
+            model: models.Organization,
+            as: "organization",
+            required: true,
+            where: {
+              id: userOrgId,
+            },
+            attributes: ["id", "name"],
+          },
+          {
+            model: models.Role,
+            as: "role",
+            required: true,
+            attributes: ["id", "name", "sort_order"],
+          },
         ],
       });
 
+      // UserRole을 User별로 그룹화
+      const sameOrgUsersMap = new Map();
+      for (const userRole of sameOrgUserRoles) {
+        const userId = userRole.user.id;
+        if (!sameOrgUsersMap.has(userId)) {
+          sameOrgUsersMap.set(userId, {
+            ...userRole.user.toJSON(),
+            userRoles: [],
+          });
+        }
+        sameOrgUsersMap.get(userId).userRoles.push(userRole);
+      }
+      const sameOrgUsers = Array.from(sameOrgUsersMap.values());
+
+      // JavaScript에서 정렬 (sort_order 순, 그 다음 이름 순)
+      sameOrgUsers.sort((a, b) => {
+        // 먼저 sort_order로 정렬
+        const sortOrderA = a.userRoles[0]?.role?.sort_order ?? 999;
+        const sortOrderB = b.userRoles[0]?.role?.sort_order ?? 999;
+        const sortOrderCompare = sortOrderA - sortOrderB;
+        if (sortOrderCompare !== 0) return sortOrderCompare;
+
+        // sort_order가 같으면 이름으로 정렬
+        return a.name.localeCompare(b.name);
+      });
+
       // 조직 구성원 목록 생성 (그룹장 + 같은 조직 구성원)
+      // sameOrgUsers에 이미 같은 이름과 같은 핸드폰 번호의 유저가 있는지 확인
+      const isGroupLeaderInSameOrg = sameOrgUsers.some(
+        (member) =>
+          member.name === groupLeader.name &&
+          member.phone_number === groupLeader.phone_number
+      );
+
       const orgPeople = [
-        {
-          name: groupLeader.name,
-          role: groupLeader.user_role.role.name,
-          phone_number: groupLeader.phone_number,
-          birth_year: groupLeader.birth_date 
-            ? new Date(groupLeader.birth_date).getFullYear().toString().slice(-2) 
-            : null,
-        },
+        // groupLeader가 sameOrgUsers에 없을 때만 추가
+        ...(isGroupLeaderInSameOrg
+          ? []
+          : [
+            {
+              name: groupLeader.name,
+              role: groupLeader.userRoles[0].role.name,
+              phone_number: groupLeader.phone_number,
+              birth_year: groupLeader.birth_date
+                ? new Date(groupLeader.birth_date).getFullYear().toString().slice(-2)
+                : null,
+            },
+          ]),
         ...sameOrgUsers.map((member) => ({
           name: member.name,
-          role: member.user_role.role.name,
+          role: member.userRoles[0].role.name,
           phone_number: member.phone_number,
-          birth_year: member.birth_date 
-            ? new Date(member.birth_date).getFullYear().toString().slice(-2) 
+          birth_year: member.birth_date
+            ? new Date(member.birth_date).getFullYear().toString().slice(-2)
             : null,
         })),
       ];
@@ -179,13 +234,38 @@ const seasonService = {
         name: user.name,
         birth_year: user.birth_date ? new Date(user.birth_date).getFullYear().toString().slice(-2) : null, // 프론트엔드에서 동명이인 구분용
         phone_number: user.phone_number,
-        role: user.user_role.role.name,
-        organization: user.user_role.organization.name,
+        role: userRole.role.name,
+        organization: userRole.organization.name,
         organization_people: orgPeople,
       });
     }
 
     return results;
+  },
+
+  getAllNationsOrgList: async () => {
+    const currentSeason = getCurrentSeasonId();
+
+    const orgList = await models.Organization.findAll({
+      where: {
+        season_id: currentSeason,
+        is_deleted: false,
+        name: {
+          [Op.and]: [
+            {
+              [Op.or]: [
+                { [Op.like]: '237국_%' },
+                { [Op.like]: '올네이션스국_%' }
+              ]
+            },
+            { [Op.like]: '%순' }
+          ],
+        },
+      },
+      attributes: ["id", "name"],
+    });
+
+    return orgList;
   },
 };
 
@@ -209,13 +289,13 @@ const validateGook = (data) => {
     if (!item.gook || item.gook.trim() === '') {
       throw new ValidationError(`${index + 1}번째 데이터에 gook 값이 없습니다.`);
     }
-    
+
     // '청년 1국' -> '1국' 변환
     if (item.gook.includes('청년')) {
       item.gook = item.gook.replace('청년', '').trim();
     }
   });
-  
+
   return data;
 }
 
@@ -229,14 +309,14 @@ const validateGroup = (data) => {
     if (!item.group || item.group.trim() === '') {
       throw new ValidationError(`${index + 1}번째 데이터에 group 값이 없습니다.`);
     }
-    
+
     if (!item.group.endsWith('그룹')) {
       throw new ValidationError(
         `${index + 1}번째 데이터의 group 값이 '그룹'으로 끝나지 않습니다. (현재 값: ${item.group})`
       );
     }
   });
-  
+
   return data;
 }
 
@@ -250,14 +330,14 @@ const validateSoon = (data) => {
     if (!item.soon || item.soon.trim() === '') {
       throw new ValidationError(`${index + 1}번째 데이터에 soon 값이 없습니다.`);
     }
-    
+
     if (!item.soon.endsWith('순')) {
       throw new ValidationError(
         `${index + 1}번째 데이터의 soon 값이 '순'으로 끝나지 않습니다. (현재 값: ${item.soon})`
       );
     }
   });
-  
+
   return data;
 }
 
@@ -268,7 +348,7 @@ const validateSoon = (data) => {
  */
 const validatePhone = (data) => {
   const phoneRegex = /^[\d-]+$/;
-  
+
   data.forEach((item, index) => {
     if (item.phone_number && item.phone_number.trim() !== '') {
       // 전화번호 형식 체크 (숫자와 '-'만 허용)
@@ -277,12 +357,12 @@ const validatePhone = (data) => {
           `${index + 1}번째 데이터의 phone_number 값이 올바른 전화번호 형식이 아닙니다. (현재 값: ${item.phone_number})`
         );
       }
-      
+
       // 모든 '-' 제거
       item.phone_number = item.phone_number.replaceAll("-", "");
     }
   });
-  
+
   return data;
 }
 
@@ -293,7 +373,7 @@ const validatePhone = (data) => {
  */
 const validateRole = (data) => {
   const validRoles = ['국장', '그룹장', '부그룹장', '순장', '부순장', '순원'];
-  
+
   data.forEach((item, index) => {
     if (!item.role || item.role.trim() === '') {
       // role 값이 없으면 '순원'으로 설정
@@ -307,7 +387,7 @@ const validateRole = (data) => {
       }
     }
   });
-  
+
   return data;
 }
 
@@ -319,20 +399,20 @@ const validateRole = (data) => {
  */
 const validateBirthDate = (data) => {
   const twoDigitRegex = /^\d{2}$/;
-  
+
   data.forEach((item, index) => {
     if (item.birth_date && item.birth_date.toString().trim() !== '') {
       const birthDateStr = item.birth_date.toString().trim();
-      
+
       // 두자리 숫자인지 체크
       if (!twoDigitRegex.test(birthDateStr)) {
         throw new ValidationError(
           `${index + 1}번째 데이터의 birth_date 값이 두자리 숫자가 아닙니다. (현재 값: ${item.birth_date})`
         );
       }
-      
+
       const year = parseInt(birthDateStr, 10);
-      
+
       // 50 이하면 2000년대, 51 이상이면 1900년대
       if (year <= 50) {
         item.birth_date = `20${birthDateStr}-01-01`;
@@ -341,7 +421,7 @@ const validateBirthDate = (data) => {
       }
     }
   });
-  
+
   return data;
 }
 
@@ -357,7 +437,7 @@ const createNewSeason = async () => {
   const currentYear = new Date().getFullYear();
   const nextYear = currentYear + 1;
   const seasonName = nextYear.toString();
-  
+
   // 해당 년도의 회기가 이미 존재하는지 체크
   let season = await models.Season.findOne({
     where: {
@@ -365,7 +445,7 @@ const createNewSeason = async () => {
       is_deleted: false,
     },
   });
-  
+
   // 존재하지 않으면 새로운 회기 생성
   if (!season) {
     season = await models.Season.create({
@@ -373,7 +453,7 @@ const createNewSeason = async () => {
       is_deleted: false,
     });
   }
-  
+
   return season.id;
 }
 
@@ -387,9 +467,9 @@ const deleteBeforeCreateOrganization = async (seasonId) => {
     },
     attributes: ['id'],
   });
-  
+
   const organizationIds = existingOrganizations.map(org => org.id);
-  
+
   // 2. 해당 organization들과 연관된 user_role 삭제
   if (organizationIds.length > 0) {
     await models.UserRole.destroy({
@@ -397,7 +477,7 @@ const deleteBeforeCreateOrganization = async (seasonId) => {
         organization_id: organizationIds,
       },
     });
-    
+
     // 3. 해당 seasonId를 가진 organization 삭제
     await models.Organization.destroy({
       where: {
@@ -418,7 +498,7 @@ const findOrCreateOrganization = async (name, upperOrgId, seasonId) => {
       is_deleted: false,
     },
   });
-  
+
   if (!org) {
     org = await models.Organization.create({
       season_id: seasonId,
@@ -427,7 +507,7 @@ const findOrCreateOrganization = async (name, upperOrgId, seasonId) => {
       is_deleted: false,
     });
   }
-  
+
   return org;
 };
 
@@ -453,23 +533,23 @@ const createOrganizationAndUserRole = async (data, seasonId) => {
     },
     attributes: ['id', 'name'],
   });
-  
+
   // 이미 생성된 조직을 추적하기 위한 Map
   const gookOrganizations = new Map();
   const groupOrganizations = new Map();
   const soonOrganizations = new Map();
-  
+
   // 데이터를 순회하며 계층 구조 생성
   for (const item of data) {
     const { gook, group, soon } = item;
-    
+
     // 1단계: 국(gook) 조직 생성 또는 조회
     if (!gookOrganizations.has(gook)) {
       const gookOrg = await findOrCreateOrganization(gook, rootOrganization.id, seasonId);
       gookOrganizations.set(gook, gookOrg);
     }
     const gookOrganization = gookOrganizations.get(gook);
-    
+
     // 2단계: 그룹 조직 생성 또는 조회
     const groupKey = `${gook}_${group}`;
     if (!groupOrganizations.has(groupKey)) {
@@ -477,7 +557,7 @@ const createOrganizationAndUserRole = async (data, seasonId) => {
       groupOrganizations.set(groupKey, groupOrg);
     }
     const groupOrganization = groupOrganizations.get(groupKey);
-    
+
     // 3단계: 순 조직 생성 (항상 생성, 중복 체크는 이름으로만)
     const soonKey = `${gook}_${group}_${soon}`;
     if (!soonOrganizations.has(soonKey)) {
@@ -495,7 +575,7 @@ const createUserRole = async (item, organizationId, allUsers, allRoles) => {
   // 우선 allUser에서 item의 이름을 가진 사용자가 한 명인지 확인
   let user = null;
   const users = allUsers.filter(user => user.name === item.name);
-  
+
   // 사용자를 찾을 수 없는 경우
   if (users.length === 0) {
     throw new ValidationError(`${item.name} (전화번호: ${item.phone_number}) 사용자를 찾을 수 없습니다.`);
