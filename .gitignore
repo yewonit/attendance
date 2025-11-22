@@ -133,3 +133,6 @@ dist
 package-lock.json
 .gitsecret/keys/random_seed
 !*.secret
+
+# Documentation
+docs/
