@@ -344,22 +344,28 @@ const validateSoon = (data) => {
 /**
  * 전화번호(phone_number) 데이터 검증 및 변환
  * - phone_number 값이 있다면 전화번호 형식인지 체크
- * - 모든 '-'를 제거하여 숫자만 남김
+ * - 모든 '-'와 공백을 제거하여 숫자만 남김
  */
 const validatePhone = (data) => {
   const phoneRegex = /^[\d-]+$/;
 
   data.forEach((item, index) => {
     if (item.phone_number && item.phone_number.trim() !== '') {
+      // 앞뒤 공백 및 보이지 않는 문자 제거
+      let phoneNumber = item.phone_number.trim();
+
+      // 보이지 않는 문자 제거 (zero-width space, non-breaking space 등)
+      phoneNumber = phoneNumber.replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '');
+
       // 전화번호 형식 체크 (숫자와 '-'만 허용)
-      if (!phoneRegex.test(item.phone_number)) {
+      if (!phoneRegex.test(phoneNumber)) {
         throw new ValidationError(
           `${index + 1}번째 데이터의 phone_number 값이 올바른 전화번호 형식이 아닙니다. (현재 값: ${item.phone_number})`
         );
       }
 
-      // 모든 '-' 제거
-      item.phone_number = item.phone_number.replaceAll("-", "");
+      // 모든 '-'와 공백 제거하여 숫자만 남김
+      item.phone_number = phoneNumber.replaceAll("-", "").replaceAll(" ", "");
     }
   });
 
