@@ -62,7 +62,7 @@ const startServer = async () => {
 		await initDatabase();
 
 		// 서버 시작
-		const PORT = process.env.PORT || 3001; // 기본값을 3001로 변경 (프론트엔드가 3000 사용)
+		const PORT = process.env.PORT || 3000; // 기본값 3000, 환경변수로 조정 가능
 		app.listen(PORT, () => {
 			logger.info("서버 시작됨", {
 				port: PORT,
