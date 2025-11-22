@@ -531,14 +531,88 @@ const userService = {
 			};
 		}
 
-		// 기본 쿼리 구조 (나중에 확장)
+		// 1️⃣ 전체 개수 조회 (COUNT 쿼리)
+		const totalCount = await models.User.count({
+			where: userWhere,
+			include: [
+				{
+					model: models.UserRole,
+					as: "user_role",
+					required: true,
+					include: [
+						{
+							model: models.Organization,
+							as: "organization",
+							required: true,
+							where: organizationWhere,
+							attributes: []
+						},
+						{
+							model: models.Role,
+							as: "role",
+							required: true,
+							where: { is_deleted: false },
+							attributes: []
+						}
+					],
+					attributes: []
+				}
+			],
+			distinct: true,
+			col: "User.id"
+		});
+
+		// 2️⃣ 구성원 목록 조회 (SELECT 쿼리)
+		const users = await models.User.findAll({
+			where: userWhere,
+			include: [
+				{
+					model: models.UserRole,
+					as: "user_role",
+					required: true,
+					include: [
+						{
+							model: models.Organization,
+							as: "organization",
+							required: true,
+							where: organizationWhere,
+							attributes: ["id", "name"]
+						},
+						{
+							model: models.Role,
+							as: "role",
+							required: true,
+							where: { is_deleted: false },
+							attributes: ["id", "name"]
+						}
+					],
+					attributes: ["id", "user_id", "organization_id", "role_id"]
+				}
+			],
+			attributes: [
+				"id",
+				"name",
+				"birth_date",
+				"phone_number"
+			],
+			order: [["name", "ASC"]],
+			limit: limitNum,
+			offset: offset,
+			distinct: true
+		});
+
+		// 3️⃣ 페이지네이션 메타데이터 계산
+		const totalPages = Math.ceil(totalCount / limitNum);
+		const pagination = {
+			currentPage: pageNum,
+			totalPages: totalPages,
+			totalCount: totalCount,
+			limit: limitNum
+		};
+
 		return {
-			userWhere,
-			organizationWhere,
-			pageNum,
-			limitNum,
-			offset,
-			currentSeason
+			members: users,
+			pagination
 		};
 	},
 };
