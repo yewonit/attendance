@@ -199,6 +199,44 @@ router.get("", async (req, res, next) => {
 	}
 });
 
+/**
+ * 구성원 목록 조회 (검색/필터링/페이지네이션 지원)
+ * GET /api/users/list
+ * 
+ * 쿼리 파라미터:
+ * - search: 이름 검색어 (optional)
+ * - department: 소속국 필터 (optional, 예: "1국")
+ * - group: 소속그룹 필터 (optional, 예: "김민수그룹")
+ * - team: 소속순 필터 (optional, 예: "이용걸순")
+ * - page: 페이지 번호 (optional, 기본값: 1)
+ * - limit: 페이지당 항목 수 (optional, 기본값: 10)
+ */
+router.get("/list", async (req, res, next) => {
+	try {
+		const { search, department, group, team, page, limit } = req.query;
+
+		const filters = {
+			search,
+			department,
+			group,
+			team,
+			page,
+			limit
+		};
+
+		const result = await userService.getMembersWithFilters(filters);
+
+		res.status(200).json({
+			data: {
+				members: result.members,
+				pagination: result.pagination
+			}
+		});
+	} catch (error) {
+		next(error);
+	}
+});
+
 router.put("/:id", async (req, res, next) => {
 	const newModel = req.body;
 	const id = req.params.id;
