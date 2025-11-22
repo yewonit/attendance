@@ -213,8 +213,8 @@ const seasonService = {
             {
               name: groupLeader.name,
               role: groupLeader.userRoles[0].role.name,
-              phone_number: groupLeader.phone_number,
-              birth_year: groupLeader.birth_date
+              phoneNumber: groupLeader.phone_number,
+              birthYear: groupLeader.birth_date
                 ? new Date(groupLeader.birth_date).getFullYear().toString().slice(-2)
                 : null,
             },
@@ -222,8 +222,8 @@ const seasonService = {
         ...sameOrgUsers.map((member) => ({
           name: member.name,
           role: member.userRoles[0].role.name,
-          phone_number: member.phone_number,
-          birth_year: member.birth_date
+          phoneNumber: member.phone_number,
+          birthYear: member.birth_date
             ? new Date(member.birth_date).getFullYear().toString().slice(-2)
             : null,
         })),
@@ -232,11 +232,11 @@ const seasonService = {
       // 결과에 추가
       results.push({
         name: user.name,
-        birth_year: user.birth_date ? new Date(user.birth_date).getFullYear().toString().slice(-2) : null, // 프론트엔드에서 동명이인 구분용
-        phone_number: user.phone_number,
+        birthYear: user.birth_date ? new Date(user.birth_date).getFullYear().toString().slice(-2) : null, // 프론트엔드에서 동명이인 구분용
+        phoneNumber: user.phone_number,
         role: userRole.role.name,
         organization: userRole.organization.name,
-        organization_people: orgPeople,
+        organizationPeople: orgPeople,
       });
     }
 
