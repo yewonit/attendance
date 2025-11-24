@@ -20,6 +20,12 @@ export default (sequelize, Sequelize) => {
 				defaultValue: false,
 				comment: "삭제 여부 (Y: 삭제됨, N: 활성 상태)",
 			},
+			sort_order: {
+				type: Sequelize.INTEGER,
+				allowNull: false,
+				defaultValue: 0,
+				comment: "정렬 순서",
+			},
 			created_at: {
 				type: Sequelize.DATE,
 				allowNull: false,

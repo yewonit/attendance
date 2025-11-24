@@ -62,9 +62,10 @@ const startServer = async () => {
 		await initDatabase();
 
 		// 서버 시작
-		app.listen(3000, () => {
+		const PORT = process.env.PORT || 3000; // 기본값 3000, 환경변수로 조정 가능
+		app.listen(PORT, () => {
 			logger.info("서버 시작됨", {
-				port: 3000,
+				port: PORT,
 				env: process.env.NODE_ENV,
 				timestamp: new Date().toISOString(),
 			});

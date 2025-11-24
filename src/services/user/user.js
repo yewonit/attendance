@@ -9,6 +9,7 @@ import { hashPassword } from "../../utils/password.js";
 import { getCurrentSeasonId } from "../../utils/season.js";
 import crudService from "../common/crud.js";
 import { sequelize } from "../../utils/database.js";
+import { buildOrganizationNamePattern, parseOrganizationName } from "../../utils/organization.js";
 
 /**
  * 사용자 관련 서비스
@@ -469,6 +470,194 @@ const userService = {
 				transaction: t,
 			});
 		});
+	},
+
+	/**
+	 * 👥 구성원 목록 조회 (검색/필터링/페이지네이션 지원)
+	 * - 이름 검색 기능
+	 * - 소속국/소속그룹/소속순 필터링
+	 * - 페이지네이션 지원
+	 * - 소속 정보 포함 응답
+	 *
+	 * @param {Object} filters - 필터 조건
+	 * @param {string} filters.search - 이름 검색어
+	 * @param {string} filters.department - 소속국 필터 (예: "1국")
+	 * @param {string} filters.group - 소속그룹 필터 (예: "김민수그룹")
+	 * @param {string} filters.team - 소속순 필터 (예: "이용걸순")
+	 * @param {number} filters.page - 페이지 번호 (기본값: 1)
+	 * @param {number} filters.limit - 페이지당 항목 수 (기본값: 10)
+	 * @returns {Promise<{members: Array, pagination: Object}>} 구성원 목록 및 페이지네이션 정보
+	 */
+	getMembersWithFilters: async (filters = {}) => {
+		const {
+			search,
+			department,
+			group,
+			team,
+			page = 1,
+			limit = 10
+		} = filters;
+
+		// 페이지네이션 파라미터 유효성 검증
+		const pageNum = Math.max(1, parseInt(page) || 1);
+		const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+		const offset = (pageNum - 1) * limitNum;
+
+		const currentSeason = getCurrentSeasonId();
+
+		// 기본 WHERE 조건 구성
+		const userWhere = {
+			is_deleted: false
+		};
+
+		// 이름 검색 조건 추가
+		if (search && search.trim()) {
+			userWhere.name = {
+				[Op.like]: `%${search.trim()}%`
+			};
+		}
+
+		// 조직 필터 조건 구성
+		const organizationWhere = {
+			season_id: currentSeason,
+			is_deleted: false
+		};
+
+		// 조직명 필터링
+		const orgNamePattern = buildOrganizationNamePattern(department, group, team);
+		if (orgNamePattern) {
+			organizationWhere.name = {
+				[Op.like]: `${orgNamePattern}%`
+			};
+		}
+
+		// 1️⃣ 전체 개수 조회 (COUNT 쿼리)
+		const totalCount = await models.User.count({
+			where: userWhere,
+			include: [
+				{
+					model: models.UserRole,
+					as: "user_role",
+					required: true,
+					include: [
+						{
+							model: models.Organization,
+							as: "organization",
+							required: true,
+							where: organizationWhere,
+							attributes: []
+						},
+						{
+							model: models.Role,
+							as: "role",
+							required: true,
+							where: { is_deleted: false },
+							attributes: []
+						}
+					],
+					attributes: []
+				}
+			],
+			distinct: true,
+			col: "User.id"
+		});
+
+		// 2️⃣ 구성원 목록 조회 (SELECT 쿼리)
+		const users = await models.User.findAll({
+			where: userWhere,
+			include: [
+				{
+					model: models.UserRole,
+					as: "user_role",
+					required: true,
+					include: [
+						{
+							model: models.Organization,
+							as: "organization",
+							required: true,
+							where: organizationWhere,
+							attributes: ["id", "name"]
+						},
+						{
+							model: models.Role,
+							as: "role",
+							required: true,
+							where: { is_deleted: false },
+							attributes: ["id", "name"]
+						}
+					],
+					attributes: ["id", "user_id", "organization_id", "role_id"]
+				}
+			],
+			attributes: [
+				"id",
+				"name",
+				"birth_date",
+				"phone_number"
+			],
+			order: [["name", "ASC"]],
+			limit: limitNum,
+			offset: offset,
+			distinct: true
+		});
+
+		// 3️⃣ 페이지네이션 메타데이터 계산
+		const totalPages = Math.ceil(totalCount / limitNum);
+		const pagination = {
+			currentPage: pageNum,
+			totalPages: totalPages,
+			totalCount: totalCount,
+			limit: limitNum
+		};
+
+		// 4️⃣ 응답 데이터 포맷팅
+		const formattedMembers = users.map((user) => {
+			// 각 사용자의 주요 역할 및 조직 정보 (첫 번째 UserRole 사용)
+			const primaryUserRole = user.user_role && user.user_role.length > 0 
+				? user.user_role[0] 
+				: null;
+
+			const organization = primaryUserRole?.organization;
+			const role = primaryUserRole?.role;
+
+			// 조직명 파싱
+			const orgInfo = organization 
+				? parseOrganizationName(organization.name)
+				: { department: null, group: null, team: null };
+
+			// 생년월일을 생일연도(YY)로 변환
+			let birthYear = null;
+			if (user.birth_date) {
+				const year = new Date(user.birth_date).getFullYear();
+				birthYear = year.toString().slice(-2); // 마지막 2자리만 추출
+			}
+
+			return {
+				id: user.id,
+				name: user.name,
+				birthYear: birthYear,
+				phoneNumber: user.phone_number,
+				affiliation: {
+					department: orgInfo.department || null,
+					group: orgInfo.group || null,
+					team: orgInfo.team || null
+				},
+				role: role?.name || null
+			};
+		});
+
+		// 빈 결과 처리
+		if (formattedMembers.length === 0) {
+			return {
+				members: [],
+				pagination
+			};
+		}
+
+		return {
+			members: formattedMembers,
+			pagination
+		};
 	},
 };
 

@@ -3,7 +3,7 @@
 import { Op } from "sequelize";
 import models from "../../models/models.js";
 import { NotFoundError } from "../../utils/errors.js";
-import { getOrganizationNamePattern } from "../../utils/organization.js";
+import { getOrganizationNamePattern, parseOrganizationName } from "../../utils/organization.js";
 import { getCurrentSeasonId } from "../../utils/season.js";
 import crudService from "../common/crud.js";
 import { sequelize } from "../../utils/database.js";
@@ -83,6 +83,7 @@ const getMembersByIdWithRoles = async (organizationId) => {
 			userId: user.id,
 			name: user.name,
 			email: user.email,
+			birthYear: user.birth_date ? new Date(user.birth_date).getFullYear().toString().slice(-2) : null,
 			phoneNumber: user.phone_number,
 			churchRegistrationDate: user.registration_date,
 			isNewMember: user.is_new_member,
@@ -414,6 +415,57 @@ const organizationService = {
 			organizationId: item.organizationId,
 			memberCount: parseInt(item.memberCount) || 0,
 		}));
+	},
+
+	/**
+	 * 🔍 필터 옵션 조회 (소속국/소속그룹/소속순 목록)
+	 * - 현재 시즌의 모든 조직에서 고유한 소속국/소속그룹/소속순 추출
+	 * - 드롭다운 옵션 제공용
+	 *
+	 * @returns {Promise<{departments: string[], groups: string[], teams: string[]}>} 필터 옵션 목록
+	 */
+	getFilterOptions: async () => {
+		const seasonId = getCurrentSeasonId();
+
+		// 현재 시즌의 모든 조직 조회
+		const organizations = await models.Organization.findAll({
+			where: {
+				season_id: seasonId,
+				is_deleted: false
+			},
+			attributes: ["name"],
+			order: [["name", "ASC"]]
+		});
+
+		// 소속국/소속그룹/소속순 추출 및 중복 제거
+		const departmentsSet = new Set();
+		const groupsSet = new Set();
+		const teamsSet = new Set();
+
+		organizations.forEach((org) => {
+			const orgInfo = parseOrganizationName(org.name);
+			
+			if (orgInfo.department) {
+				departmentsSet.add(orgInfo.department);
+			}
+			if (orgInfo.group) {
+				groupsSet.add(orgInfo.group);
+			}
+			if (orgInfo.team) {
+				teamsSet.add(orgInfo.team);
+			}
+		});
+
+		// Set을 배열로 변환 및 정렬
+		const departments = Array.from(departmentsSet).sort();
+		const groups = Array.from(groupsSet).sort();
+		const teams = Array.from(teamsSet).sort();
+
+		return {
+			departments,
+			groups,
+			teams
+		};
 	},
 };
 

@@ -190,18 +190,66 @@ router.post("", async (req, res, next) => {
 	}
 });
 
+/**
+ * 구성원 목록 조회
+ * GET /api/users
+ * 
+ * 쿼리 파라미터 없을 때: 전체 사용자 목록 반환 (기존 동작 유지)
+ * 쿼리 파라미터 있을 때: 검색/필터링/페이지네이션 지원
+ * 
+ * 쿼리 파라미터:
+ * - search: 이름 검색어 (optional)
+ * - department: 소속국 필터 (optional, 예: "1국")
+ * - group: 소속그룹 필터 (optional, 예: "김민수그룹")
+ * - team: 소속순 필터 (optional, 예: "이용걸순")
+ * - page: 페이지 번호 (optional, 기본값: 1)
+ * - limit: 페이지당 항목 수 (optional, 기본값: 10)
+ */
 router.get("", async (req, res, next) => {
 	try {
+		const { search, department, group, team, page, limit } = req.query;
+
+		// 쿼리스트링이 있고 유효한 값이 있으면 필터링된 결과 반환
+		const hasFilters = 
+			(search && search.trim()) || 
+			(department && department.trim()) || 
+			(group && group.trim()) || 
+			(team && team.trim()) || 
+			(page && parseInt(page) > 0) || 
+			(limit && parseInt(limit) > 0);
+
+		if (hasFilters) {
+			// 필터링된 결과 반환
+			const filters = {
+				search,
+				department,
+				group,
+				team,
+				page,
+				limit
+			};
+
+			const result = await userService.getMembersWithFilters(filters);
+
+			return res.status(200).json({
+				data: {
+					members: result.members,
+					pagination: result.pagination
+				}
+			});
+		}
+
+		// 쿼리스트링이 없으면 전체 목록 반환 (기존 동작 유지)
 		const data = await userService.findUsers();
-		res.status(200).json({ data });
+		return res.status(200).json({ data });
 	} catch (error) {
 		next(error);
 	}
 });
 
-router.put("", async (req, res, next) => {
+router.put("/:id", async (req, res, next) => {
 	const newModel = req.body;
-	const id = newModel.id; // 추후에 params에서 가져오도록 수정 필요
+	const id = req.params.id;
 
 	try {
 		const updated = await userService.updateUser(id, newModel);
@@ -211,8 +259,8 @@ router.put("", async (req, res, next) => {
 	}
 });
 
-router.delete("", async (req, res, next) => {
-	const id = req.body.id; // 추후에 params에서 가져오도록 수정 필요
+router.delete("/:id", async (req, res, next) => {
+	const id = req.params.id;
 
 	try {
 		const deleted = await userService.deleteUser(id);
