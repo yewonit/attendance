@@ -595,21 +595,40 @@ const createUserRole = async (item, organizationId, allUsers, allRoles, transact
   }
   // 만약 한 명이 아니라면 name_suffix와 phone_number를 사용하여 특정 사용자를 찾음
   else if (users.length > 1) {
-    // name_suffix로 먼저 찾기 (item.name_suffix가 없으면 undefined === "" 비교가 false가 됨)
-    if (item.name_suffix) {
-      user = users.find(u => u.name_suffix === item.name_suffix);
-    }
+    let filteredUsers;
 
     if (!user && item.phone_number) {
-      user = users.find(u => u.phone_number === item.phone_number);
+      filteredUsers = users.filter(u => u.phone_number === item.phone_number);
+      if (filteredUsers.length === 1) {
+        user = filteredUsers[0];
+      }
+      if (filteredUsers.length > 1) {
+        throw new ValidationError(`${item.name} (전화번호: ${item.phone_number}) 한 명으로 특정이 불가능합니다.`);
+      }
     }
 
     if (!user && item.birth_date) {
-      user = users.find(u => u.birth_date === item.birth_date);
+      filteredUsers = users.filter(u => u.birth_date === item.birth_date);
+      if (filteredUsers.length === 1) {
+        user = filteredUsers[0];
+      }
+      if (filteredUsers.length > 1) {
+        throw new ValidationError(`${item.name} (생년월일: ${item.birth_date}) 한 명으로 특정이 불가능합니다.`);
+      }
+    }
+
+    if (item.name_suffix) {
+      filteredUsers = users.filter(u => u.name_suffix === item.name_suffix);
+      if (filteredUsers.length === 1) {
+        user = filteredUsers[0];
+      }
+      if (filteredUsers.length > 1) {
+        throw new ValidationError(`${item.name} (이름 접미사: ${item.name_suffix}) 한 명으로 특정이 불가능합니다.`);
+      }
     }
 
     if (!user) {
-      throw new ValidationError(`${item.name} (전화번호: ${item.phone_number}) 한 명으로 특정이 불가능합니다.`);
+      throw new ValidationError(`${item} 한 명으로 특정이 불가능합니다.`);
     }
   } else {
     user = users[0];
