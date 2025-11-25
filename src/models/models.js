@@ -2,6 +2,7 @@ import { Sequelize } from "sequelize";
 import { sequelize } from "../utils/database.js";
 import ActivityModel from "./activity/activity.js";
 import AttendanceModel from "./attendance/attendance.js";
+import UserAttendanceStatusModel from "./attendance/user_attendance_status.js";
 import ActivityImageModel from "./image/activity_image.js";
 import OrganizationModel from "./organization/organization.js";
 import PermissionModel from "./permission/permission.js";
@@ -17,6 +18,7 @@ const Role = RoleModel(sequelize, Sequelize);
 const Activity = ActivityModel(sequelize, Sequelize);
 const ActivityImage = ActivityImageModel(sequelize, Sequelize);
 const Attendance = AttendanceModel(sequelize, Sequelize);
+const UserAttendanceStatus = UserAttendanceStatusModel(sequelize, Sequelize);
 const Season = SeasonModel(sequelize, Sequelize);
 const Permission = PermissionModel(sequelize, Sequelize);
 const RolePermission = RolePermissionModel(sequelize, Sequelize);
@@ -40,6 +42,9 @@ Activity.hasMany(Attendance, { foreignKey: "activity_id", as: "attendances" });
 Attendance.belongsTo(User, { foreignKey: "user_id", as: "user" });
 User.hasMany(Attendance, { foreignKey: "user_id", as: "attendances" });
 
+UserAttendanceStatus.belongsTo(User, { foreignKey: "user_id", as: "user" });
+User.hasMany(UserAttendanceStatus, { foreignKey: "user_id", as: "attendanceStatuses" });
+
 User.belongsToMany(Role, { through: UserRole, foreignKey: "user_id", otherKey: "role_id", as: "roles" });
 Role.belongsToMany(User, { through: UserRole, foreignKey: "role_id", otherKey: "user_id", as: "users" });
 
@@ -62,6 +67,7 @@ export default {
 	Activity,
 	ActivityImage,
 	Attendance,
+	UserAttendanceStatus,
 	Organization,
 	Role,
 	RolePermission,
