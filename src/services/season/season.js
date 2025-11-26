@@ -551,6 +551,7 @@ const createOrganizationAndUserRole = async (data, seasonId, transaction) => {
   const gookOrganizations = new Map();
   const groupOrganizations = new Map();
   const soonOrganizations = new Map();
+  const userIds = [];
 
   // 데이터를 순회하며 계층 구조 생성
   for (const item of data) {
@@ -580,8 +581,22 @@ const createOrganizationAndUserRole = async (data, seasonId, transaction) => {
     const soonOrganization = soonOrganizations.get(soonKey);
 
     // 4단계: 사용자 역할 생성
-    await createUserRole(item, soonOrganization.id, allUsers, allRoles, transaction);
+    let userId = await createUserRole(item, soonOrganization.id, allUsers, allRoles, transaction);
+    userIds.push(userId);
   }
+
+  // 5단계: userIds에 포함되지 않는 사용자들의 UserAttendanceStatus를 비활성화
+  await models.UserAttendanceStatus.update(
+    { is_disabled: true },
+    {
+      where: {
+        user_id: {
+          [Op.notIn]: userIds,
+        },
+      },
+      transaction,
+    }
+  );
 }
 
 const createUserRole = async (item, organizationId, allUsers, allRoles, transaction) => {
@@ -644,6 +659,8 @@ const createUserRole = async (item, organizationId, allUsers, allRoles, transact
     role_id: role.id,
     organization_id: organizationId,
   }, { transaction });
+
+  return user.id;
 }
 
 export default seasonService;
