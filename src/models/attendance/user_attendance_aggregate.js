@@ -49,18 +49,6 @@ export default (sequelize, Sequelize) => {
 				defaultValue: 0,
 				comment: "연속 결석 횟수",
 			},
-			max_attendance_continuous: {
-				type: Sequelize.INTEGER,
-				allowNull: false,
-				defaultValue: 0,
-				comment: "최대 연속 출석 횟수",
-			},
-			max_absence_continuous: {
-				type: Sequelize.INTEGER,
-				allowNull: false,
-				defaultValue: 0,
-				comment: "최대 연속 결석 횟수",
-			},
 			total_attend_count: {
 				type: Sequelize.INTEGER,
 				allowNull: false,
@@ -72,6 +60,16 @@ export default (sequelize, Sequelize) => {
 				allowNull: false,
 				defaultValue: 0,
 				comment: "총 결석 횟수",
+			},
+			last_action: {
+				type: Sequelize.STRING(10),
+				allowNull: true,
+				comment: "마지막 행동 (출석/결석)",
+			},
+			last_opposite_continuous_count: {
+				type: Sequelize.INTEGER,
+				allowNull: true,
+				comment: "마지막 반대 연속 횟수",
 			},
 			is_disabled: {
 				type: Sequelize.BOOLEAN,
