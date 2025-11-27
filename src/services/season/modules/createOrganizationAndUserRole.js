@@ -90,8 +90,8 @@ const createOrganizationAndUserRole = async (data, seasonId, transaction) => {
     userIds.push(userId);
   }
 
-  // 5단계: userIds에 포함되지 않는 사용자들의 UserAttendanceStatus를 비활성화
-  await models.UserAttendanceStatus.update(
+  // 5단계: userIds에 포함되지 않는 사용자들의 UserAttendanceAggregate를 비활성화
+  await models.UserAttendanceAggregate.update(
     { is_disabled: true },
     {
       where: {
