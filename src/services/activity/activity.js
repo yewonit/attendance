@@ -7,6 +7,7 @@ import {
 	NotFoundError,
 	ValidationError,
 } from "../../utils/errors.js";
+import { updateUserAttendanceAggregate, updateUserAttendanceAggregateWhenChanged } from "./modules/updateAggregate.js";
 
 // TODO: organization의 활동 관련 서비스 구현
 const activityService = {
@@ -264,19 +265,27 @@ const activityService = {
 					);
 				}
 
-				await Promise.all(
-					attendances.map((attendance) => {
-						return models.Attendance.create(
-							{
-								activity_id: activity.id,
-								user_id: attendance.userId,
-								attendance_status: attendance.status,
-								description: attendance.note,
-							},
-							{ transaction: t }
-						);
-					})
-				);
+			await Promise.all(
+				attendances.map(async (attendance) => {
+					await models.Attendance.create(
+						{
+							activity_id: activity.id,
+							user_id: attendance.userId,
+							attendance_status: attendance.status,
+							description: attendance.note,
+						},
+						{ transaction: t }
+					);
+
+					// user_attendance_aggregate 업데이트
+					await updateUserAttendanceAggregate(
+						attendance.userId,
+						template.name || activityData.name,
+						attendance.status,
+						t
+					);
+				})
+			);
 			});
 		} catch (error) {
 			throw new DataCreationError("활동 정보 저장 중 에러 발생 : ", error);
@@ -365,6 +374,22 @@ const activityService = {
 								description: attendance.note || null,
 							},
 							{ transaction: t }
+						);
+
+						await updateUserAttendanceAggregateWhenChanged(
+							attendance.userId,
+							activity.name,
+							attendance.status,
+							t
+						);
+					}
+					else {
+						// user_attendance_aggregate 업데이트
+						await updateUserAttendanceAggregate(
+							attendance.userId,
+							activity.name,
+							attendance.status,
+							t
 						);
 					}
 				})
