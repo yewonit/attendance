@@ -48,6 +48,7 @@ const getWeeklyAttendanceAggregation = async (gook, group, soon) => {
 				{
 					model: models.Organization,
 					as: "organization",
+					required: true,
 					attributes: [],
 					where: { season_id: seasonId },
 				},
@@ -61,6 +62,7 @@ const getWeeklyAttendanceAggregation = async (gook, group, soon) => {
 				{
 					model: models.Organization,
 					as: "organization",
+					required: true,
 					attributes: [],
 					where: { season_id: seasonId },
 				},
@@ -76,23 +78,59 @@ const getWeeklyAttendanceAggregation = async (gook, group, soon) => {
 		// 지난 주 청년예배 활동 ID
 		activityService.get2WeeksAgoSundayYoungAdultServiceIds(organizationIdArray),
 		// 이번 주 신규 가족
-		models.User.findAll({
-			where: {
-				is_new_member: true,
-				registration_date: { [Op.gte]: oneWeekAgo },
+		models.UserRole.findAll({
+			include: [
+				{
+					model: models.User,
+					as: "user",
+					required: true,
+					where: {
+						is_new_member: true,
+						registration_date: { [Op.gte]: oneWeekAgo },
+					},
+					attributes: ["id"],
+				},
+				{
+					model: models.Organization,
+					as: "organization",
+					required: true,
+					attributes: [],
+					where: { season_id: seasonId },
+				},
+			],
+			where: { 
+				organization_id: { [Op.in]: organizationIdArray },
 			},
-			attributes: ["id"],
+			attributes: ["user_id"],
 		}),
 		// 지난 주 신규 가족
-		models.User.findAll({
-			where: {
-				is_new_member: true,
-				registration_date: {
-					[Op.gte]: twoWeeksAgo,
-					[Op.lt]: oneWeekAgo,
+		models.UserRole.findAll({
+			include: [
+				{
+					model: models.User,
+					as: "user",
+					required: true,
+					where: {
+						is_new_member: true,
+						registration_date: {
+							[Op.gte]: twoWeeksAgo,
+							[Op.lt]: oneWeekAgo,
+						},
+					},
+					attributes: ["id"],
 				},
+				{
+					model: models.Organization,
+					as: "organization",
+					required: true,
+					attributes: [],
+					where: { season_id: seasonId },
+				},
+			],
+			where: { 
+				organization_id: { [Op.in]: organizationIdArray },
 			},
-			attributes: ["id"],
+			attributes: ["user_id"],
 		}),
 	]);
 
