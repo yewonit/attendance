@@ -187,7 +187,8 @@ const getContinuousMembers = async (gook, group, soon) => {
 			const userInfo = allUserMap[userId];
 			const continuousCount = serviceData.absenceCount[userId];
 
-			if (userInfo && continuousCount >= 2) {
+			// 연속 결석자는 role이 '순원'인 경우만 집계
+			if (userInfo && userInfo.role === "순원" && continuousCount >= 2) {
 				const userData = {
 					name: userInfo.name,
 					role: userInfo.role,
