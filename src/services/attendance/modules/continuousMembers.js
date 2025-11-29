@@ -1,6 +1,6 @@
 import { Op } from "sequelize";
-import models from "../../models/models.js";
-import organizationService from "../organization/organization.js";
+import models from "../../../models/models.js";
+import organizationService from "../../organization/organization.js";
 
 const fourWeeksAgo = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000);
 

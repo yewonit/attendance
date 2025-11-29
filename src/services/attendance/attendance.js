@@ -1,11 +1,11 @@
-import getWeeklyAttendanceAggregation from "./weeklyAttendanceAggregation.js";
-import getWeeklyAttendanceGraph from "./weeklyAttendanceGraph.js";
-import getContinuousMembers from "./continuousMembers.js";
-import getYoungAdultAttendanceTrend from "./youngAdultAttendanceTrend.js";
+import getContinuousMembers from "./modules/continuousMembers.js";
 import {
 	getRecentSundayAttendance,
 	recentSundayAttendanceToExcel,
-} from "./recentSunday.js";
+} from "./modules/recentSunday.js";
+import getWeeklyAttendanceAggregation from "./modules/weeklyAttendanceAggregation.js";
+import getWeeklyAttendanceGraph from "./modules/weeklyAttendanceGraph.js";
+import getYoungAdultAttendanceTrend from "./modules/youngAdultAttendanceTrend.js";
 
 const attendanceService = {
 	getWeeklyAttendanceAggregation,

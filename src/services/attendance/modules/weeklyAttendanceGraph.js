@@ -1,6 +1,6 @@
 import { Op, col, fn } from "sequelize";
-import models from "../../models/models.js";
-import organizationService from "../organization/organization.js";
+import models from "../../../models/models.js";
+import organizationService from "../../organization/organization.js";
 
 const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
@@ -260,19 +260,19 @@ const getWeeklyAttendanceGraph = async (gook, group, soon) => {
 	const attendanceYAxisMax =
 		attendanceCounts.length > 0
 			? Math.floor(
-					Math.max(
-						...attendanceCounts.map((data) =>
-							Math.max(
-								data.sunday,
-								data.sundayYoungAdult,
-								data.wednesdayYoungAdult,
-								data.fridayYoungAdult
-							)
+				Math.max(
+					...attendanceCounts.map((data) =>
+						Math.max(
+							data.sunday,
+							data.sundayYoungAdult,
+							data.wednesdayYoungAdult,
+							data.fridayYoungAdult
 						)
-					) / 10
-			  ) *
-					10 +
-			  10
+					)
+				) / 10
+			) *
+			10 +
+			10
 			: 10;
 
 	return {

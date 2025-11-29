@@ -1,8 +1,8 @@
 import { Op } from "sequelize";
-import models from "../../models/models.js";
-import { getCurrentSeasonId } from "../../utils/season.js";
-import activityService from "../activity/activity.js";
-import organizationService from "../organization/organization.js";
+import models from "../../../models/models.js";
+import { getCurrentSeasonId } from "../../../utils/season.js";
+import activityService from "../../activity/activity.js";
+import organizationService from "../../organization/organization.js";
 
 const seasonId = getCurrentSeasonId();
 const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -98,7 +98,7 @@ const getWeeklyAttendanceAggregation = async (gook, group, soon) => {
 					where: { season_id: seasonId },
 				},
 			],
-			where: { 
+			where: {
 				organization_id: { [Op.in]: organizationIdArray },
 			},
 			attributes: ["user_id"],
@@ -127,7 +127,7 @@ const getWeeklyAttendanceAggregation = async (gook, group, soon) => {
 					where: { season_id: seasonId },
 				},
 			],
-			where: { 
+			where: {
 				organization_id: { [Op.in]: organizationIdArray },
 			},
 			attributes: ["user_id"],

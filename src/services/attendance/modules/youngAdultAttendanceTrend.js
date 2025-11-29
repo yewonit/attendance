@@ -1,5 +1,5 @@
 import { Op, col, fn } from "sequelize";
-import models from "../../models/models.js";
+import models from "../../../models/models.js";
 
 /**
  * 청년예배 출석 트렌드를 조회하는 메서드
@@ -80,7 +80,7 @@ const getYoungAdultAttendanceTrend = async () => {
 		const weekNumber = Math.ceil(
 			(sundayDate.getDate() +
 				new Date(sundayDate.getFullYear(), sundayDate.getMonth(), 0).getDay()) /
-				7
+			7
 		);
 
 		weeklyData.push({
