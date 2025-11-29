@@ -1,6 +1,6 @@
 import { Op, col, fn } from "sequelize";
-import models from "../../models/models.js";
-import organizationService from "../organization/organization.js";
+import models from "../../../models/models.js";
+import organizationService from "../../organization/organization.js";
 
 const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
@@ -17,7 +17,79 @@ const buildServiceData = (
 		fridayYoungAdult,
 	};
 };
-const initServiceData = buildServiceData(0, 0, 0, 0);
+
+
+/**
+ * 연간 출석 평균을 계산하는 함수
+ * 지정된 조직들의 1년간 데이터를 조회하여 각 예배별 주간 평균 출석을 계산합니다.
+ *
+ * @param {Array<number>} organizationIds - 조직 ID 배열
+ * @returns {Object} 각 예배별 연간 평균 출석 수
+ */
+const getAnnualAttendanceAverageOfOrganization = async (organizationIds) => {
+	// 1년 전 날짜 계산
+	const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+
+	// 1년간의 출석 데이터 조회
+	const annualAttendanceData = await models.Activity.findAll({
+		attributes: [
+			"name",
+			[fn("DATE", col("start_time")), "activity_date"],
+			[fn("COUNT", col("attendances.id")), "count"],
+		],
+		include: [
+			{
+				model: models.Attendance,
+				as: "attendances",
+				attributes: [],
+				required: true,
+				where: { attendance_status: "출석" },
+			},
+		],
+		where: {
+			organization_id: { [Op.in]: organizationIds },
+			start_time: { [Op.gt]: oneYearAgo },
+		},
+		group: ["Activity.name", fn("DATE", col("start_time"))],
+		raw: true,
+	});
+
+	// 예배별로 주차별 출석 수를 저장할 맵
+	const serviceWeeklyData = {
+		sunday: [], // 주일예배
+		sundayYoungAdult: [], // 청년예배
+		wednesdayYoungAdult: [], // 수요청년예배
+		fridayYoungAdult: [], // 금요청년예배
+	};
+
+	// 데이터를 예배별로 분류
+	annualAttendanceData.forEach((att) => {
+		const count = parseInt(att.count, 10);
+		if (att.name === "주일2부예배" || att.name === "주일3부예배") {
+			serviceWeeklyData.sunday.push(count);
+		} else if (att.name === "청년예배") {
+			serviceWeeklyData.sundayYoungAdult.push(count);
+		} else if (att.name === "수요청년예배") {
+			serviceWeeklyData.wednesdayYoungAdult.push(count);
+		} else if (att.name === "금요청년예배") {
+			serviceWeeklyData.fridayYoungAdult.push(count);
+		}
+	});
+
+	// 각 예배별 평균 계산
+	const calculateAverage = (dataArray) => {
+		if (dataArray.length === 0) return 0;
+		const sum = dataArray.reduce((acc, val) => acc + val, 0);
+		return Math.floor(sum / dataArray.length);
+	};
+
+	return buildServiceData(
+		calculateAverage(serviceWeeklyData.sunday),
+		calculateAverage(serviceWeeklyData.sundayYoungAdult),
+		calculateAverage(serviceWeeklyData.wednesdayYoungAdult),
+		calculateAverage(serviceWeeklyData.fridayYoungAdult)
+	);
+}
 
 /**
  * 주간 출석 그래프 데이터를 조회하는 메서드
@@ -173,39 +245,34 @@ const getWeeklyAttendanceGraph = async (gook, group, soon) => {
 			attendanceAggregationSum.fridayYoungAdult += att.count;
 	});
 
-	// 평균 계산
-	const orgCount = attendanceCounts.length;
-	if (orgCount > 0) {
-		attendanceAggregationAverage.sunday = Math.floor(
-			attendanceAggregationSum.sunday / orgCount
-		);
-		attendanceAggregationAverage.sundayYoungAdult = Math.floor(
-			attendanceAggregationSum.sundayYoungAdult / orgCount
-		);
-		attendanceAggregationAverage.wednesdayYoungAdult = Math.floor(
-			attendanceAggregationSum.wednesdayYoungAdult / orgCount
-		);
-		attendanceAggregationAverage.fridayYoungAdult = Math.floor(
-			attendanceAggregationSum.fridayYoungAdult / orgCount
-		);
-	}
+	// 평균 계산 - 연간 출석 평균 사용 (매주 예배별 출석의 평균)
+	const annualAverage = await getAnnualAttendanceAverageOfOrganization(
+		organizationIds
+	);
+	attendanceAggregationAverage.sunday = annualAverage.sunday;
+	attendanceAggregationAverage.sundayYoungAdult =
+		annualAverage.sundayYoungAdult;
+	attendanceAggregationAverage.wednesdayYoungAdult =
+		annualAverage.wednesdayYoungAdult;
+	attendanceAggregationAverage.fridayYoungAdult =
+		annualAverage.fridayYoungAdult;
 
 	const attendanceYAxisMax =
 		attendanceCounts.length > 0
 			? Math.floor(
-					Math.max(
-						...attendanceCounts.map((data) =>
-							Math.max(
-								data.sunday,
-								data.sundayYoungAdult,
-								data.wednesdayYoungAdult,
-								data.fridayYoungAdult
-							)
+				Math.max(
+					...attendanceCounts.map((data) =>
+						Math.max(
+							data.sunday,
+							data.sundayYoungAdult,
+							data.wednesdayYoungAdult,
+							data.fridayYoungAdult
 						)
-					) / 10
-			  ) *
-					10 +
-			  10
+					)
+				) / 10
+			) *
+			10 +
+			10
 			: 10;
 
 	return {

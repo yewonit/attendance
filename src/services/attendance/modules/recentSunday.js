@@ -1,5 +1,5 @@
-import { sequelize } from "../../utils/database.js";
 import ExcelJS from "exceljs";
+import { sequelize } from "../../../utils/database.js";
 
 const getRecentSunday = () => {
 	const today = new Date();
@@ -92,8 +92,8 @@ const recentSundayAttendanceToExcel = async (sundayAttendance) => {
 				key === "organization_name"
 					? "조직"
 					: key === "user_name"
-					? "이름"
-					: key,
+						? "이름"
+						: key,
 			key: key,
 			width: 20,
 		}));
@@ -124,8 +124,8 @@ const recentSundayAttendanceToExcel = async (sundayAttendance) => {
 					key === "organization_name"
 						? "조직"
 						: key === "user_name"
-						? "이름"
-						: key,
+							? "이름"
+							: key,
 				key: key,
 				width: 20,
 			}));
