@@ -1,6 +1,6 @@
+import { Op } from "sequelize";
 import models from "../../../models/models.js";
 import { ValidationError } from "../../../utils/errors.js";
-import { Op } from "sequelize";
 
 // 조직 생성을 위한 헬퍼 함수
 const findOrCreateOrganization = async (name, upperOrgId, seasonId, transaction) => {
@@ -148,7 +148,7 @@ const createUserRole = async (item, organizationId, allUsers, allRoles, transact
     }
 
     if (!user) {
-      throw new ValidationError(`${item} 한 명으로 특정이 불가능합니다.`);
+      throw new ValidationError(`${item.name} ${item.phone_number} 한 명으로 특정이 불가능합니다.`);
     }
   } else {
     user = users[0];
