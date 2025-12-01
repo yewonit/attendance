@@ -34,7 +34,13 @@ const seasonService = {
    */
   getNextOrganization: async (name, userId) => {
     const currentSeason = getCurrentSeasonId();
-    const nextSeason = currentSeason + 1;
+    const now = new Date();
+    
+    // 12월의 첫째 주 확인 (12월 1일~7일)
+    const isFirstWeekOfDecember = now.getMonth() === 11 && now.getDate() <= 7;
+    
+    // 일주일의 유예기간
+    const nextSeason = isFirstWeekOfDecember ? currentSeason : currentSeason + 1;
 
     // 다음 회기 존재 여부 확인
     const season = await models.Season.findOne({
