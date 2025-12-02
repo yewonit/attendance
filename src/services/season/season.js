@@ -2,10 +2,10 @@ import { Op } from "sequelize";
 import models from "../../models/models.js";
 import { sequelize } from "../../utils/database.js";
 import { NotFoundError } from "../../utils/errors.js";
-import { validateNewSeasonData } from "./modules/validate.js";
 import { createNewSeason } from "./modules/createNewSeason.js";
-import { deleteBeforeCreateOrganization } from "./modules/deleteBeforeCreateOrganization.js";
 import { createOrganizationAndUserRole } from "./modules/createOrganizationAndUserRole.js";
+import { deleteBeforeCreateOrganization } from "./modules/deleteBeforeCreateOrganization.js";
+import { validateNewSeasonData } from "./modules/validate.js";
 
 const seasonService = {
   createNewSeason: async (data) => {
@@ -32,14 +32,7 @@ const seasonService = {
    * @throws {NotFoundError} 다음 회기가 없거나 사용자를 찾을 수 없는 경우
    */
   getNextOrganization: async (name, userId) => {
-    const currentSeason = getCurrentSeasonId();
-    const now = new Date();
-    
-    // 12월의 첫째 주 확인 (12월 1일~7일)
-    const isFirstWeekOfDecember = now.getMonth() === 11 && now.getDate() <= 7;
-    
-    // 일주일의 유예기간
-    const nextSeason = isFirstWeekOfDecember ? currentSeason : currentSeason + 1;
+    const nextSeason = this.getCurrentSeasonId() + 1;
 
     // 다음 회기 존재 여부 확인
     const season = await models.Season.findOne({
