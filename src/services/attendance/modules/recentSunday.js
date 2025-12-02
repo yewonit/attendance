@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import { sequelize } from "../../../utils/database.js";
+import seasonService from "../../season/season.js";
 
 const getRecentSunday = () => {
 	const today = new Date();
@@ -28,6 +29,7 @@ const formatDateShort = (date) => {
 };
 
 const getRecentSundayAttendance = async () => {
+	const seasonId = await seasonService.getCurrentSeasonId();
 	const recentSunday = getRecentSunday();
 	const dateStr = formatDate(recentSunday);
 	const shortDateStr = formatDateShort(recentSunday);
@@ -55,7 +57,7 @@ const getRecentSundayAttendance = async () => {
         AND a.start_time >= :startDate
         AND a.start_time < :endDate
         AND a.is_deleted = 0
-    WHERE u.is_deleted = 0
+    WHERE u.is_deleted = 0 AND o.season_id = :seasonId
     GROUP BY o.name, u.id, u.name
     ORDER BY o.name, u.id;
   `;
@@ -64,6 +66,7 @@ const getRecentSundayAttendance = async () => {
 		replacements: {
 			startDate: `${dateStr} 00:00:00`,
 			endDate: `${nextDayStr} 00:00:00`,
+			seasonId: seasonId,
 		},
 	});
 
