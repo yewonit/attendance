@@ -31,8 +31,9 @@ const seasonService = {
    * @returns {Promise<Array<Object>>} 사용자들의 조직 정보 및 조직 구성원 목록 배열
    * @throws {NotFoundError} 다음 회기가 없거나 사용자를 찾을 수 없는 경우
    */
-  getNextOrganization: async (name, userId) => {
-    const nextSeason = this.getCurrentSeasonId() + 1;
+  async getNextOrganization(name, userId) {
+    const currentSeasonId = await this.getCurrentSeasonId();
+    const nextSeason = currentSeasonId + 1;
 
     // 다음 회기 존재 여부 확인
     const season = await models.Season.findOne({
@@ -271,7 +272,7 @@ const seasonService = {
     return orgList;
   },
 
-  getCurrentSeasonId: async () => {
+  async getCurrentSeasonId() {
     const now = new Date();
     const currentSeason = await models.Season.findOne({
       where: {
