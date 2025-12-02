@@ -2,7 +2,6 @@ import { Op } from "sequelize";
 import models from "../../models/models.js";
 import { sequelize } from "../../utils/database.js";
 import { NotFoundError } from "../../utils/errors.js";
-import { getCurrentSeasonId } from "../../utils/season.js";
 import { validateNewSeasonData } from "./modules/validate.js";
 import { createNewSeason } from "./modules/createNewSeason.js";
 import { deleteBeforeCreateOrganization } from "./modules/deleteBeforeCreateOrganization.js";
@@ -278,6 +277,26 @@ const seasonService = {
 
     return orgList;
   },
+
+  getCurrentSeasonId: async () => {
+    const now = new Date();
+    const currentSeason = await models.Season.findOne({
+      where: {
+        is_deleted: false,
+        start_date: {
+          [Op.lte]: now,
+        },
+        end_date: {
+          [Op.gte]: now,
+        },
+      },
+      attributes: ["id"],
+    });
+    if (!currentSeason) {
+      throw new NotFoundError("현재 회기를 찾을 수 없습니다.");
+    }
+    return currentSeason.id;
+  }
 };
 
 export default seasonService;

@@ -17,6 +17,20 @@ export default (sequelize, Sequelize) => {
 				allowNull: false,
 				comment: "시즌 이름",
 			},
+			start_date: {
+				type: Sequelize.DATE,
+				allowNull: false,
+				comment: "시즌 시작 일자",
+			},
+			end_date: {
+				type: Sequelize.DATE,
+				allowNull: false,
+				comment: "시즌 종료 일자",
+			},
+			end_delay: {
+				type: Sequelize.DATE,
+				comment: "종료 지연 일자",
+			},
 			is_deleted: {
 				type: Sequelize.BOOLEAN,
 				allowNull: false,

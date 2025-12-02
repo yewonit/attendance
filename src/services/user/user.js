@@ -6,7 +6,7 @@ import {
 	ValidationError,
 } from "../../utils/errors.js";
 import { hashPassword } from "../../utils/password.js";
-import { getCurrentSeasonId } from "../../utils/season.js";
+import seasonService from "../season/season.js";
 import crudService from "../common/crud.js";
 import { sequelize } from "../../utils/database.js";
 import { buildOrganizationNamePattern, parseOrganizationName } from "../../utils/organization.js";
@@ -230,7 +230,7 @@ const userService = {
 		}
 
 		const userIds = users.map((u) => u.id);
-		const currentSeason = getCurrentSeasonId();
+		const currentSeason = await seasonService.getCurrentSeasonId();
 
 		// 2️⃣ 모든 사용자의 역할 및 조직 정보를 일괄 조회
 		const userRoles = await models.UserRole.findAll({
@@ -363,7 +363,7 @@ const userService = {
 	 * TODO: 페이지네이션 추가 고려 (새가족이 매우 많아질 경우)
 	 */
 	getAllNewMembers: async () => {
-		const currentSeason = getCurrentSeasonId();
+		const currentSeason = await seasonService.getCurrentSeasonId();
 
 		// UserRole을 통해 User, Role, Organization 정보를 한 번에 조회
 		const newMembers = await models.UserRole.findAll({
@@ -437,7 +437,7 @@ const userService = {
 		});
 	},
 	changeOrganization: async (id, organizationId, roleName) => {
-		const currentSeason = getCurrentSeasonId();
+		const currentSeason = await seasonService.getCurrentSeasonId();
 		
 		const userRole = await models.UserRole.findOne({
 			where: { user_id: id},
@@ -503,7 +503,7 @@ const userService = {
 		const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
 		const offset = (pageNum - 1) * limitNum;
 
-		const currentSeason = getCurrentSeasonId();
+		const currentSeason = await seasonService.getCurrentSeasonId();
 
 		// 기본 WHERE 조건 구성
 		const userWhere = {
@@ -662,7 +662,7 @@ const userService = {
 };
 
 const getRoleAndOrganization = async (userId) => {
-	const currentSeason = getCurrentSeasonId();
+	const currentSeason = await seasonService.getCurrentSeasonId();
 
 	const result = await models.UserRole.findAll({
 		include: [
@@ -747,7 +747,7 @@ const findHighestRole = (userRoles) => {
 };
 
 const getOrganizationsByRole = async (highestRole) => {
-	const seasonId = getCurrentSeasonId();
+	const seasonId = await seasonService.getCurrentSeasonId();
 	const highestRoleOrgName = highestRole.organizationName;
 	const [currentGook, currentGroup, currentSoon] =
 		highestRoleOrgName.split("_");

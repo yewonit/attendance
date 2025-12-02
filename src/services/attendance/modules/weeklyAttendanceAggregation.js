@@ -1,10 +1,10 @@
 import { Op } from "sequelize";
 import models from "../../../models/models.js";
-import { getCurrentSeasonId } from "../../../utils/season.js";
+import seasonService from "../../season/season.js";
 import activityService from "../../activity/activity.js";
 import organizationService from "../../organization/organization.js";
 
-const seasonId = getCurrentSeasonId();
+const seasonId = seasonService.getCurrentSeasonId();
 const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
 
