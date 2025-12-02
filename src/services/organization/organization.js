@@ -4,7 +4,7 @@ import { Op } from "sequelize";
 import models from "../../models/models.js";
 import { NotFoundError } from "../../utils/errors.js";
 import { getOrganizationNamePattern, parseOrganizationName } from "../../utils/organization.js";
-import { getCurrentSeasonId } from "../../utils/season.js";
+import seasonService from "../season/season.js";
 import crudService from "../common/crud.js";
 import { sequelize } from "../../utils/database.js";
 
@@ -307,7 +307,7 @@ const organizationService = {
 		return orgs;
 	},
 	getOrganizationIdsByGookAndGroup: async (gook, group, soon) => {
-		const seasonId = getCurrentSeasonId();
+		const seasonId = await seasonService.getCurrentSeasonId();
 		let name = getOrganizationNamePattern(gook, group, soon);
 		if (name) {
 			const result = await models.Organization.findAll({
@@ -334,7 +334,7 @@ const organizationService = {
 		return result;
 	},
 	getOrganizationsByGookAndGroup: async (gook, group, soon) => {
-		const seasonId = getCurrentSeasonId();
+		const seasonId = await seasonService.getCurrentSeasonId();
 		let name = getOrganizationNamePattern(gook, group, soon);
 		if (name) {
 			return await models.Organization.findAll({
@@ -375,7 +375,7 @@ const organizationService = {
 	 * TODO: 캐싱 전략 고려 (Redis, 5분 TTL 등)
 	 */
 	getAllOrganizationMemberCounts: async () => {
-		const seasonId = getCurrentSeasonId();
+		const seasonId = await seasonService.getCurrentSeasonId();
 		const result = await models.Organization.findAll({
 			attributes: [
 				["id", "organizationId"],
@@ -425,7 +425,7 @@ const organizationService = {
 	 * @returns {Promise<{departments: string[], groups: string[], teams: string[]}>} 필터 옵션 목록
 	 */
 	getFilterOptions: async () => {
-		const seasonId = getCurrentSeasonId();
+		const seasonId = await seasonService.getCurrentSeasonId();
 
 		// 현재 시즌의 모든 조직 조회
 		const organizations = await models.Organization.findAll({
