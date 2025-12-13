@@ -15,6 +15,18 @@ const fourWeeksAgo = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000);
  * - 4주전: 출석, 3주전: 출석, 2주전: 결석, 1주전: 출석 → 1주 연속 출석
  * - 4주전: 결석, 3주전: 출석, 2주전: 출석, 1주전: 출석 → 3주 연속 출석
  */
+/**
+ * 날짜를 주 단위로 변환하는 함수 (월요일 기준)
+ */
+const getWeekKey = (date) => {
+	const d = new Date(date);
+	const day = d.getDay();
+	const diff = d.getDate() - day + (day === 0 ? -6 : 1); // 월요일로 조정
+	const monday = new Date(d.setDate(diff));
+	monday.setHours(0, 0, 0, 0);
+	return monday.getTime();
+};
+
 const aggregateContinuous = async (serviceAttendanceData) => {
 	const attendCount = {};
 	const absenceCount = {};
@@ -23,32 +35,58 @@ const aggregateContinuous = async (serviceAttendanceData) => {
 		(a, b) => new Date(b.start_time) - new Date(a.start_time)
 	);
 
-	const userAttendanceMap = {};
+	// 사용자별 주 단위 출석 기록을 저장할 Map
+	// { userId: { weekKey: { 출석: count, 결석: count } } }
+	const userWeekAttendanceMap = {};
 
 	sortedData.forEach((activity) => {
+		const weekKey = getWeekKey(activity.start_time);
+
 		activity.attendances.forEach((attendance) => {
 			const userId = attendance.user_id;
 			const status = attendance.attendance_status;
 
-			if (!userAttendanceMap[userId]) {
-				userAttendanceMap[userId] = [];
+			if (!userWeekAttendanceMap[userId]) {
+				userWeekAttendanceMap[userId] = {};
 			}
 
-			userAttendanceMap[userId].push({
-				status,
-				date: activity.start_time,
-			});
+			if (!userWeekAttendanceMap[userId][weekKey]) {
+				userWeekAttendanceMap[userId][weekKey] = {
+					출석: 0,
+					결석: 0,
+				};
+			}
+
+			userWeekAttendanceMap[userId][weekKey][status]++;
 		});
 	});
 
-	Object.keys(userAttendanceMap).forEach((userId) => {
-		const attendanceHistory = userAttendanceMap[userId];
+	// 각 사용자별로 주 단위 기록을 정렬하고 연속성 계산
+	Object.keys(userWeekAttendanceMap).forEach((userId) => {
+		const weekRecords = userWeekAttendanceMap[userId];
+
+		// 주 단위 기록을 날짜순으로 정렬 (최신순)
+		const sortedWeeks = Object.keys(weekRecords)
+			.map(weekKey => ({
+				weekKey: parseInt(weekKey),
+				...weekRecords[weekKey]
+			}))
+			.sort((a, b) => b.weekKey - a.weekKey);
+
+		// 각 주에 대해 출석/결석 여부 결정 (한 번이라도 출석하면 출석, 모두 결석이면 결석)
+		const weeklyStatus = sortedWeeks.map(week => ({
+			weekKey: week.weekKey,
+			status: week.출석 > 0 ? "출석" : "결석"
+		}));
+
+		// 최신 주부터 연속성 계산
+		if (weeklyStatus.length === 0) return;
 
 		let currentStreak = 0;
 		let currentStatus = null;
 
-		for (let i = 0; i < attendanceHistory.length; i++) {
-			const { status } = attendanceHistory[i];
+		for (let i = 0; i < weeklyStatus.length; i++) {
+			const { status } = weeklyStatus[i];
 
 			if (i === 0) {
 				currentStatus = status;
