@@ -28,7 +28,7 @@ router.get("", async (req, res, next) => {
 		const { filterOptions } = req.query;
 
 		// filter-options=true면 필터 옵션 반환
-		if (filterOptions === 'true') {
+		if (filterOptions) {
 			const options = await organizationService.getFilterOptions();
 			return res.status(200).json({
 				data: options
