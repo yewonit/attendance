@@ -531,64 +531,63 @@ const userService = {
 			};
 		}
 
-		// 1️⃣ 전체 개수 조회 (COUNT 쿼리)
-		const totalCount = await models.User.count({
-			where: userWhere,
-			include: [
-				{
-					model: models.UserRole,
-					as: "userRoles",
-					required: true,
-					include: [
-						{
-							model: models.Organization,
-							as: "organization",
-							required: true,
-							where: organizationWhere,
-							attributes: []
-						},
-						{
-							model: models.Role,
-							as: "role",
-							required: true,
-							where: { is_deleted: false },
-							attributes: []
-						}
-					],
-					attributes: []
-				}
-			],
-			distinct: true,
-			col: "User.id"
+		// 1️⃣ 필터링된 user_id 목록 조회 (raw SQL 쿼리 사용)
+		let userWhereClause = "u.is_deleted = 0";
+		let replacements = {};
+		
+		if (search && search.trim()) {
+			userWhereClause += " AND u.name LIKE :search";
+			replacements.search = `%${search.trim()}%`;
+		}
+		
+		let orgWhereClause = `o.season_id = :seasonId AND o.is_deleted = 0`;
+		replacements.seasonId = currentSeason;
+		
+		if (orgNamePattern) {
+			orgWhereClause += " AND o.name LIKE :orgPattern";
+			replacements.orgPattern = `${orgNamePattern}%`;
+		}
+		
+		const userQuery = `
+			SELECT DISTINCT ur.user_id
+			FROM user_role ur
+			INNER JOIN user u ON ur.user_id = u.id
+			INNER JOIN organization o ON ur.organization_id = o.id
+			INNER JOIN role r ON ur.role_id = r.id
+			WHERE ${userWhereClause}
+				AND ${orgWhereClause}
+				AND r.is_deleted = 0
+		`;
+		
+		const filteredUserRoles = await sequelize.query(userQuery, {
+			replacements,
+			type: sequelize.QueryTypes.SELECT
 		});
-
-		// 2️⃣ 구성원 목록 조회 (SELECT 쿼리)
-		const users = await models.User.findAll({
-			where: userWhere,
-			include: [
-				{
-					model: models.UserRole,
-					as: "userRoles",
-					required: true,
-					include: [
-						{
-							model: models.Organization,
-							as: "organization",
-							required: true,
-							where: organizationWhere,
-							attributes: ["id", "name"]
-						},
-						{
-							model: models.Role,
-							as: "role",
-							required: true,
-							where: { is_deleted: false },
-							attributes: ["id", "name"]
-						}
-					],
-					attributes: ["id", "user_id", "organization_id", "role_id"]
+		
+		// user_id 추출 (이미 DISTINCT로 중복 제거됨)
+		const filteredUserIds = filteredUserRoles.map(ur => ur.user_id);
+		
+		if (filteredUserIds.length === 0) {
+			return {
+				members: [],
+				pagination: {
+					currentPage: pageNum,
+					totalPages: 0,
+					totalCount: 0,
+					limit: limitNum
 				}
-			],
+			};
+		}
+
+		// 2️⃣ 전체 개수 조회
+		const totalCount = filteredUserIds.length;
+
+		// 3️⃣ 구성원 목록 조회 (필터링된 user_id로 조회)
+		const users = await models.User.findAll({
+			where: {
+				...userWhere,
+				id: { [Op.in]: filteredUserIds }
+			},
 			attributes: [
 				"id",
 				"name",
@@ -597,8 +596,47 @@ const userService = {
 			],
 			order: [["name", "ASC"]],
 			limit: limitNum,
-			offset: offset,
-			distinct: true
+			offset: offset
+		});
+
+		// 4️⃣ UserRole, Organization, Role 정보 별도 조회
+		const userIds = users.map(u => u.id);
+		
+		const userRoles = await models.UserRole.findAll({
+			where: {
+				user_id: { [Op.in]: userIds }
+			},
+			include: [
+				{
+					model: models.Organization,
+					as: "organization",
+					required: true,
+					where: organizationWhere,
+					attributes: ["id", "name"]
+				},
+				{
+					model: models.Role,
+					as: "role",
+					required: true,
+					where: { is_deleted: false },
+					attributes: ["id", "name"]
+				}
+			],
+			attributes: ["id", "user_id", "organization_id", "role_id"]
+		});
+
+		// UserRole을 user_id로 그룹화
+		const userRolesByUserId = new Map();
+		userRoles.forEach(ur => {
+			if (!userRolesByUserId.has(ur.user_id)) {
+				userRolesByUserId.set(ur.user_id, []);
+			}
+			userRolesByUserId.get(ur.user_id).push(ur);
+		});
+
+		// User에 UserRole 정보 추가
+		users.forEach(user => {
+			user.userRoles = userRolesByUserId.get(user.id) || [];
 		});
 
 		// 3️⃣ 페이지네이션 메타데이터 계산
