@@ -105,12 +105,14 @@ const organizationService = {
 	),
 
 	// 📖 전체 조직 조회
-	findOrganizations: await models.Organization.findAll({
-		where: {
-			season_id: seasonService.getCurrentSeasonId(),
-			is_deleted: false,
-		},
-	}),
+	findOrganizations: async () => {
+		return await models.Organization.findAll({
+			where: {
+				season_id: seasonService.getCurrentSeasonId(),
+				is_deleted: false,
+			},
+		});
+	},
 
 	// 🔍 특정 조직 조회
 	findOrganization: crudService.findOne(models.Organization),
