@@ -174,9 +174,31 @@ const getWeeklyAttendanceGraph = async (gook, group, soon) => {
 		});
 
 		attendanceXAxis = Array.from(gookMap.keys()).sort((a, b) => {
-			const aNum = parseInt(a.replace("국", ""));
-			const bNum = parseInt(b.replace("국", ""));
-			return aNum - bNum;
+			// "국" 제거
+			const aStr = a.replace("국", "");
+			const bStr = b.replace("국", "");
+
+			// 숫자로 시작하는지 확인
+			const aIsNum = /^\d+/.test(aStr);
+			const bIsNum = /^\d+/.test(bStr);
+
+			// 둘 다 숫자면 숫자 순으로 정렬
+			if (aIsNum && bIsNum) {
+				return parseInt(aStr) - parseInt(bStr);
+			}
+
+			// a만 숫자면 a가 앞에
+			if (aIsNum && !bIsNum) {
+				return -1;
+			}
+
+			// b만 숫자면 b가 앞에
+			if (!aIsNum && bIsNum) {
+				return 1;
+			}
+
+			// 둘 다 숫자가 아니면 알파벳 순으로 정렬
+			return aStr.localeCompare(bStr);
 		});
 		attendanceCounts = attendanceXAxis.map((gookName) => gookMap.get(gookName));
 	} else if (gook && !group) {
