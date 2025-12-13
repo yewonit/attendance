@@ -2,11 +2,11 @@
 
 import { Op } from "sequelize";
 import models from "../../models/models.js";
+import { sequelize } from "../../utils/database.js";
 import { NotFoundError } from "../../utils/errors.js";
 import { getOrganizationNamePattern, parseOrganizationName } from "../../utils/organization.js";
-import seasonService from "../season/season.js";
 import crudService from "../common/crud.js";
-import { sequelize } from "../../utils/database.js";
+import seasonService from "../season/season.js";
 
 // 📝 조직 정보 유효성 검사 함수
 const validateOrganizationData = async (data) => {
@@ -105,7 +105,15 @@ const organizationService = {
 	),
 
 	// 📖 전체 조직 조회
-	findOrganizations: crudService.findAll(models.Organization),
+	findOrganizations: async () => {
+		const organizations = await models.Organization.findAll({
+			where: {
+				season_id: seasonService.getCurrentSeasonId(),
+				is_deleted: false,
+			},
+		});
+		return organizations;
+	},
 
 	// 🔍 특정 조직 조회
 	findOrganization: crudService.findOne(models.Organization),
@@ -444,7 +452,7 @@ const organizationService = {
 
 		organizations.forEach((org) => {
 			const orgInfo = parseOrganizationName(org.name);
-			
+
 			if (orgInfo.department) {
 				departmentsSet.add(orgInfo.department);
 			}
