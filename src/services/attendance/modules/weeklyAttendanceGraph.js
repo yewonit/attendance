@@ -154,7 +154,8 @@ const getWeeklyAttendanceGraph = async (gook, group, soon) => {
 		const gookMap = new Map();
 
 		attendanceDataWithOrgName.forEach((att) => {
-			const gookMatch = att.orgName.match(/^(\d+국)/);
+			// 숫자, 한글, 알파벳으로 시작하는 국(1국, 2국, AN국, 청년1국, 기치국...) 모두 매칭
+			const gookMatch = att.orgName.match(/^([가-힣0-9A-Za-z]+국)/);
 			if (gookMatch) {
 				const gookName = gookMatch[1];
 				if (!gookMap.has(gookName)) {
