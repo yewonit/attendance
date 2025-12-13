@@ -106,12 +106,13 @@ const organizationService = {
 
 	// 📖 전체 조직 조회
 	findOrganizations: async () => {
-		return await models.Organization.findAll({
+		const organizations = await models.Organization.findAll({
 			where: {
 				season_id: seasonService.getCurrentSeasonId(),
 				is_deleted: false,
 			},
 		});
+		return organizations;
 	},
 
 	// 🔍 특정 조직 조회
