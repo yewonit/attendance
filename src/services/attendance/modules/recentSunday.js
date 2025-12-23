@@ -2,8 +2,11 @@ import ExcelJS from "exceljs";
 import { sequelize } from "../../../utils/database.js";
 import seasonService from "../../season/season.js";
 
-const getRecentSunday = () => {
-	const today = new Date();
+const getRecentSunday = (date) => {
+	let today = new Date();
+	if (date) {
+		today = new Date(date);
+	}
 	const dayOfWeek = today.getDay(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
 
 	// 오늘이 일요일이면 오늘, 아니면 지난 일요일
@@ -28,9 +31,9 @@ const formatDateShort = (date) => {
 	return `${month}-${day}`;
 };
 
-const getRecentSundayAttendance = async () => {
+const getRecentSundayAttendance = async (date) => {
 	const seasonId = await seasonService.getCurrentSeasonId();
-	const recentSunday = getRecentSunday();
+	const recentSunday = getRecentSunday(date);
 	const dateStr = formatDate(recentSunday);
 	const shortDateStr = formatDateShort(recentSunday);
 
