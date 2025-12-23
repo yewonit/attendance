@@ -2,339 +2,148 @@ import { Op } from "sequelize";
 import models from "../../../models/models.js";
 import organizationService from "../../organization/organization.js";
 
-const fourWeeksAgo = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000);
-
-/**
- * 최근 4주간의 연속 출석/결석 횟수를 계산하는 메서드
- * 최근 모임부터 역순으로 확인하여 연속성을 판단합니다.
- *
- * @param {Array} serviceAttendanceData - 특정 서비스(예배)의 출석 데이터 배열
- * @returns {Object} { attendCount: {}, absenceCount: {} } - 유저별 연속 출석/결석 횟수
- *
- * 예시:
- * - 4주전: 출석, 3주전: 출석, 2주전: 결석, 1주전: 출석 → 1주 연속 출석
- * - 4주전: 결석, 3주전: 출석, 2주전: 출석, 1주전: 출석 → 3주 연속 출석
- */
-/**
- * 날짜를 주 단위로 변환하는 함수 (월요일 기준)
- */
-const getWeekKey = (date) => {
-	const d = new Date(date);
-	const day = d.getDay();
-	const diff = d.getDate() - day + (day === 0 ? -6 : 1); // 월요일로 조정
-	const monday = new Date(d.setDate(diff));
-	monday.setHours(0, 0, 0, 0);
-	return monday.getTime();
+const ROLE_IDS = {
+	MEMBER: 5,
 };
 
-const aggregateContinuous = async (serviceAttendanceData) => {
-	const attendCount = {};
-	const absenceCount = {};
+const ACTIVITY_TYPES = {
+	SUNDAY: "주일3부예배",
+	SUNDAY_YOUNG_ADULT: "청년예배",
+	WEDNESDAY_YOUNG_ADULT: "수요청년예배",
+	FRIDAY_YOUNG_ADULT: "금요청년예배",
+};
 
-	const sortedData = serviceAttendanceData.sort(
-		(a, b) => new Date(b.start_time) - new Date(a.start_time)
-	);
+const WEEK_THRESHOLDS = {
+	FOUR_WEEKS: 4,
+	THREE_WEEKS: 3,
+	TWO_WEEKS: 2,
+};
 
-	// 사용자별 주 단위 출석 기록을 저장할 Map
-	// { userId: { weekKey: { 출석: count, 결석: count } } }
-	const userWeekAttendanceMap = {};
+const filterByCount = (dataList, count, isGreaterOrEqual = false) => {
+	return dataList
+		.filter((data) => 
+			isGreaterOrEqual 
+				? data.attendance_continuous_count >= count 
+				: data.attendance_continuous_count === count
+		)
+		.map((data) => data.user.id);
+};
 
-	sortedData.forEach((activity) => {
-		const weekKey = getWeekKey(activity.start_time);
+const filterByAbsenceCount = (dataList, count, isGreaterOrEqual = false) => {
+	return dataList
+		.filter((data) => 
+			isGreaterOrEqual 
+				? data.absence_continuous_count >= count 
+				: data.absence_continuous_count === count
+		)
+		.map((data) => data.user.id);
+};
 
-		activity.attendances.forEach((attendance) => {
-			const userId = attendance.user_id;
-			const status = attendance.attendance_status;
-
-			if (!userWeekAttendanceMap[userId]) {
-				userWeekAttendanceMap[userId] = {};
-			}
-
-			if (!userWeekAttendanceMap[userId][weekKey]) {
-				userWeekAttendanceMap[userId][weekKey] = {
-					출석: 0,
-					결석: 0,
-				};
-			}
-
-			userWeekAttendanceMap[userId][weekKey][status]++;
-		});
-	});
-
-	// 각 사용자별로 주 단위 기록을 정렬하고 연속성 계산
-	Object.keys(userWeekAttendanceMap).forEach((userId) => {
-		const weekRecords = userWeekAttendanceMap[userId];
-
-		// 주 단위 기록을 날짜순으로 정렬 (최신순)
-		const sortedWeeks = Object.keys(weekRecords)
-			.map(weekKey => ({
-				weekKey: parseInt(weekKey),
-				...weekRecords[weekKey]
-			}))
-			.sort((a, b) => b.weekKey - a.weekKey);
-
-		// 각 주에 대해 출석/결석 여부 결정 (한 번이라도 출석하면 출석, 모두 결석이면 결석)
-		const weeklyStatus = sortedWeeks.map(week => ({
-			weekKey: week.weekKey,
-			status: week.출석 > 0 ? "출석" : "결석"
-		}));
-
-		// 최신 주부터 연속성 계산
-		if (weeklyStatus.length === 0) return;
-
-		let currentStreak = 0;
-		let currentStatus = null;
-
-		for (let i = 0; i < weeklyStatus.length; i++) {
-			const { status } = weeklyStatus[i];
-
-			if (i === 0) {
-				currentStatus = status;
-				currentStreak = 1;
-			} else {
-				if (status === currentStatus) {
-					currentStreak++;
-				} else {
-					break;
-				}
-			}
-		}
-
-		if (currentStatus === "출석") {
-			attendCount[userId] = currentStreak;
-		} else if (currentStatus === "결석") {
-			absenceCount[userId] = currentStreak;
-		}
-	});
+const buildWeeklyStats = (dataList, allUserMap) => {
+	const fourWeeks = filterByCount(dataList, WEEK_THRESHOLDS.FOUR_WEEKS, true);
+	const threeWeeks = filterByCount(dataList, WEEK_THRESHOLDS.THREE_WEEKS);
+	const twoWeeks = filterByCount(dataList, WEEK_THRESHOLDS.TWO_WEEKS);
 
 	return {
-		attendCount,
-		absenceCount,
+		"4weeks": fourWeeks.map((id) => allUserMap[id]),
+		"3weeks": threeWeeks.map((id) => allUserMap[id]),
+		"2weeks": twoWeeks.map((id) => allUserMap[id]),
 	};
 };
 
-/**
- * 최근 4주간의 연속 출석/결석 멤버 정보를 조회하는 메서드 (성능 최적화 버전)
- * - 쿼리를 분리하여 Cartesian Product 문제 해결
- * - 3중 include 제거로 DB 부하 감소
- * - 필요한 데이터만 선택적으로 조회
- * 
- * 각 서비스(주일예배, 청년예배, 수요청년예배, 금요청년예배)별로 연속 출석/결석 멤버를 분류합니다.
- *
- * @param {string} gook - 구역 정보
- * @param {string} group - 그룹 정보
- * @param {string} soon - 순 정보
- * @returns {Object} 각 서비스별 연속 출석/결석 멤버 데이터
- * 
- * TODO: 캐싱 전략 고려 (4주 데이터는 변경 빈도가 낮음)
- */
 const getContinuousMembers = async (gook, group, soon) => {
 	const organizations =
 		await organizationService.getOrganizationsByGookAndGroup(gook, group, soon);
 	const organizationIds = organizations.map((org) => org.id);
-	const organizationNameMap = {};
-	organizations.forEach((org) => {
-		organizationNameMap[org.id] = org.name;
-	});
+	const organizationNameMap = organizations.reduce((map, org) => {
+		map[org.id] = org.name;
+		return map;
+	}, {});
 
-	// 1️⃣ 활동과 출석 정보만 먼저 조회 (User 정보는 제외)
-	const attendanceData = await models.Activity.findAll({
-		attributes: ["id", "name", "organization_id", "start_time"],
+	const aggregatedData = await models.UserAttendanceAggregate.findAll({
 		include: [
 			{
-				model: models.Attendance,
-				as: "attendances",
-				attributes: ["id", "user_id", "attendance_status"],
-				required: true,
-				where: { attendance_status: { [Op.in]: ["출석", "결석"] } },
-			},
-		],
-		where: {
-			organization_id: { [Op.in]: organizationIds },
-			is_deleted: false,
-			start_time: { [Op.gte]: fourWeeksAgo },
-		},
-		order: [["start_time", "DESC"]],
-	});
-
-	// 2️⃣ 출석 데이터에서 사용자 ID 목록 추출
-	const userIds = new Set();
-	attendanceData.forEach((activity) => {
-		activity.attendances.forEach((attendance) => {
-			userIds.add(attendance.user_id);
-		});
-	});
-
-	// 3️⃣ 사용자 정보와 역할 정보를 한 번에 조회
-	const users = await models.User.findAll({
-		attributes: ["id", "name"],
-		where: { id: { [Op.in]: Array.from(userIds) }, is_deleted: false },
-		include: [
-			{
-				model: models.UserRole,
-				as: "userRoles",
-				attributes: ["organization_id"],
-				required: true,
-				where: { organization_id: { [Op.in]: organizationIds } },
+				model: models.User,
+				as: "user",
+				attributes: ["id", "name"],
+				where: { is_deleted: false },
 				include: [
 					{
-						model: models.Role,
-						as: "role",
-						attributes: ["name"],
+						model: models.UserRole,
+						as: "userRoles",
+						attributes: ["organization_id"],
 						required: true,
+						where: { organization_id: { [Op.in]: organizationIds } },
+						include: [
+							{
+								model: models.Role,
+								as: "role",
+								attributes: ["name"],
+								required: true,
+								where: { role_id: ROLE_IDS.MEMBER }
+							},
+						],
 					},
 				],
-			},
-		],
-	});
-
-	// 4️⃣ 사용자 정보를 Map으로 변환 (빠른 조회를 위해)
-	const allUserMap = {};
-	users.forEach((user) => {
-		const userRoles = Array.isArray(user.userRoles) ? user.userRoles : [];
-		const primaryRole = userRoles.length > 0 ? userRoles[0] : null;
-
-		allUserMap[user.id] = {
-			name: user.name,
-			role: primaryRole?.role?.name || null,
-			organization: primaryRole ? organizationNameMap[primaryRole.organization_id] : null,
-		};
-	});
-
-	const sundayData = await aggregateContinuous(
-		attendanceData.filter((att) => att.name === "주일3부예배")
-	);
-	const sundayYoungAdultData = await aggregateContinuous(
-		attendanceData.filter((att) => att.name === "청년예배")
-	);
-	const wednesdayYoungAdultData = await aggregateContinuous(
-		attendanceData.filter((att) => att.name === "수요청년예배")
-	);
-	const fridayYoungAdultData = await aggregateContinuous(
-		attendanceData.filter((att) => att.name === "금요청년예배")
-	);
-
-	const categorizeAbsentees = (serviceData) => {
-		const result = {
-			4: [],
-			3: [],
-			2: [],
-		};
-
-		Object.keys(serviceData.absenceCount).forEach((userId) => {
-			const userInfo = allUserMap[userId];
-			const continuousCount = serviceData.absenceCount[userId];
-
-			// 연속 결석자는 role이 '순원'인 경우만 집계
-			if (userInfo && userInfo.role === "순원" && continuousCount >= 2) {
-				const userData = {
-					name: userInfo.name,
-					role: userInfo.role,
-					organization: userInfo.organization,
-				};
-
-				// 정확히 N주 연속 결석자만 해당 카테고리에 포함
-				if (continuousCount === 4) {
-					result[4].push(userData);
-				} else if (continuousCount === 3) {
-					result[3].push(userData);
-				} else if (continuousCount === 2) {
-					result[2].push(userData);
-				}
 			}
-		});
-
-		return result;
-	};
-
-	const countAttendees = (serviceData) => {
-		const result = {
-			4: [],
-			3: [],
-			2: [],
-		};
-
-		Object.keys(serviceData.attendCount).forEach((userId) => {
-			const continuousCount = serviceData.attendCount[userId];
-			const userInfo = allUserMap[userId];
-
-			// 연속 출석자는 role이 '순원'인 경우만 집계
-			if (userInfo && userInfo.role === "순원") {
-				const userData = {
-					name: userInfo.name,
-					role: userInfo.role,
-					organization: userInfo.organization,
-				};
-
-				// 정확히 N주 연속 출석자만 해당 카테고리에 포함
-				if (continuousCount === 4) {
-					result[4].push(userData);
-				} else if (continuousCount === 3) {
-					result[3].push(userData);
-				} else if (continuousCount === 2) {
-					result[2].push(userData);
-				}
-			}
-		});
-
-		return result;
-	};
-
-	const allAbsenteeData = {
-		sunday: categorizeAbsentees(sundayData),
-		sundayYoungAdult: categorizeAbsentees(sundayYoungAdultData),
-		wednesdayYoungAdult: categorizeAbsentees(wednesdayYoungAdultData),
-		fridayYoungAdult: categorizeAbsentees(fridayYoungAdultData),
-	};
-
-	const absenteeList = {
-		4: new Set(),
-		3: new Set(),
-		2: new Set(),
-	};
-
-	Object.keys(allAbsenteeData).forEach((service) => {
-		[4, 3, 2].forEach((week) => {
-			allAbsenteeData[service][week].forEach((user) => {
-				const userKey = `${user.name}-${user.organization}`;
-				absenteeList[week].add(JSON.stringify(user));
-			});
-		});
+		]
 	});
 
-	const finalAbsenteeList = {
-		4: Array.from(absenteeList[4]).map((userStr) => JSON.parse(userStr)),
-		3: Array.from(absenteeList[3]).map((userStr) => JSON.parse(userStr)),
-		2: Array.from(absenteeList[2]).map((userStr) => JSON.parse(userStr)),
+	const allUserMap = aggregatedData.reduce((map, data) => {
+		const user = data.user;
+		if (!map[user.id]) {
+			const userRoles = Array.isArray(user.userRoles) ? user.userRoles : [];
+			const primaryRole = userRoles[0] || null;
+
+			map[user.id] = {
+				name: user.name,
+				role: primaryRole?.role?.name || null,
+				organization: primaryRole ? organizationNameMap[primaryRole.organization_id] : null,
+			};
+		}
+		return map;
+	}, {});
+
+	const activityTypeMap = {
+		sunday: [],
+		sundayYoungAdult: [],
+		wednesdayYoungAdult: [],
+		fridayYoungAdult: [],
 	};
+
+	aggregatedData.forEach((data) => {
+		switch (data.activity_type) {
+			case ACTIVITY_TYPES.SUNDAY:
+				activityTypeMap.sunday.push(data);
+				break;
+			case ACTIVITY_TYPES.SUNDAY_YOUNG_ADULT:
+				activityTypeMap.sundayYoungAdult.push(data);
+				break;
+			case ACTIVITY_TYPES.WEDNESDAY_YOUNG_ADULT:
+				activityTypeMap.wednesdayYoungAdult.push(data);
+				break;
+			case ACTIVITY_TYPES.FRIDAY_YOUNG_ADULT:
+				activityTypeMap.fridayYoungAdult.push(data);
+				break;
+		}
+	});
+
+	const sundayData = activityTypeMap.sunday;
+	const fourWeeksAbsent = filterByAbsenceCount(sundayData, WEEK_THRESHOLDS.FOUR_WEEKS, true);
+	const threeWeeksAbsent = filterByAbsenceCount(sundayData, WEEK_THRESHOLDS.THREE_WEEKS);
+	const twoWeeksAbsent = filterByAbsenceCount(sundayData, WEEK_THRESHOLDS.TWO_WEEKS);
 
 	return {
 		absenteeList: {
-			"4weeks": finalAbsenteeList[4],
-			"3weeks": finalAbsenteeList[3],
-			"2weeks": finalAbsenteeList[2],
+			"4weeks": fourWeeksAbsent.map((id) => allUserMap[id]),
+			"3weeks": threeWeeksAbsent.map((id) => allUserMap[id]),
+			"2weeks": twoWeeksAbsent.map((id) => allUserMap[id]),
 		},
 		continuousAttendeeCount: {
-			sunday: {
-				"4weeks": countAttendees(sundayData)[4],
-				"3weeks": countAttendees(sundayData)[3],
-				"2weeks": countAttendees(sundayData)[2],
-			},
-			sundayYoungAdult: {
-				"4weeks": countAttendees(sundayYoungAdultData)[4],
-				"3weeks": countAttendees(sundayYoungAdultData)[3],
-				"2weeks": countAttendees(sundayYoungAdultData)[2],
-			},
-			wednesdayYoungAdult: {
-				"4weeks": countAttendees(wednesdayYoungAdultData)[4],
-				"3weeks": countAttendees(wednesdayYoungAdultData)[3],
-				"2weeks": countAttendees(wednesdayYoungAdultData)[2],
-			},
-			fridayYoungAdult: {
-				"4weeks": countAttendees(fridayYoungAdultData)[4],
-				"3weeks": countAttendees(fridayYoungAdultData)[3],
-				"2weeks": countAttendees(fridayYoungAdultData)[2],
-			},
+			sunday: buildWeeklyStats(activityTypeMap.sunday, allUserMap),
+			sundayYoungAdult: buildWeeklyStats(activityTypeMap.sundayYoungAdult, allUserMap),
+			wednesdayYoungAdult: buildWeeklyStats(activityTypeMap.wednesdayYoungAdult, allUserMap),
+			fridayYoungAdult: buildWeeklyStats(activityTypeMap.fridayYoungAdult, allUserMap),
 		},
 	};
 };
