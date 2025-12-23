@@ -62,9 +62,11 @@ router.get("/trend", async (req, res, next) => {
 });
 
 router.get("/sunday/recent/excel", async (req, res, next) => {
+	const { date } = req.query;
+
 	try {
 		const sundayAttendance =
-			await attendanceService.getRecentSundayAttendance();
+			await attendanceService.getRecentSundayAttendance(date);
 		const buffer = await attendanceService.recentSundayAttendanceToExcel(
 			sundayAttendance
 		);
