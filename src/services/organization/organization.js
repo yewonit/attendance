@@ -108,7 +108,7 @@ const organizationService = {
 	findOrganizations: async () => {
 		const organizations = await models.Organization.findAll({
 			where: {
-				season_id: seasonService.getCurrentSeasonId(),
+				season_id: await seasonService.getCurrentSeasonId(),
 				is_deleted: false,
 			},
 		});
