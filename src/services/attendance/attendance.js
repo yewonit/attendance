@@ -3,6 +3,10 @@ import {
 	getRecentSundayAttendance,
 	recentSundayAttendanceToExcel,
 } from "./modules/recentSunday.js";
+import {
+	getRecentWednesdayAttendance,
+	recentWednesdayAttendanceToExcel,
+} from "./modules/recentWednesday.js";
 import getWeeklyAttendanceAggregation from "./modules/weeklyAttendanceAggregation.js";
 import getWeeklyAttendanceGraph from "./modules/weeklyAttendanceGraph.js";
 import getYoungAdultAttendanceTrend from "./modules/youngAdultAttendanceTrend.js";
@@ -19,6 +23,10 @@ const attendanceService = {
 	getRecentSundayAttendance,
 
 	recentSundayAttendanceToExcel,
+
+	getRecentWednesdayAttendance,
+
+	recentWednesdayAttendanceToExcel,
 };
 
 export default attendanceService;
