@@ -84,4 +84,27 @@ router.get("/sunday/recent/excel", async (req, res, next) => {
 	}
 });
 
+router.get("/wednesday/recent/excel", async (req, res, next) => {
+	const { date } = req.query;
+
+	try {
+		const wednesdayAttendance =
+			await attendanceService.getRecentWednesdayAttendance(date);
+		const buffer = await attendanceService.recentWednesdayAttendanceToExcel(
+			wednesdayAttendance
+		);
+		res.setHeader(
+			"Content-Type",
+			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+		);
+		res.setHeader(
+			"Content-Disposition",
+			"attachment; filename=recent_wednesday_attendance.xlsx"
+		);
+		res.send(buffer);
+	} catch (error) {
+		next(error);
+	}
+});
+
 export default router;
