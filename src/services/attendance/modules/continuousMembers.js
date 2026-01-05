@@ -51,6 +51,16 @@ const buildWeeklyStats = (dataList, allUserMap) => {
 	};
 };
 
+/**
+ * 연속 출석/결석 현황 조회
+ * 특정 국/구역/순의 조직에 속한 멤버들의 출석 집계 데이터를 조회하여
+ * 연속 출석자 및 결석자 리스트를 반환합니다.
+ * 
+ * @param {string} gook - 국 이름
+ * @param {string} group - 구역 이름
+ * @param {string} soon - 순 이름
+ * @returns {Promise<Object>} 연속 결석자 리스트와 활동별 연속 출석자 현황
+ */
 const getContinuousMembers = async (gook, group, soon) => {
 	const organizations =
 		await organizationService.getOrganizationsByGookAndGroup(gook, group, soon);
@@ -60,7 +70,9 @@ const getContinuousMembers = async (gook, group, soon) => {
 		return map;
 	}, {});
 
+	// 깊은 nested include 구조에서 서브쿼리 문제 방지를 위해 subQuery: false 옵션 추가
 	const aggregatedData = await models.UserAttendanceAggregate.findAll({
+		subQuery: false,
 		include: [
 			{
 				model: models.User,
@@ -71,16 +83,19 @@ const getContinuousMembers = async (gook, group, soon) => {
 					{
 						model: models.UserRole,
 						as: "userRoles",
-						attributes: ["organization_id"],
+						attributes: ["organization_id", "role_id"],
 						required: true,
-						where: { organization_id: { [Op.in]: organizationIds } },
+						where: {
+							organization_id: { [Op.in]: organizationIds },
+							// role_id 조건을 UserRole 테이블에서 직접 체크 (Role 테이블의 PK는 id임)
+							role_id: ROLE_IDS.MEMBER
+						},
 						include: [
 							{
 								model: models.Role,
 								as: "role",
-								attributes: ["name"],
-								required: true,
-								where: { role_id: ROLE_IDS.MEMBER }
+								attributes: ["id", "name"],
+								required: false,
 							},
 						],
 					},
