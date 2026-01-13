@@ -280,9 +280,10 @@ const getWeeklyAttendanceGraph = async (gook, group, soon) => {
 	attendanceAggregationAverage.fridayYoungAdult =
 		annualAverage.fridayYoungAdult;
 
+	// Y축 최대값을 50 단위로 올림하여 계산 (예: 156 → 200, 234 → 250)
 	const attendanceYAxisMax =
 		attendanceCounts.length > 0
-			? Math.floor(
+			? Math.ceil(
 				Math.max(
 					...attendanceCounts.map((data) =>
 						Math.max(
@@ -292,11 +293,9 @@ const getWeeklyAttendanceGraph = async (gook, group, soon) => {
 							data.fridayYoungAdult
 						)
 					)
-				) / 10
-			) *
-			10 +
-			10
-			: 10;
+				) / 50
+			) * 50
+			: 50;
 
 	return {
 		attendanceXAxis,
