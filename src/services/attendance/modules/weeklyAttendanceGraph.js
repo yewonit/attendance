@@ -294,7 +294,7 @@ const getWeeklyAttendanceGraph = async (gook, group, soon) => {
 						)
 					)
 				) / 50
-			) * 50
+			) * 50 + 50
 			: 50;
 
 	return {
