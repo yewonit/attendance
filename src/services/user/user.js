@@ -32,7 +32,7 @@ const userService = {
 			where: {
 				name: userData.name,
 				phone_number: formatPhoneNumber(userData.phone_number),
-				is_deleted: "N",
+				is_deleted: false,
 			},
 		});
 		if (userExists) {
@@ -220,7 +220,7 @@ const userService = {
 				name: {
 					[Op.like]: `%${decodedName}%`,
 				},
-				is_deleted: "N",
+				is_deleted: false,
 			},
 			attributes: ["id", "name", "email", "phone_number"],
 		});
@@ -558,8 +558,7 @@ const userService = {
 					attributes: []
 				}
 			],
-			distinct: true,
-			col: "User.id"
+			distinct: true
 		});
 
 		// 2️⃣ 구성원 목록 조회 (SELECT 쿼리)
@@ -597,8 +596,7 @@ const userService = {
 			],
 			order: [["name", "ASC"]],
 			limit: limitNum,
-			offset: offset,
-			distinct: true
+			offset: offset
 		});
 
 		// 3️⃣ 페이지네이션 메타데이터 계산
