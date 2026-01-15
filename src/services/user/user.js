@@ -531,38 +531,8 @@ const userService = {
 			};
 		}
 
-		// 1️⃣ 전체 개수 조회 (COUNT 쿼리)
-		const totalCount = await models.User.count({
-			where: userWhere,
-			include: [
-				{
-					model: models.UserRole,
-					as: "userRoles",
-					required: true,
-					include: [
-						{
-							model: models.Organization,
-							as: "organization",
-							required: true,
-							where: organizationWhere,
-							attributes: []
-						},
-						{
-							model: models.Role,
-							as: "role",
-							required: true,
-							where: { is_deleted: false },
-							attributes: []
-						}
-					],
-					attributes: []
-				}
-			],
-			distinct: true
-		});
-
-		// 2️⃣ 구성원 목록 조회 (SELECT 쿼리)
-		const users = await models.User.findAll({
+		// 1️⃣ 구성원 목록 및 전체 개수 조회 (findAndCountAll 사용)
+		const { count: totalCount, rows: users } = await models.User.findAndCountAll({
 			where: userWhere,
 			include: [
 				{
@@ -596,10 +566,12 @@ const userService = {
 			],
 			order: [["name", "ASC"]],
 			limit: limitNum,
-			offset: offset
+			offset: offset,
+			distinct: true,
+			subQuery: false
 		});
 
-		// 3️⃣ 페이지네이션 메타데이터 계산
+		// 2️⃣ 페이지네이션 메타데이터 계산
 		const totalPages = Math.ceil(totalCount / limitNum);
 		const pagination = {
 			currentPage: pageNum,
