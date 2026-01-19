@@ -817,7 +817,7 @@ const getOrganizationsByRole = async (highestRole, userId) => {
 		const [upperGook, upperGroup] = upperOrgName.split("_");
 
 		result.gook.push(upperGook.slice(0, -1));
-		result.group.push(upperGroup.slice(0, -2));
+		result.group.push([upperGroup.slice(0, -2)]);
 		return result;
 	}
 
@@ -829,7 +829,7 @@ const getOrganizationsByRole = async (highestRole, userId) => {
 	switch (highestRole.roleName) {
 		case "그룹장":
 			result.gook.push(currentGook.slice(0, -1));
-			result.group.push(currentGroup.slice(0, -2));
+			result.group.push([currentGroup.slice(0, -2)]);
 			return result;
 
 		case "국장":
