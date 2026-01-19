@@ -301,18 +301,30 @@ const userService = {
 	 * @param {string} email - 사용자 이메일
 	 * @param {string} name - 사용자 이름
 	 * @returns {Array} 접근 가능한 조직 목록
+	 * @description
+	 * - 어드민 계정(user id: 2520, 2519, 2518, 2517)은 is_deleted 체크를 건너뜀
 	 */
 	getAccessibleOrganizations: async (email, name) => {
-		// 이메일과 이름으로 사용자 찾기
+		// 이메일과 이름으로 사용자 찾기 (어드민 계정은 is_deleted 체크 제외)
+		const userWhere = {
+			email: email,
+			name: name,
+		};
+
+		// 먼저 사용자 조회 (is_deleted 체크 없이)
 		const user = await models.User.findOne({
-			where: {
-				email: email,
-				name: name,
-				is_deleted: false,
-			},
+			where: userWhere,
 		});
 
 		if (!user) {
+			throw new NotFoundError("사용자를 찾을 수 없습니다.");
+		}
+
+		// 어드민 계정 여부 확인
+		const isAdmin = ADMIN_USER_IDS.includes(user.id);
+
+		// 어드민이 아니고 is_deleted가 true인 경우 에러
+		if (!isAdmin && user.is_deleted) {
 			throw new NotFoundError("사용자를 찾을 수 없습니다.");
 		}
 
@@ -326,8 +338,8 @@ const userService = {
 		// 가장 높은 권한의 역할 찾기
 		const highestRole = findHighestRole(userRoles);
 
-		// 역할에 따라 접근 가능한 조직 반환
-		return await getOrganizationsByRole(highestRole);
+		// 역할에 따라 접근 가능한 조직 반환 (userId 전달)
+		return await getOrganizationsByRole(highestRole, user.id);
 	},
 
 	/**
@@ -722,7 +734,15 @@ const findHighestRole = (userRoles) => {
 	});
 };
 
-const getOrganizationsByRole = async (highestRole) => {
+/**
+ * 역할에 따라 접근 가능한 조직 목록 조회
+ * @param {Object} highestRole - 가장 높은 권한의 역할 정보
+ * @param {number} userId - 사용자 ID (어드민 체크용)
+ * @returns {Promise<Object>} 접근 가능한 조직 목록
+ * @description
+ * - 어드민 계정(user id: 2520, 2519, 2518, 2517)은 is_deleted 체크를 건너뜀
+ */
+const getOrganizationsByRole = async (highestRole, userId) => {
 	const seasonId = await seasonService.getCurrentSeasonId();
 	const highestRoleOrgName = highestRole.organizationName;
 	const [currentGook, currentGroup, currentSoon] =
@@ -730,11 +750,20 @@ const getOrganizationsByRole = async (highestRole) => {
 	const organizationNameDto = (gook, group) => {
 		return { gook, group };
 	};
+
+	// 어드민 계정 여부 확인
+	const isAdmin = ADMIN_USER_IDS.includes(userId);
+
+	// Organization 조회 조건 구성 (어드민 계정은 is_deleted 체크 제외)
+	const organizationWhere = {
+		season_id: seasonId,
+	};
+	if (!isAdmin) {
+		organizationWhere.is_deleted = false;
+	}
+
 	const organizationNames = await models.Organization.findAll({
-		where: {
-			season_id: seasonId,
-			is_deleted: false,
-		},
+		where: organizationWhere,
 		attributes: ["name"],
 	}).then((orgs) =>
 		orgs.map((org) => {
