@@ -143,10 +143,10 @@ const getContinuousMembers = async (gook, group, soon) => {
 		}
 	});
 
-	const sundayData = activityTypeMap.sunday;
-	const fourWeeksAbsent = filterByAbsenceCount(sundayData, WEEK_THRESHOLDS.FOUR_WEEKS, true);
-	const threeWeeksAbsent = filterByAbsenceCount(sundayData, WEEK_THRESHOLDS.THREE_WEEKS);
-	const twoWeeksAbsent = filterByAbsenceCount(sundayData, WEEK_THRESHOLDS.TWO_WEEKS);
+	const sundayYoungAdultData = activityTypeMap.sundayYoungAdult;
+	const fourWeeksAbsent = filterByAbsenceCount(sundayYoungAdultData, WEEK_THRESHOLDS.FOUR_WEEKS, true);
+	const threeWeeksAbsent = filterByAbsenceCount(sundayYoungAdultData, WEEK_THRESHOLDS.THREE_WEEKS);
+	const twoWeeksAbsent = filterByAbsenceCount(sundayYoungAdultData, WEEK_THRESHOLDS.TWO_WEEKS);
 
 	return {
 		absenteeList: {
