@@ -26,6 +26,11 @@ export default (sequelize, Sequelize) => {
 				defaultValue: 0,
 				comment: "정렬 순서",
 			},
+			level: {
+				type: Sequelize.INTEGER,
+				allowNull: true,
+				comment: "역할 우선순위 레벨 (낮을수록 우선순위 높음)",
+			},
 			created_at: {
 				type: Sequelize.DATE,
 				allowNull: false,

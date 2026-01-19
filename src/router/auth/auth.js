@@ -11,6 +11,7 @@ import {
 import userService from "../../services/user/user.js";
 import { AuthenticationError, ValidationError } from "../../utils/errors.js";
 import { comparePassword } from "../../utils/password.js";
+import permissionService from "../../services/permission/permission.js";
 
 const router = Router();
 
@@ -48,6 +49,7 @@ router.post("/login", async (req, res, next) => {
 		const tokens = await loginWithEmailAndPassword(email, user.name);
 
 		const userRoleAndOrganization = await userService.getUserRoleOfCurrentSeason(user.id);
+		const userPermissions = await permissionService.getUserPermissionCodes(user.id);
 
 		const userData = {
 			id: user.id,
@@ -55,6 +57,7 @@ router.post("/login", async (req, res, next) => {
 			email: user.email,
 			phoneNumber: user.phone_number,
 			roles: userRoleAndOrganization,
+			permissions: userPermissions,
 		};
 
 		res.status(200).json({
@@ -79,6 +82,7 @@ router.get("/login", async (req, res, next) => {
 		});
 
 		const userRoleAndOrganization = await userService.getUserRoleOfCurrentSeason(user.id);
+		const userPermissions = await permissionService.getUserPermissionCodes(user.id);
 
 		const userData = {
 			id: user.id,
@@ -86,6 +90,7 @@ router.get("/login", async (req, res, next) => {
 			email: user.email,
 			phoneNumber: user.phone_number,
 			roles: userRoleAndOrganization,
+			permissions: userPermissions,
 		};
 
 		res.json({
