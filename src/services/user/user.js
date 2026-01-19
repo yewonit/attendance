@@ -741,16 +741,11 @@ const findHighestRole = (userRoles) => {
  * @returns {Promise<Object>} 접근 가능한 조직 목록
  * @description
  * - 어드민 계정(user id: 2520, 2519, 2518, 2517)은 is_deleted 체크를 건너뜀
+ * - 순장/부그룹장은 상위 조직(그룹장의 조직)을 찾아서 그룹장과 동일한 접근 권한을 가짐
  */
 const getOrganizationsByRole = async (highestRole, userId) => {
 	const seasonId = await seasonService.getCurrentSeasonId();
-	const highestRoleOrgName = highestRole.organizationName;
-	const [currentGook, currentGroup, currentSoon] =
-		highestRoleOrgName.split("_");
-	const organizationNameDto = (gook, group) => {
-		return { gook, group };
-	};
-
+	
 	// 어드민 계정 여부 확인
 	const isAdmin = ADMIN_USER_IDS.includes(userId);
 
@@ -761,6 +756,10 @@ const getOrganizationsByRole = async (highestRole, userId) => {
 	if (!isAdmin) {
 		organizationWhere.is_deleted = false;
 	}
+
+	const organizationNameDto = (gook, group) => {
+		return { gook, group };
+	};
 
 	const organizationNames = await models.Organization.findAll({
 		where: organizationWhere,
@@ -778,10 +777,59 @@ const getOrganizationsByRole = async (highestRole, userId) => {
 		group: [],
 	};
 
+	// 순장/부그룹장인 경우 상위 조직(그룹장의 조직)을 찾아서 그룹장 로직 적용
+	if (highestRole.roleName === "순장" || highestRole.roleName === "부그룹장") {
+		// 현재 조직의 상위 조직 조회
+		const currentOrganization = await models.Organization.findOne({
+			where: {
+				id: highestRole.organizationId,
+				season_id: seasonId,
+			},
+			attributes: ["upper_organization_id"],
+		});
+
+		if (!currentOrganization || !currentOrganization.upper_organization_id) {
+			// 상위 조직이 없는 경우 빈 결과 반환
+			return result;
+		}
+
+		// 상위 조직(그룹장의 조직) 조회
+		const upperOrgWhere = {
+			id: currentOrganization.upper_organization_id,
+			season_id: seasonId,
+		};
+		if (!isAdmin) {
+			upperOrgWhere.is_deleted = false;
+		}
+
+		const upperOrganization = await models.Organization.findOne({
+			where: upperOrgWhere,
+			attributes: ["name"],
+		});
+
+		if (!upperOrganization) {
+			// 상위 조직을 찾을 수 없는 경우 빈 결과 반환
+			return result;
+		}
+
+		// 상위 조직의 이름을 파싱하여 그룹장과 동일한 로직 적용
+		const upperOrgName = upperOrganization.name;
+		const [upperGook, upperGroup] = upperOrgName.split("_");
+
+		result.gook.push(upperGook.slice(0, -1));
+		result.group.push(upperGroup.slice(0, -2));
+		return result;
+	}
+
+	// 그룹장 및 기타 역할 처리
+	const highestRoleOrgName = highestRole.organizationName;
+	const [currentGook, currentGroup, currentSoon] =
+		highestRoleOrgName.split("_");
+
 	switch (highestRole.roleName) {
 		case "그룹장":
 			result.gook.push(currentGook.slice(0, -1));
-			result.group.push(currentGroup.slice(0 - 2));
+			result.group.push(currentGroup.slice(0, -2));
 			return result;
 
 		case "국장":
