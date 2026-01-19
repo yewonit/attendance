@@ -631,26 +631,39 @@ const userService = {
 	},
 };
 
+const ADMIN_USER_IDS = [2520, 2519, 2518, 2517];
+
 const getRoleAndOrganization = async (userId) => {
 	const currentSeason = await seasonService.getCurrentSeasonId();
+
+	// 어드민 계정 여부 확인
+	const isAdmin = ADMIN_USER_IDS.includes(userId);
+
+	// Role과 Organization의 where 조건 구성 (어드민 계정은 is_deleted 체크 제외)
+	const roleWhere = {};
+	if (!isAdmin) {
+		roleWhere.is_deleted = false;
+	}
+
+	const organizationWhere = {
+		season_id: currentSeason,
+	};
+	if (!isAdmin) {
+		organizationWhere.is_deleted = false;
+	}
 
 	const result = await models.UserRole.findAll({
 		include: [
 			{
 				model: models.Role,
 				as: "role",
-				where: {
-					is_deleted: false,
-				},
+				where: roleWhere,
 				attributes: ["id", "name", "level"],
 			},
 			{
 				model: models.Organization,
 				as: "organization",
-				where: {
-					season_id: currentSeason,
-					is_deleted: false,
-				},
+				where: organizationWhere,
 				attributes: ["id", "name"],
 			},
 		],
