@@ -642,7 +642,7 @@ const getRoleAndOrganization = async (userId) => {
 				where: {
 					is_deleted: false,
 				},
-				attributes: ["id", "name"],
+				attributes: ["id", "name", "level"],
 			},
 			{
 				model: models.Organization,
@@ -665,6 +665,7 @@ const getRoleAndOrganization = async (userId) => {
 
 	const rolesWithOrganization = result.map((userRole) => ({
 		roleName: userRole.role.name,
+		roleLevel: userRole.role.level,
 		organizationId: userRole.organization.id,
 		organizationName: userRole.organization.name,
 	}));
@@ -701,18 +702,10 @@ const passwordCheck = (password) => {
 };
 
 const findHighestRole = (userRoles) => {
-	const rolePriority = {
-		회장단: 4,
-		교역자: 4,
-		국장: 3,
-		그룹장: 2,
-		순장: 1,
-	};
-
 	return userRoles.reduce((highest, current) => {
-		const currentPriority = rolePriority[current.roleName] || 0;
-		const highestPriority = rolePriority[highest.roleName] || 0;
-		return currentPriority > highestPriority ? current : highest;
+		const currentLevel = current.roleLevel ?? Infinity;
+		const highestLevel = highest.roleLevel ?? Infinity;
+		return currentLevel < highestLevel ? current : highest;
 	});
 };
 
