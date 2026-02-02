@@ -1,11 +1,12 @@
 import { ValidationError } from "../../../utils/errors.js";
+import models from "../../../models/models.js";
 
-const validateNewSeasonData = (data) => {
+const validateNewSeasonData = async (data) => {
   validateGook(data);
   validateGroup(data);
   validateSoon(data);
   validatePhone(data);
-  validateRole(data);
+  await validateRole(data);
   validateBirthDate(data);
   return data
 }
@@ -106,10 +107,14 @@ const validatePhone = (data) => {
 /**
  * 역할(role) 데이터 검증 및 설정
  * - role 값이 없다면 '순원'으로 설정
- * - 있다면 정해진 역할 중 하나인지 체크
+ * - 있다면 DB의 role 테이블에 있는 역할 중 하나인지 체크
  */
-const validateRole = (data) => {
-  const validRoles = ['국장', '그룹장', '부그룹장', '순장', '부순장', '순원'];
+const validateRole = async (data) => {
+  // DB에서 role 테이블의 모든 name 컬럼 조회
+  const roles = await models.Role.findAll({
+    attributes: ['name'],
+  });
+  const validRoles = roles.map((role) => role.name);
 
   data.forEach((item, index) => {
     if (!item.role || item.role.trim() === '') {
