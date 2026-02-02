@@ -9,7 +9,7 @@ import { validateNewSeasonData } from "./modules/validate.js";
 
 const seasonService = {
   createNewSeason: async (data) => {
-    validateNewSeasonData(data);
+    await validateNewSeasonData(data);
 
     // 새로운 회기 생성 또는 조회
     const seasonId = await createNewSeason();

@@ -827,11 +827,14 @@ const getOrganizationsByRole = async (highestRole, userId) => {
 		highestRoleOrgName.split("_");
 
 	switch (highestRole.roleName) {
+		case "순장":
+		case "부그룹장":
 		case "그룹장":
 			result.gook.push(currentGook.slice(0, -1));
 			result.group.push([currentGroup.slice(0, -2)]);
 			return result;
 
+		case "부국장":
 		case "국장":
 			result.gook.push(currentGook.slice(0, -1));
 			result.group.push(
