@@ -46,14 +46,13 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.AWS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.AWS_SSH_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.AWS_SSH_BACKEND_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to Docker Swarm on AWS EC2
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.AWS_SSH_USER }}@${{ secrets.AWS_SSH_HOST }} << 'EOF'
-            docker stop attendance
-            docker rm attendance
-            docker rmi coramdeoyouth/attendance:prod
-            docker pull coramdeoyouth/attendance:prod
-            docker run -i -t --log-driver=awslogs --log-opt awslogs-region=ap-northeast-2 --log-opt awslogs-group=attendance --log-opt awslogs-stream=prod -d -p 3000:3000 --name attendance --network auth-net -e NODE_ENV=production --restart unless-stopped coramdeoyouth/attendance:prod
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.AWS_SSH_USER }}@${{ secrets.AWS_SSH_BACKEND_HOST }} << 'EOF'
+            cd ~/src/deployment/ec2-deploy/backend
+            docker compose pull attendance
+            docker compose up -d attendance
+            docker image prune -f
           EOF
