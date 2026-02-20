@@ -51,6 +51,7 @@ jobs:
       - name: Deploy to Docker Swarm on AWS EC2
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.AWS_SSH_USER }}@${{ secrets.AWS_SSH_BACKEND_HOST }} << 'EOF'
+            cd ~/src/deployment/ec2-deploy/backend
             docker compose pull attendance-dev
             docker compose up -d attendance-dev
             docker image prune -f
