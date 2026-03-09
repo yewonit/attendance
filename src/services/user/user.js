@@ -759,6 +759,7 @@ const userService = {
 			where: { activity_type: '청년예배', absence_continuous_count: 0 },
 			include: [{
 				model: models.User,
+				as: 'user',
 				where: { is_long_term_absentee: true },
 				attributes: [],
 			}],
@@ -778,6 +779,7 @@ const userService = {
 			where: { activity_type: '청년예배', absence_continuous_count: 4 },
 			include: [{
 				model: models.User,
+				as: 'user',
 				where: { is_long_term_absentee: false },
 				attributes: [],
 			}],
