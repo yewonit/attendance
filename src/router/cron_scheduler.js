@@ -3,7 +3,7 @@ import userService from "../services/user/user.js";
 
 const router = Router();
 
-router.get("/users/new-members", async (req, res, next) => {
+router.put("/users/new-members", async (req, res, next) => {
 	try {
 		await userService.setFalseIsNewMember();
 		res.status(200).json({
@@ -14,7 +14,7 @@ router.get("/users/new-members", async (req, res, next) => {
 	}
 });
 
-router.get("/users/long-term-absentees", async (req, res, next) => {
+router.put("/users/long-term-absentees", async (req, res, next) => {
 	try {
 		await userService.setIsLongTermAbsentee();
 		res.status(200).json({
