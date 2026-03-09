@@ -754,34 +754,42 @@ const userService = {
 	 */
 	setIsLongTermAbsentee: async () => {
 		// 장결자인데 청년예배 연속 결석이 0회인 유저 → 장결 해제
-		await models.User.update(
-			{ is_long_term_absentee: false },
-			{
-				where: {
-					is_long_term_absentee: true,
-					id: {
-						[Op.in]: sequelize.literal(
-							`(SELECT user_id FROM user_attendance_aggregate WHERE activity_type = '청년예배' AND absence_continuous_count = 0)`
-						),
-					},
-				},
-			}
-		);
+		const toUnset = await models.UserAttendanceAggregate.findAll({
+			attributes: ['user_id'],
+			where: { activity_type: '청년예배', absence_continuous_count: 0 },
+			include: [{
+				model: models.User,
+				where: { is_long_term_absentee: true },
+				attributes: [],
+			}],
+			raw: true,
+		});
+
+		if (toUnset.length > 0) {
+			await models.User.update(
+				{ is_long_term_absentee: false },
+				{ where: { id: toUnset.map(r => r.user_id) } }
+			);
+		}
 
 		// 비장결자인데 청년예배 연속 결석이 4회인 유저 → 장결 설정
-		await models.User.update(
-			{ is_long_term_absentee: true },
-			{
-				where: {
-					is_long_term_absentee: false,
-					id: {
-						[Op.in]: sequelize.literal(
-							`(SELECT user_id FROM user_attendance_aggregate WHERE activity_type = '청년예배' AND absence_continuous_count = 4)`
-						),
-					},
-				},
-			}
-		);
+		const toSet = await models.UserAttendanceAggregate.findAll({
+			attributes: ['user_id'],
+			where: { activity_type: '청년예배', absence_continuous_count: 4 },
+			include: [{
+				model: models.User,
+				where: { is_long_term_absentee: false },
+				attributes: [],
+			}],
+			raw: true,
+		});
+
+		if (toSet.length > 0) {
+			await models.User.update(
+				{ is_long_term_absentee: true },
+				{ where: { id: toSet.map(r => r.user_id) } }
+			);
+		}
 	},
 };
 
