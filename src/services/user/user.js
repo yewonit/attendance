@@ -735,6 +735,54 @@ const userService = {
 			pagination
 		};
 	},
+	setFalseIsNewMember: async () => {
+		await models.User.update({
+			is_new_member: false,
+		}, {
+		where: {
+			is_new_member: true,
+			registration_date: {
+				[Op.lte]: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000),
+			},
+		},
+		});
+	},
+	/**
+	 * 장결자 상태를 갱신하는 메서드
+	 * - 청년예배 연속 결석 0회인 장결자 → 장결 해제
+	 * - 청년예배 연속 결석 4회인 비장결자 → 장결 설정
+	 */
+	setIsLongTermAbsentee: async () => {
+		// 장결자인데 청년예배 연속 결석이 0회인 유저 → 장결 해제
+		await models.User.update(
+			{ is_long_term_absentee: false },
+			{
+				where: {
+					is_long_term_absentee: true,
+					id: {
+						[Op.in]: sequelize.literal(
+							`(SELECT user_id FROM user_attendance_aggregate WHERE activity_type = '청년예배' AND absence_continuous_count = 0)`
+						),
+					},
+				},
+			}
+		);
+
+		// 비장결자인데 청년예배 연속 결석이 4회인 유저 → 장결 설정
+		await models.User.update(
+			{ is_long_term_absentee: true },
+			{
+				where: {
+					is_long_term_absentee: false,
+					id: {
+						[Op.in]: sequelize.literal(
+							`(SELECT user_id FROM user_attendance_aggregate WHERE activity_type = '청년예배' AND absence_continuous_count = 4)`
+						),
+					},
+				},
+			}
+		);
+	},
 };
 
 const ADMIN_USER_IDS = [2520, 2519, 2518, 2517];

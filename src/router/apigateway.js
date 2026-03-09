@@ -4,6 +4,7 @@ import attendanceRouter from "./attendance/attendance.js";
 import organizationRouter from "./organization/organization.js";
 import seasonRouter from "./season/season.js";
 import userRouter from "./user/user.js";
+import cronSchedulerRouter from "./cron_scheduler.js";
 
 const router = Router();
 
@@ -46,6 +47,14 @@ router.use("/attendances", attendanceRouter);
  *   description: 회기 전환 관리 API
  */
 router.use("/seasons", seasonRouter);
+
+/**
+ * @swagger
+ * tags:
+ *   name: Cron Scheduler
+ *   description: 크론 스케줄러 API
+ */
+router.use("/cron-scheduler", cronSchedulerRouter);
 
 // 설정된 라우터 모듈을 내보냅니다.
 export default router;
