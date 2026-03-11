@@ -178,7 +178,7 @@ const userService = {
 
 	findUser: crudService.findOne(models.User),
 
-	updateUser: async (id, user, organizationId) => {
+	updateUser: async (id, user) => {
 		const exist = await models.User.findOne({
 			where: { id },
 		});
@@ -193,17 +193,17 @@ const userService = {
 			user.password = await hashPassword(user.password);
 		}
 
-		if (user.phoneNumber) {
-			user.phoneNumber = formatPhoneNumber(user.phoneNumber);
+		if (user.phone) {
+			user.phone = formatPhoneNumber(user.phone);
 		}
 
-		if (organizationId) {
+		if (user.organizationId) {
 			const organization = await models.Organization.findOne({
-				where: { id: organizationId },
+				where: { id: user.organizationId },
 			});
 			if (!organization) {
 				throw new NotFoundError(
-					`존재하지 않는 organization입니다. (organizationId: ${organizationId})`
+					`존재하지 않는 organization입니다. (organizationId: ${user.organizationId})`
 				);
 			}
 		}
@@ -215,7 +215,7 @@ const userService = {
 			...(user.password && { password: user.password }),
 			...(user.gender && { gender: user.gender }),
 			...(user.birthDate && { birth_date: user.birthDate }),
-			...(user.phoneNumber && { phone_number: user.phoneNumber }),
+			...(user.phoneNumber && { phone_number: user.phone }),
 		};
 
 		return await sequelize.transaction(async (t) => {
@@ -224,9 +224,9 @@ const userService = {
 				transaction: t,
 			});
 
-			if (organizationId) {
+			if (user.organizationId) {
 				await models.UserRole.update(
-					{ organization_id: organizationId },
+					{ organization_id: user.organizationId },
 					{
 						where: { user_id: id },
 						transaction: t,

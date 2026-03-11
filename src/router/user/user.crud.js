@@ -263,11 +263,10 @@ router.get("", async (req, res, next) => {
 
 router.put("/:id", async (req, res, next) => {
 	const newModel = req.body.userData;
-	const organizationId = req.body.organizationId;
 	const id = req.params.id;
 
 	try {
-		const updated = await userService.updateUser(id, newModel, organizationId);
+		const updated = await userService.updateUser(id, newModel);
 		res.status(200).json(updated);
 	} catch (error) {
 		next(error);
