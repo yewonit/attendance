@@ -215,7 +215,7 @@ const userService = {
 			...(user.password && { password: user.password }),
 			...(user.gender && { gender: user.gender }),
 			...(user.birthDate && { birth_date: user.birthDate }),
-			...(user.phoneNumber && { phone_number: user.phone }),
+			...(user.phone && { phone_number: user.phone }),
 		};
 
 		return await sequelize.transaction(async (t) => {
