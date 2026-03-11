@@ -176,14 +176,28 @@ router.get("/:id", async (req, res, next) => {
 });
 
 router.post("", async (req, res, next) => {
-	const { userData, organizationId, idOfCreatingUser } = req.body;
+	const { userData, organizationId } = req.body;
 
 	try {
 		const data = await userService.createUser(
-			userData,
-			organizationId,
-			idOfCreatingUser
+			userData.name,
+			userData.gender,
+			userData.name_suffix,
+			userData.birth_date,
+			userData.phone_number,
+			organizationId
 		);
+		res.status(201).json(data);
+	} catch (error) {
+		next(error);
+	}
+});
+
+router.post("/batch", async (req, res, next) => {
+	const { users } = req.body;
+
+	try {
+		const data = await userService.createUsers(users);
 		res.status(201).json(data);
 	} catch (error) {
 		next(error);
@@ -248,7 +262,7 @@ router.get("", async (req, res, next) => {
 });
 
 router.put("/:id", async (req, res, next) => {
-	const newModel = req.body;
+	const newModel = req.body.userData;
 	const id = req.params.id;
 
 	try {

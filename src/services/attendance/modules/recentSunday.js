@@ -105,4 +105,4 @@ const recentSundayAttendanceToExcel = async (sundayAttendance) => {
 	return attendanceToExcel(sundayAttendance);
 };
 
-export { getRecentSundayAttendance, recentSundayAttendanceToExcel };
+export { getRecentSunday, getRecentSundayAttendance, recentSundayAttendanceToExcel };

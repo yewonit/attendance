@@ -10,6 +10,7 @@ import seasonService from "../season/season.js";
 import crudService from "../common/crud.js";
 import { sequelize } from "../../utils/database.js";
 import { buildOrganizationNamePattern, parseOrganizationName } from "../../utils/organization.js";
+import { getRecentSunday } from "../attendance/modules/recentSunday.js";
 
 /**
  * 사용자 관련 서비스
@@ -17,11 +18,12 @@ import { buildOrganizationNamePattern, parseOrganizationName } from "../../utils
  * TODO: 이메일/전화번호 변경 시 감사 로그 남기기
  */
 const userService = {
-	createUser: async (userData, organizationId, idOfCreatingUser) => {
+	createUser: async (name, gender, nameSuffix, birthDate, phoneNumber, organizationId) => {
 		// 필수 필드 검증
-		if (!userData || !organizationId || !idOfCreatingUser) {
+		if (!name || !gender || !organizationId) {
 			const nullFields = [];
-			if (!userData) nullFields.push("userData");
+			if (!name) nullFields.push("name");
+			if (!gender) nullFields.push("gender");
 			if (!organizationId) nullFields.push("organizationId");
 			throw new ValidationError(
 				`필수 필드가 누락되었습니다 : ${nullFields.join(", ")}`
@@ -30,8 +32,8 @@ const userService = {
 
 		const userExists = await models.User.findOne({
 			where: {
-				name: userData.name,
-				phone_number: formatPhoneNumber(userData.phone_number),
+				name: name,
+				phone_number: formatPhoneNumber(phoneNumber),
 				is_deleted: false,
 			},
 		});
@@ -45,13 +47,13 @@ const userService = {
 			// 사용자 생성
 			const user = await models.User.create(
 				{
-					name: userData.name,
-					name_suffix: userData.name_suffix,
-					gender: userData.gender_type,
-					birth_date: userData.birth_date,
-					phone_number: formatPhoneNumber(userData.phone_number),
-					registration_date: userData.church_registration_date,
-					is_new_member: userData.is_new_member,
+					name: name,
+					name_suffix: nameSuffix || 'AAA',
+					gender: gender,
+					birth_date: birthDate,
+					phone_number: formatPhoneNumber(phoneNumber),
+					registration_date: getRecentSunday(),
+					is_new_member: true,
 				},
 				{ transaction: t }
 			);
@@ -80,15 +82,105 @@ const userService = {
 		});
 	},
 
+	/**
+	 * 복수 사용자 일괄 생성
+	 * @description 단일 트랜잭션으로 여러 사용자를 한 번에 생성합니다.
+	 * 하나라도 실패 시 전체 롤백됩니다.
+	 * @param {Array<{name, gender, nameSuffix?, birthDate?, phone?, organizationId}>} users
+	 * @returns {Array} 생성된 사용자 목록
+	 * TODO: bulkCreate 활용한 성능 최적화 고려
+	 */
+	createUsers: async (users) => {
+		if (!Array.isArray(users) || users.length === 0) {
+			throw new ValidationError("사용자 목록이 비어있습니다.");
+		}
+
+		users.forEach((user, i) => {
+			const nullFields = [];
+			if (!user.name) nullFields.push("name");
+			if (!user.gender) nullFields.push("gender");
+			if (!user.organizationId) nullFields.push("organizationId");
+			if (nullFields.length > 0) {
+				throw new ValidationError(
+					`${i + 1}번째 사용자: 필수 필드가 누락되었습니다 : ${nullFields.join(", ")}`
+				);
+			}
+		});
+
+		// 기존 사용자 중복 체크 (이름 + 전화번호 조합)
+		const duplicateConditions = users
+			.filter((u) => u.phone)
+			.map((u) => ({
+				name: u.name,
+				phone_number: formatPhoneNumber(u.phone),
+				is_deleted: false,
+			}));
+
+		if (duplicateConditions.length > 0) {
+			const existingUsers = await models.User.findAll({
+				where: { [Op.or]: duplicateConditions },
+			});
+			if (existingUsers.length > 0) {
+				const names = existingUsers.map((u) => u.name).join(", ");
+				throw new DataConflictError(
+					`이미 같은 전화번호로 생성된 유저가 있습니다: ${names}`
+				);
+			}
+		}
+
+		// 조직 존재 여부 일괄 확인
+		const organizationIds = [...new Set(users.map((u) => u.organizationId))];
+		const organizations = await models.Organization.findAll({
+			where: { id: organizationIds },
+		});
+		const foundOrgIds = new Set(organizations.map((o) => o.id));
+		const missingOrgIds = organizationIds.filter((id) => !foundOrgIds.has(id));
+		if (missingOrgIds.length > 0) {
+			throw new NotFoundError(
+				`존재하지 않는 organization입니다. (organizationId: ${missingOrgIds.join(", ")})`
+			);
+		}
+
+		return await sequelize.transaction(async (t) => {
+			const createdUsers = [];
+
+			for (const u of users) {
+				const user = await models.User.create(
+					{
+						name: u.name,
+						name_suffix: u.nameSuffix || "AAA",
+						gender: u.gender,
+						birth_date: u.birthDate,
+						phone_number: formatPhoneNumber(u.phone),
+						registration_date: getRecentSunday(),
+						is_new_member: true,
+					},
+					{ transaction: t }
+				);
+
+				await models.UserRole.create(
+					{
+						user_id: user.id,
+						role_id: 5,
+						organization_id: u.organizationId,
+					},
+					{ transaction: t }
+				);
+
+				createdUsers.push(user);
+			}
+
+			return createdUsers;
+		});
+	},
+
 	findUsers: crudService.findAll(models.User),
 
 	findUser: crudService.findOne(models.User),
 
 	updateUser: async (id, user) => {
 		const exist = await models.User.findOne({
-			where: {
-				id: id,
-			},
+			where: { id },
 		});
 		if (!exist) throw new NotFoundError("해당 id로 유저를 찾을 수 없습니다.");
 
@@ -101,15 +193,46 @@ const userService = {
 			user.password = await hashPassword(user.password);
 		}
 
-		if (user.phone_number) {
-			user.phone_number = formatPhoneNumber(user.phone_number);
+		if (user.phone) {
+			user.phone = formatPhoneNumber(user.phone);
 		}
 
+		if (user.organizationId) {
+			const organization = await models.Organization.findOne({
+				where: { id: user.organizationId },
+			});
+			if (!organization) {
+				throw new NotFoundError(
+					`존재하지 않는 organization입니다. (organizationId: ${user.organizationId})`
+				);
+			}
+		}
+
+		const updateData = {
+			...(user.name && { name: user.name }),
+			...(user.nameSuffix && { name_suffix: user.nameSuffix }),
+			...(user.email && { email: user.email }),
+			...(user.password && { password: user.password }),
+			...(user.gender && { gender: user.gender }),
+			...(user.birthDate && { birth_date: user.birthDate }),
+			...(user.phone && { phone_number: user.phone }),
+		};
+
 		return await sequelize.transaction(async (t) => {
-			const [updated] = await models.User.update(user, {
-				where: { id: id },
+			const [updated] = await models.User.update(updateData, {
+				where: { id },
 				transaction: t,
 			});
+
+			if (user.organizationId) {
+				await models.UserRole.update(
+					{ organization_id: user.organizationId },
+					{
+						where: { user_id: id },
+						transaction: t,
+					}
+				);
+			}
 
 			return updated;
 		});
@@ -640,6 +763,64 @@ const userService = {
 			members: formattedMembers,
 			pagination
 		};
+	},
+	setFalseIsNewMember: async () => {
+		await models.User.update({
+			is_new_member: false,
+		}, {
+		where: {
+			is_new_member: true,
+			registration_date: {
+				[Op.lte]: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000),
+			},
+		},
+		});
+	},
+	/**
+	 * 장결자 상태를 갱신하는 메서드
+	 * - 청년예배 연속 결석 0회인 장결자 → 장결 해제
+	 * - 청년예배 연속 결석 4회인 비장결자 → 장결 설정
+	 */
+	setIsLongTermAbsentee: async () => {
+		// 장결자인데 청년예배 연속 결석이 0회인 유저 → 장결 해제
+		const toUnset = await models.UserAttendanceAggregate.findAll({
+			attributes: ['user_id'],
+			where: { activity_type: '청년예배', absence_continuous_count: 0 },
+			include: [{
+				model: models.User,
+				as: 'user',
+				where: { is_long_term_absentee: true },
+				attributes: [],
+			}],
+			raw: true,
+		});
+
+		if (toUnset.length > 0) {
+			await models.User.update(
+				{ is_long_term_absentee: false },
+				{ where: { id: toUnset.map(r => r.user_id) } }
+			);
+		}
+
+		// 비장결자인데 청년예배 연속 결석이 4회인 유저 → 장결 설정
+		const toSet = await models.UserAttendanceAggregate.findAll({
+			attributes: ['user_id'],
+			where: { activity_type: '청년예배', absence_continuous_count: 4 },
+			include: [{
+				model: models.User,
+				as: 'user',
+				where: { is_long_term_absentee: false },
+				attributes: [],
+			}],
+			raw: true,
+		});
+
+		if (toSet.length > 0) {
+			await models.User.update(
+				{ is_long_term_absentee: true },
+				{ where: { id: toSet.map(r => r.user_id) } }
+			);
+		}
 	},
 };
 
