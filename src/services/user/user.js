@@ -109,10 +109,11 @@ const userService = {
 
 		// 기존 사용자 중복 체크 (이름 + 전화번호 조합)
 		const duplicateConditions = users
-			.filter((u) => u.phone)
+			.filter((u) => u.phone || u.email)
 			.map((u) => ({
 				name: u.name,
 				phone_number: formatPhoneNumber(u.phone),
+				email: u.email,
 				is_deleted: false,
 			}));
 
@@ -123,7 +124,7 @@ const userService = {
 			if (existingUsers.length > 0) {
 				const names = existingUsers.map((u) => u.name).join(", ");
 				throw new DataConflictError(
-					`이미 같은 전화번호로 생성된 유저가 있습니다: ${names}`
+					`이미 같은 전화번호 또는 이메일로 생성된 유저가 있습니다: ${names}`
 				);
 			}
 		}
@@ -149,6 +150,7 @@ const userService = {
 					{
 						name: u.name,
 						name_suffix: u.nameSuffix || "AAA",
+						email: u.email,
 						gender: u.gender,
 						birth_date: u.birthDate,
 						phone_number: formatPhoneNumber(u.phone),
