@@ -113,7 +113,7 @@ const userService = {
 			.map((u) => ({
 				name: u.name,
 				phone_number: formatPhoneNumber(u.phone),
-				email: u.email,
+				...(u.email && { email: u.email }),
 				is_deleted: false,
 			}));
 
