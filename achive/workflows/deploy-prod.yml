@@ -21,7 +21,7 @@ jobs:
       - name: Import GPG Key for Git Secret
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import --batch --yes
-          gpg --list-secret-keys
+          gpg --list-secret-keys  # GPG 키 확인
 
       - name: Decrypt .env.secret using git-secret
         run: |

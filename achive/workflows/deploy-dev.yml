@@ -3,7 +3,7 @@ name: Build and Deploy to Docker Swarm
 on:
   push:
     branches:
-      - main
+      - dev
 
 jobs:
   build-and-push:
@@ -21,7 +21,7 @@ jobs:
       - name: Import GPG Key for Git Secret
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import --batch --yes
-          gpg --list-secret-keys
+          gpg --list-secret-keys  # GPG 키 확인
 
       - name: Decrypt .env.secret using git-secret
         run: |
@@ -35,11 +35,11 @@ jobs:
 
       - name: Build Docker Image with .env
         run: |
-          docker buildx build -t ${{ secrets.DOCKER_HUB_USERNAME }}/attendance:prod --platform linux/amd64 .
+          docker buildx build -t ${{ secrets.DOCKER_HUB_USERNAME }}/attendance:dev --platform linux/amd64 .
 
       - name: Push Docker Image to Docker Hub
         run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/attendance:prod
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/attendance:dev
 
       - name: Setup SSH Key
         run: |
@@ -52,7 +52,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.AWS_SSH_USER }}@${{ secrets.AWS_SSH_BACKEND_HOST }} << 'EOF'
             cd ~/src/deployment/ec2-deploy/backend
-            docker compose pull attendance
-            docker compose up -d attendance
+            docker compose pull attendance-dev
+            docker compose up -d attendance-dev
             docker image prune -f
           EOF
