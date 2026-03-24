@@ -1,6 +1,6 @@
 /**
  * 환경 변수 설정 및 Zod 기반 검증
- * dotenv로 .env.secret 파일을 로드하고, Zod 스키마로 타입 안전하게 검증합니다.
+ * dotenv로 .env 파일을 로드하고, Zod 스키마로 타입 안전하게 검증합니다.
  */
 import { config } from 'dotenv';
 import { z } from 'zod';

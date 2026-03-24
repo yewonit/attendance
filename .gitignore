@@ -3,7 +3,7 @@ dist/
 
 *.env
 .env.*
-!.env.secret.secret
+!.env.secret
 
 *.log
 logs/

@@ -18,7 +18,7 @@ COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
-COPY .env.secret* ./
+COPY .env* ./
 
 EXPOSE 3000
 
