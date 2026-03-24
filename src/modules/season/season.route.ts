@@ -1,14 +1,79 @@
-/**
- * 시즌 관련 라우트
- * 시즌 생성, 다음 시즌 조회 등을 처리합니다.
- * TODO: 기존 season 서비스 로직 마이그레이션
- */
 import type { FastifyInstance } from 'fastify';
+import { z } from 'zod';
+import { db } from '../../db';
+import { createNewSeason } from '../../services/season/modules/create-new-season';
+import { createOrganizationAndUserRole } from '../../services/season/modules/create-organization-and-user-role';
+import { deleteBeforeCreateOrganization } from '../../services/season/modules/delete-before-create';
+import { validateNewSeasonData } from '../../services/season/modules/validate';
+import { getAllNationsOrgList, getNextOrganization } from '../../services/season/season.service';
 
-export async function seasonRoutes(app: FastifyInstance): Promise<void> {
-  // TODO: POST /seasons - 시즌 생성
-  // TODO: GET /seasons/next - 다음 시즌 정보 조회
-  // TODO: GET /seasons/all-nations - 전체 시즌 조회
+const TAG = ['Seasons'] as const;
 
-  app.log.info('Season routes registered (pending implementation)');
+export async function seasonRoutes(app: FastifyInstance) {
+  app.post(
+    '/',
+    {
+      schema: {
+        tags: [...TAG],
+        summary: '새 회기 데이터 일괄 생성',
+        body: z.object({
+          data: z.array(
+            z.object({
+              gook: z.string(),
+              group: z.string(),
+              soon: z.string(),
+              name: z.string(),
+              name_suffix: z.string().optional(),
+              phone_number: z.string().optional(),
+              role: z.string().optional(),
+              birth_date: z.string().optional(),
+            }),
+          ),
+        }),
+      },
+    },
+    async (req, reply) => {
+      const { data } = req.body as { data: Parameters<typeof validateNewSeasonData>[0] };
+
+      const validatedData = await validateNewSeasonData(data);
+      const seasonId = await createNewSeason();
+
+      await db.transaction(async (tx) => {
+        await deleteBeforeCreateOrganization(seasonId, tx);
+        await createOrganizationAndUserRole(validatedData, seasonId, tx);
+      });
+
+      return reply.status(201).send({ data: 'success' });
+    },
+  );
+
+  app.get(
+    '/next',
+    {
+      schema: {
+        tags: [...TAG],
+        summary: '다음 회기 소속 조직 조회',
+        querystring: z.object({
+          name: z.string().optional(),
+          userId: z.coerce.number().optional(),
+        }),
+      },
+    },
+    async (req) => {
+      const { name, userId } = req.query as { name?: string; userId?: number };
+      const result = await getNextOrganization(name, userId);
+      return { data: result };
+    },
+  );
+
+  app.get(
+    '/all-nations',
+    {
+      schema: { tags: [...TAG], summary: '올네이션스 순 리스트 조회' },
+    },
+    async () => {
+      const result = await getAllNationsOrgList();
+      return { data: result };
+    },
+  );
 }

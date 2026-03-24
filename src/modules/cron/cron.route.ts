@@ -1,13 +1,31 @@
-/**
- * 크론 스케줄러 라우트
- * 신규 멤버 업데이트, 장기 결석자 처리 등 예약 작업을 트리거합니다.
- * TODO: 기존 cron_scheduler 로직 마이그레이션
- */
 import type { FastifyInstance } from 'fastify';
+import {
+  resetExpiredNewMembers,
+  updateLongTermAbsenteeStatus,
+} from '../../services/user/user-cron.service';
 
-export async function cronRoutes(app: FastifyInstance): Promise<void> {
-  // TODO: PUT /cron-scheduler/users/new-members - 신규 멤버 상태 업데이트
-  // TODO: PUT /cron-scheduler/users/long-term-absentees - 장기 결석자 처리
+const TAG = ['Cron'] as const;
 
-  app.log.info('Cron routes registered (pending implementation)');
+export async function cronRoutes(app: FastifyInstance) {
+  app.put(
+    '/users/new-members',
+    {
+      schema: { tags: [...TAG], summary: '새가족 상태 만료 처리' },
+    },
+    async () => {
+      await resetExpiredNewMembers();
+      return { message: 'success' };
+    },
+  );
+
+  app.put(
+    '/users/long-term-absentees',
+    {
+      schema: { tags: [...TAG], summary: '장결자 상태 갱신' },
+    },
+    async () => {
+      await updateLongTermAbsenteeStatus();
+      return { message: 'success' };
+    },
+  );
 }

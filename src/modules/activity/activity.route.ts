@@ -1,17 +1,105 @@
-/**
- * 활동 관련 라우트
- * 활동 CRUD 및 템플릿 조회를 처리합니다.
- * TODO: 기존 activity 서비스 로직 마이그레이션
- */
 import type { FastifyInstance } from 'fastify';
+import { z } from 'zod';
+import * as activityService from '../../services/activity/activity.service';
 
-export async function activityRoutes(app: FastifyInstance): Promise<void> {
-  // TODO: GET /activities - 활동 목록 조회
-  // TODO: POST /activities - 활동 생성
-  // TODO: GET /activities/templates - 활동 템플릿 조회
-  // TODO: GET /activities/:id - 활동 상세 조회
-  // TODO: PUT /activities/:id - 활동 수정
-  // TODO: DELETE /activities/:id - 활동 삭제
+const TAG = ['Activities'] as const;
 
-  app.log.info('Activity routes registered (pending implementation)');
+export async function activityRoutes(app: FastifyInstance) {
+  app.get(
+    '/templates',
+    {
+      schema: { tags: [...TAG], summary: '활동 템플릿 목록 조회' },
+    },
+    async () => {
+      return { data: activityService.getActivityTemplates(), error: null };
+    },
+  );
+
+  app.get(
+    '/',
+    {
+      schema: {
+        tags: [...TAG],
+        summary: '조직별 활동 목록 조회',
+        querystring: z.object({ organizationId: z.coerce.number() }),
+      },
+    },
+    async (req) => {
+      const { organizationId } = req.query as { organizationId: number };
+      const data = await activityService.getAllOrganizationActivities(organizationId);
+      return { data, error: null };
+    },
+  );
+
+  app.post(
+    '/',
+    {
+      schema: {
+        tags: [...TAG],
+        summary: '활동 및 출석 기록 생성',
+        querystring: z.object({
+          organizationId: z.coerce.number(),
+          activityTemplateId: z.coerce.number(),
+        }),
+      },
+    },
+    async (req, reply) => {
+      const { organizationId, activityTemplateId } = req.query as {
+        organizationId: number;
+        activityTemplateId: number;
+      };
+      const data = req.body as Parameters<typeof activityService.recordActivityAndAttendance>[2];
+      await activityService.recordActivityAndAttendance(organizationId, activityTemplateId, data);
+      return reply.status(201).send({ data: 'success', error: null });
+    },
+  );
+
+  app.get(
+    '/:id',
+    {
+      schema: {
+        tags: [...TAG],
+        summary: '활동 상세 조회',
+        params: z.object({ id: z.coerce.number() }),
+      },
+    },
+    async (req) => {
+      const { id } = req.params as { id: number };
+      const data = await activityService.getActivityDetails(id);
+      return { data, error: null };
+    },
+  );
+
+  app.put(
+    '/:id',
+    {
+      schema: {
+        tags: [...TAG],
+        summary: '활동 및 출석 수정',
+        params: z.object({ id: z.coerce.number() }),
+      },
+    },
+    async (req) => {
+      const { id } = req.params as { id: number };
+      const data = req.body as Parameters<typeof activityService.updateActivityAndAttendance>[1];
+      await activityService.updateActivityAndAttendance(id, data);
+      return { data: 'success', error: null };
+    },
+  );
+
+  app.delete(
+    '/:id',
+    {
+      schema: {
+        tags: [...TAG],
+        summary: '활동 삭제',
+        params: z.object({ id: z.coerce.number() }),
+      },
+    },
+    async (req) => {
+      const { id } = req.params as { id: number };
+      await activityService.deleteActivityAndAttendance(id);
+      return { data: 'success', error: null };
+    },
+  );
 }
