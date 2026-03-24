@@ -21,20 +21,9 @@ jobs:
       - name: Import GPG Key for Git Secret
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import --batch --yes
-          gpg --list-secret-keys
+          gpg --list-secret-keys  # GPG 키 확인
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests (API 커버리지 + 테스트 통과 검증)
-        run: npm test
-
-      - name: Decrypt .env using git-secret
+      - name: Decrypt .env.secret using git-secret
         run: |
           git secret reveal -p "${{ secrets.GPG_PASSPHRASE }}"
 

@@ -1,11 +1,25 @@
-# before packaging container, pass 'NODE_ENV' env (e.g. NODE_ENV=development)
-
-FROM node:23.1.0-alpine3.20
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-COPY . .
+COPY package.json package-lock.json* ./
+RUN npm ci
 
-RUN npm install
+COPY tsconfig.json tsup.config.ts ./
+COPY src/ src/
 
-CMD ["node", "index.js"]
+RUN npm run build
+
+FROM node:22-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev
+
+COPY --from=builder /app/dist ./dist
+COPY .env* ./
+
+EXPOSE 3000
+
+CMD ["node", "dist/server.js"]
