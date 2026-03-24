@@ -12,6 +12,7 @@ import { env } from './config/env';
 import { registerSwagger } from './config/swagger';
 import authPlugin from './plugins/auth';
 import errorHandlerPlugin from './plugins/error-handler';
+import requestLoggerPlugin from './plugins/request-logger';
 
 import { activityRoutes } from './modules/activity/activity.route';
 import { attendanceRoutes } from './modules/attendance/attendance.route';
@@ -26,11 +27,22 @@ export async function buildApp(): Promise<FastifyInstance> {
   const app = fastify({
     logger: {
       level: env.nodeEnv === 'production' ? 'info' : 'debug',
+      redact: {
+        paths: [
+          'req.headers.authorization',
+          'req.body.password',
+          'req.body.token',
+          'req.body.secret',
+          'req.body.refreshToken',
+        ],
+        censor: '[REDACTED]',
+      },
       transport:
         env.nodeEnv === 'local'
           ? { target: 'pino-pretty', options: { colorize: true } }
           : undefined,
     },
+    disableRequestLogging: true,
   });
 
   // Zod 스키마 → JSON Schema 자동 변환 (Swagger + 요청 검증)
@@ -41,6 +53,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(fastifyCors, { origin: true, credentials: true });
   await app.register(fastifyCompress);
   await app.register(fastifyCookie);
+  await app.register(requestLoggerPlugin);
   await app.register(errorHandlerPlugin);
   await app.register(authPlugin);
 
