@@ -128,8 +128,14 @@ interface RecordData {
     name?: string;
     activityCategory?: string;
   };
-  attendances: { userId: number; status: string; note?: string }[];
-  imageInfo?: { fileName: string; url: string };
+  attendances: {
+    userId: number;
+    status: string;
+    note?: string;
+    checkInTime?: Date | null;
+    checkOutTime?: Date | null;
+  }[];
+  imageInfo?: { fileName: string; url: string; fileSize?: number; fileType?: string };
 }
 
 /** 활동과 출석을 동시에 생성합니다. (단일 트랜잭션) */
