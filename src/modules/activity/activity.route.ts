@@ -1,10 +1,44 @@
 import type { FastifyInstance } from 'fastify';
+import { type ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import * as activityService from '../../services/activity/activity.service';
 
 const TAG = ['Activities'] as const;
 
+/** ISO 8601 문자열을 Date 객체로 변환하는 Zod 스키마 */
+const zDateTime = z.string().datetime({ offset: true }).transform((s) => new Date(s));
+
+/** 활동 + 출석 요청 바디 스키마 — ISO 문자열을 Date 객체로 자동 변환 */
+const activityBodySchema = z.object({
+  activityData: z.object({
+    startDateTime: zDateTime,
+    endDateTime: zDateTime,
+    location: z.string().optional(),
+    notes: z.string().optional(),
+    name: z.string().optional(),
+    activityCategory: z.string().optional(),
+  }),
+  attendances: z.array(
+    z.object({
+      userId: z.number(),
+      status: z.string(),
+      checkInTime: zDateTime.nullable().optional(),
+      checkOutTime: zDateTime.nullable().optional(),
+      note: z.string().optional(),
+    }),
+  ),
+  imageInfo: z
+    .object({
+      url: z.string(),
+      fileName: z.string(),
+      fileSize: z.number().optional(),
+      fileType: z.string().optional(),
+    })
+    .optional(),
+});
+
 export async function activityRoutes(app: FastifyInstance) {
+  const typed = app.withTypeProvider<ZodTypeProvider>();
   app.get(
     '/templates',
     {
@@ -31,7 +65,7 @@ export async function activityRoutes(app: FastifyInstance) {
     },
   );
 
-  app.post(
+  typed.post(
     '/',
     {
       schema: {
@@ -41,15 +75,15 @@ export async function activityRoutes(app: FastifyInstance) {
           organizationId: z.coerce.number(),
           activityTemplateId: z.coerce.number(),
         }),
+        body: activityBodySchema,
       },
     },
     async (req, reply) => {
-      const { organizationId, activityTemplateId } = req.query as {
-        organizationId: number;
-        activityTemplateId: number;
-      };
-      const data = req.body as Parameters<typeof activityService.recordActivityAndAttendance>[2];
-      await activityService.recordActivityAndAttendance(organizationId, activityTemplateId, data);
+      await activityService.recordActivityAndAttendance(
+        req.query.organizationId,
+        req.query.activityTemplateId,
+        req.body,
+      );
       return reply.status(201).send({ data: 'success', error: null });
     },
   );
@@ -70,19 +104,18 @@ export async function activityRoutes(app: FastifyInstance) {
     },
   );
 
-  app.put(
+  typed.put(
     '/:id',
     {
       schema: {
         tags: [...TAG],
         summary: '활동 및 출석 수정',
         params: z.object({ id: z.coerce.number() }),
+        body: activityBodySchema,
       },
     },
     async (req) => {
-      const { id } = req.params as { id: number };
-      const data = req.body as Parameters<typeof activityService.updateActivityAndAttendance>[1];
-      await activityService.updateActivityAndAttendance(id, data);
+      await activityService.updateActivityAndAttendance(req.params.id, req.body);
       return { data: 'success', error: null };
     },
   );

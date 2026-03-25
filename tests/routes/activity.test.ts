@@ -53,7 +53,7 @@ describe('Activity Routes', () => {
 
   describe('POST /api/activities', () => {
     it('활동을 생성하고 201 {data: success, error: null}을 반환한다', async () => {
-      const res = await app.inject({ method: 'POST', url: '/api/activities?organizationId=1&activityTemplateId=1', payload: { activityData: { startDateTime: '2025-01-01', endDateTime: '2025-01-01' }, attendances: [] } });
+      const res = await app.inject({ method: 'POST', url: '/api/activities?organizationId=1&activityTemplateId=1', payload: { activityData: { startDateTime: '2025-01-05T05:30:00Z', endDateTime: '2025-01-05T07:30:00Z' }, attendances: [] } });
       expect(res.statusCode).toBe(201);
       expect(res.json()).toEqual({ data: 'success', error: null });
     });
@@ -70,7 +70,7 @@ describe('Activity Routes', () => {
 
   describe('PUT /api/activities/:id', () => {
     it('활동 수정 후 {data: success, error: null}을 반환한다', async () => {
-      const res = await app.inject({ method: 'PUT', url: '/api/activities/1', payload: { activityData: { startDateTime: '2025-01-01', endDateTime: '2025-01-01' }, attendances: [] } });
+      const res = await app.inject({ method: 'PUT', url: '/api/activities/1', payload: { activityData: { startDateTime: '2025-01-05T05:30:00Z', endDateTime: '2025-01-05T07:30:00Z' }, attendances: [] } });
       expect(res.statusCode).toBe(200);
       expect(res.json()).toEqual({ data: 'success', error: null });
     });
