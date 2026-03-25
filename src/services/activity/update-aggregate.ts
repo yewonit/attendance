@@ -42,24 +42,26 @@ export async function updateUserAttendanceAggregate(
     const totalAttend = pastRows.filter((r) => r.status === ATTENDANCE_STATUS.PRESENT).length;
     const totalAbsence = pastRows.filter((r) => r.status === ATTENDANCE_STATUS.ABSENT).length;
 
-    const [inserted] = await tx.insert(userAttendanceAggregates).values({
+    // insert 후 동일 트랜잭션 내 재조회 시 insertId 불일치 위험 → 삽입값을 직접 사용
+    const newValues = {
       userId,
       activityType,
       attendanceContinuousCount: 0,
       absenceContinuousCount: 0,
       totalAttendCount: totalAttend,
       totalAbsenceCount: totalAbsence,
-      lastAction: null,
+      lastAction: null as string | null,
       lastOppositeContinuousCount: 0,
       isDisabled: false,
-    });
+    };
+    const [inserted] = await tx.insert(userAttendanceAggregates).values(newValues);
 
-    const created = await tx
-      .select()
-      .from(userAttendanceAggregates)
-      .where(eq(userAttendanceAggregates.id, inserted.insertId))
-      .limit(1);
-    aggregate = created[0];
+    aggregate = {
+      id: inserted.insertId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...newValues,
+    };
   }
 
   if (attendanceStatus === ATTENDANCE_STATUS.PRESENT) {
