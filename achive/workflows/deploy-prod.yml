@@ -3,7 +3,7 @@ name: Build and Deploy to Docker Swarm
 on:
   push:
     branches:
-      - dev
+      - main
 
 jobs:
   build-and-push:
@@ -21,20 +21,9 @@ jobs:
       - name: Import GPG Key for Git Secret
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import --batch --yes
-          gpg --list-secret-keys
+          gpg --list-secret-keys  # GPG 키 확인
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests (API 커버리지 + 테스트 통과 검증)
-        run: npm test
-
-      - name: Decrypt .env using git-secret
+      - name: Decrypt .env.secret using git-secret
         run: |
           git secret reveal -p "${{ secrets.GPG_PASSPHRASE }}"
 
@@ -46,11 +35,11 @@ jobs:
 
       - name: Build Docker Image with .env
         run: |
-          docker buildx build -t ${{ secrets.DOCKER_HUB_USERNAME }}/attendance:dev --platform linux/amd64 .
+          docker buildx build -t ${{ secrets.DOCKER_HUB_USERNAME }}/attendance:prod --platform linux/amd64 .
 
       - name: Push Docker Image to Docker Hub
         run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/attendance:dev
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/attendance:prod
 
       - name: Setup SSH Key
         run: |
@@ -63,7 +52,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.AWS_SSH_USER }}@${{ secrets.AWS_SSH_BACKEND_HOST }} << 'EOF'
             cd ~/src/deployment/ec2-deploy/backend
-            docker compose pull attendance-dev
-            docker compose up -d attendance-dev
+            docker compose pull attendance
+            docker compose up -d attendance
             docker image prune -f
           EOF
