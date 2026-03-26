@@ -95,7 +95,7 @@ describe('User Routes', () => {
 
   describe('POST /api/users', () => {
     it('사용자를 생성하고 201을 반환한다', async () => {
-      const res = await app.inject({ method: 'POST', url: '/api/users', payload: { userData: { name: '홍길동', gender: 'M', phone_number: '01012345678' }, organizationId: 1 } });
+      const res = await app.inject({ method: 'POST', url: '/api/users', payload: { userData: { name: '홍길동', gender: 'M', phoneNumber: '01012345678' }, organizationId: 1 } });
       expect(res.statusCode).toBe(201);
     });
   });

@@ -129,9 +129,9 @@ export async function userRoutes(app: FastifyInstance) {
           userData: z.object({
             name: z.string(),
             gender: z.string(),
-            name_suffix: z.string().optional(),
-            birth_date: z.string().optional(),
-            phone_number: z.string(),
+            nameSuffix: z.string().optional(),
+            birthDate: z.string().optional(),
+            phoneNumber: z.string(),
           }),
           organizationId: z.number(),
         }),
@@ -142,18 +142,18 @@ export async function userRoutes(app: FastifyInstance) {
         userData: {
           name: string;
           gender: string;
-          name_suffix?: string;
-          birth_date?: string;
-          phone_number: string;
+          nameSuffix?: string;
+          birthDate?: string;
+          phoneNumber: string;
         };
         organizationId: number;
       };
       const data = await userService.createUser({
         name: userData.name,
         gender: userData.gender,
-        nameSuffix: userData.name_suffix,
-        birthDate: userData.birth_date ? new Date(userData.birth_date) : null,
-        phoneNumber: userData.phone_number,
+        nameSuffix: userData.nameSuffix,
+        birthDate: userData.birthDate ? new Date(userData.birthDate) : null,
+        phoneNumber: userData.phoneNumber,
         organizationId,
       });
       return reply.status(201).send(data);
@@ -171,8 +171,8 @@ export async function userRoutes(app: FastifyInstance) {
             z.object({
               name: z.string(),
               gender: z.string(),
-              name_suffix: z.string().optional(),
-              birth_date: z.string().optional(),
+              nameSuffix: z.string().optional(),
+              birthDate: z.string().optional(),
               phone: z.string().optional(),
               email: z.string().optional(),
               organizationId: z.number(),
@@ -186,8 +186,8 @@ export async function userRoutes(app: FastifyInstance) {
         users: {
           name: string;
           gender: string;
-          name_suffix?: string;
-          birth_date?: string;
+          nameSuffix?: string;
+          birthDate?: string;
           phone?: string;
           email?: string;
           organizationId: number;
@@ -196,8 +196,8 @@ export async function userRoutes(app: FastifyInstance) {
       const data = await userService.createUsers(
         userList.map((u) => ({
           ...u,
-          nameSuffix: u.name_suffix,
-          birthDate: u.birth_date ? new Date(u.birth_date) : null,
+          nameSuffix: u.nameSuffix,
+          birthDate: u.birthDate ? new Date(u.birthDate) : null,
         })),
       );
       return reply.status(201).send(data);

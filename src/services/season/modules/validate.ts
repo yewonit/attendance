@@ -12,9 +12,9 @@ export interface SeasonDataItem {
   group: string;
   soon: string;
   name: string;
-  name_suffix?: string;
-  phone_number?: string;
-  birth_date?: string;
+  nameSuffix?: string;
+  phoneNumber?: string;
+  birthDate?: string;
   role?: string;
 }
 
@@ -71,14 +71,14 @@ const INVISIBLE_CHARS = /(\u200B|\u200C|\u200D|\uFEFF|\u00A0)/g;
 
 function validatePhone(data: SeasonDataItem[]) {
   for (const [i, item] of data.entries()) {
-    if (!item.phone_number?.trim()) continue;
-    const phone = item.phone_number.trim().replace(INVISIBLE_CHARS, '');
+    if (!item.phoneNumber?.trim()) continue;
+    const phone = item.phoneNumber.trim().replace(INVISIBLE_CHARS, '');
     if (!PHONE_REGEX.test(phone)) {
       throw new BadRequestError(
-        `${i + 1}번째 phone_number 형식이 올바르지 않습니다. (현재: ${item.phone_number})`,
+        `${i + 1}번째 phoneNumber 형식이 올바르지 않습니다. (현재: ${item.phoneNumber})`,
       );
     }
-    item.phone_number = phone.replaceAll('-', '').replaceAll(' ', '');
+    item.phoneNumber = phone.replaceAll('-', '').replaceAll(' ', '');
   }
 }
 
@@ -101,14 +101,14 @@ const TWO_DIGIT_REGEX = /^\d{2}$/;
 
 function validateBirthDate(data: SeasonDataItem[]) {
   for (const [i, item] of data.entries()) {
-    if (!item.birth_date?.toString().trim()) continue;
-    const s = item.birth_date.toString().trim();
+    if (!item.birthDate?.toString().trim()) continue;
+    const s = item.birthDate.toString().trim();
     if (!TWO_DIGIT_REGEX.test(s)) {
       throw new BadRequestError(
-        `${i + 1}번째 birth_date가 두자리 숫자가 아닙니다. (현재: ${item.birth_date})`,
+        `${i + 1}번째 birthDate가 두자리 숫자가 아닙니다. (현재: ${item.birthDate})`,
       );
     }
     const y = Number.parseInt(s, 10);
-    item.birth_date = y <= 50 ? `20${s}-01-01` : `19${s}-01-01`;
+    item.birthDate = y <= 50 ? `20${s}-01-01` : `19${s}-01-01`;
   }
 }

@@ -137,7 +137,7 @@ async function resolveAndAssignRole(
 
   if (candidates.length === 0) {
     throw new BadRequestError(
-      `${item.name} (전화번호: ${item.phone_number}) 사용자를 찾을 수 없습니다.`,
+      `${item.name} (전화번호: ${item.phoneNumber}) 사용자를 찾을 수 없습니다.`,
     );
   }
 
@@ -146,16 +146,16 @@ async function resolveAndAssignRole(
   if (candidates.length === 1) {
     user = candidates[0];
   } else {
-    if (item.phone_number) {
-      const byPhone = candidates.filter((u) => u.phoneNumber === item.phone_number);
+    if (item.phoneNumber) {
+      const byPhone = candidates.filter((u) => u.phoneNumber === item.phoneNumber);
       if (byPhone.length === 1) user = byPhone[0];
       else if (byPhone.length > 1)
         throw new BadRequestError(
-          `${item.name} (전화번호: ${item.phone_number}) 한 명으로 특정이 불가능합니다.`,
+          `${item.name} (전화번호: ${item.phoneNumber}) 한 명으로 특정이 불가능합니다.`,
         );
     }
-    if (!user && item.birth_date) {
-      const targetDate = item.birth_date;
+    if (!user && item.birthDate) {
+      const targetDate = item.birthDate;
       const byBirth = candidates.filter((u) => {
         if (!u.birthDate) return false;
         const bd =
@@ -167,19 +167,19 @@ async function resolveAndAssignRole(
       if (byBirth.length === 1) user = byBirth[0];
       else if (byBirth.length > 1)
         throw new BadRequestError(
-          `${item.name} (생년월일: ${item.birth_date}) 한 명으로 특정이 불가능합니다.`,
+          `${item.name} (생년월일: ${item.birthDate}) 한 명으로 특정이 불가능합니다.`,
         );
     }
-    if (!user && item.name_suffix) {
-      const bySuffix = candidates.filter((u) => u.nameSuffix === item.name_suffix);
+    if (!user && item.nameSuffix) {
+      const bySuffix = candidates.filter((u) => u.nameSuffix === item.nameSuffix);
       if (bySuffix.length === 1) user = bySuffix[0];
       else if (bySuffix.length > 1)
         throw new BadRequestError(
-          `${item.name} (접미사: ${item.name_suffix}) 한 명으로 특정이 불가능합니다.`,
+          `${item.name} (접미사: ${item.nameSuffix}) 한 명으로 특정이 불가능합니다.`,
         );
     }
     if (!user)
-      throw new BadRequestError(`${item.name} ${item.phone_number} 한 명으로 특정이 불가능합니다.`);
+      throw new BadRequestError(`${item.name} ${item.phoneNumber} 한 명으로 특정이 불가능합니다.`);
   }
 
   const role = allRoles.find((r) => r.name === item.role);
