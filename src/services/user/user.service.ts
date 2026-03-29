@@ -75,7 +75,7 @@ interface BatchUserInput {
   nameSuffix?: string;
   birthDate?: Date | null;
   phone?: string;
-  email?: string;
+  email?: string | null;
   organizationId: number;
 }
 

@@ -135,7 +135,7 @@ interface RecordData {
     checkInTime?: Date | null;
     checkOutTime?: Date | null;
   }[];
-  imageInfo?: { fileName: string; url: string; fileSize?: number; fileType?: string };
+  imageInfo?: { fileName: string; url: string; fileSize?: number; fileType?: string } | null;
 }
 
 /** 활동과 출석을 동시에 생성합니다. (단일 트랜잭션) */
