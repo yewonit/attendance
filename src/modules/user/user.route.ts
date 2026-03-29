@@ -174,7 +174,7 @@ export async function userRoutes(app: FastifyInstance) {
               nameSuffix: z.string().optional(),
               birthDate: z.string().optional(),
               phone: z.string().optional(),
-              email: z.string().optional(),
+              email: z.string().nullish(),
               organizationId: z.number(),
             }),
           ),
@@ -189,7 +189,7 @@ export async function userRoutes(app: FastifyInstance) {
           nameSuffix?: string;
           birthDate?: string;
           phone?: string;
-          email?: string;
+          email?: string | null;
           organizationId: number;
         }[];
       };

@@ -34,7 +34,7 @@ const activityBodySchema = z.object({
       fileSize: z.number().optional(),
       fileType: z.string().optional(),
     })
-    .optional(),
+    .nullish(),
 });
 
 export async function activityRoutes(app: FastifyInstance) {
