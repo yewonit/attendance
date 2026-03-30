@@ -50,7 +50,11 @@ export async function buildApp(): Promise<FastifyInstance> {
   app.setSerializerCompiler(serializerCompiler);
 
   // --- 핵심 플러그인 ---
-  await app.register(fastifyCors, { origin: true, credentials: true });
+  await app.register(fastifyCors, {
+    origin: true,
+    credentials: true,
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  });
   await app.register(fastifyCompress);
   await app.register(fastifyCookie);
   await app.register(requestLoggerPlugin);
