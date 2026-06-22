@@ -2,7 +2,7 @@
  * 사용자 크론 작업 서비스
  * 새가족 상태 해제 및 장결자 판정 로직을 처리합니다.
  */
-import { and, eq, inArray, lte } from 'drizzle-orm';
+import { and, eq, gte, inArray, lte } from 'drizzle-orm';
 import { db } from '../../db';
 import { users } from '../../db/schema/user';
 import { userAttendanceAggregates } from '../../db/schema/user-attendance-aggregate';
@@ -27,11 +27,11 @@ export async function resetExpiredNewMembers(): Promise<void> {
 
 /**
  * 장결자 상태를 갱신합니다.
- * - 청년예배 연속 결석 0회인 장결자 → 장결 해제
- * - 청년예배 연속 결석 4회인 비장결자 → 장결 설정
+ * - 청년예배 연속 출석 1회 이상인 장결자 → 장결 해제
+ * - 청년예배 연속 결석 4회 이상인 비장결자 → 장결 설정
  */
 export async function updateLongTermAbsenteeStatus(): Promise<void> {
-  // 장결자 → 연속 결석 0회 → 해제
+  // 장결자 → 연속 출석 1회 이상 → 해제
   const toUnset = await db
     .select({ userId: userAttendanceAggregates.userId })
     .from(userAttendanceAggregates)
@@ -42,7 +42,7 @@ export async function updateLongTermAbsenteeStatus(): Promise<void> {
     .where(
       and(
         eq(userAttendanceAggregates.activityType, ACTIVITY_TYPES.SUNDAY_YOUNG_ADULT),
-        eq(userAttendanceAggregates.absenceContinuousCount, 0),
+        gte(userAttendanceAggregates.attendanceContinuousCount, 1),
       ),
     );
 
@@ -58,7 +58,7 @@ export async function updateLongTermAbsenteeStatus(): Promise<void> {
       );
   }
 
-  // 비장결자 → 연속 결석 4회 → 장결 설정
+  // 비장결자 → 연속 결석 4회 이상 → 장결 설정
   const toSet = await db
     .select({ userId: userAttendanceAggregates.userId })
     .from(userAttendanceAggregates)
@@ -69,7 +69,7 @@ export async function updateLongTermAbsenteeStatus(): Promise<void> {
     .where(
       and(
         eq(userAttendanceAggregates.activityType, ACTIVITY_TYPES.SUNDAY_YOUNG_ADULT),
-        eq(userAttendanceAggregates.absenceContinuousCount, LONG_TERM_ABSENCE_THRESHOLD),
+        gte(userAttendanceAggregates.absenceContinuousCount, LONG_TERM_ABSENCE_THRESHOLD),
       ),
     );
 
