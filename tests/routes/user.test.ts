@@ -79,7 +79,7 @@ describe('User Routes', () => {
 
   describe('PATCH /api/users/:id/change-organization', () => {
     it('조직 변경 후 {message: success}를 반환한다', async () => {
-      const res = await app.inject({ method: 'PATCH', url: '/api/users/1/change-organization', headers: AUTH_HEADERS, payload: { organizationId: 2, roleName: '순원' } });
+      const res = await app.inject({ method: 'PATCH', url: '/api/users/1/change-organization', headers: AUTH_HEADERS, payload: { organizationId: 2, roleName: '부그룹장' } });
       expect(res.statusCode).toBe(200);
       expect(res.json()).toHaveProperty('message', 'success');
     });
