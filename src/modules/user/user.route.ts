@@ -1,8 +1,10 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import { ASSIGNABLE_ROLE_NAMES, PERMISSION_CODES } from '../../services/shared/constants';
 import { getAllNewMembers, getMembersWithFilters } from '../../services/user/user-filter.service';
 import {
   changeOrganization,
+  changeOrganizations,
   getAccessibleOrganizations,
 } from '../../services/user/user-role.service';
 import * as userService from '../../services/user/user.service';
@@ -10,6 +12,12 @@ import * as userService from '../../services/user/user.service';
 const TAG = ['Users'] as const;
 
 export async function userRoutes(app: FastifyInstance) {
+  /** 구성원 소속/직분 변경: 인증 + MEMBER_MANAGEMENT_CONTROL 권한 필요 */
+  const memberControlGuard = [
+    app.authenticate,
+    app.requirePermission(PERMISSION_CODES.MEMBER_MANAGEMENT_CONTROL),
+  ];
+
   // --- 특수 경로 (CRUD보다 먼저 등록) ---
 
   app.get(
@@ -64,10 +72,12 @@ export async function userRoutes(app: FastifyInstance) {
     {
       schema: {
         tags: [...TAG],
-        summary: '사용자 조직 변경',
+        summary: '사용자 조직/직분 변경',
+        security: [{ bearerAuth: [] }],
         params: z.object({ id: z.coerce.number() }),
-        body: z.object({ organizationId: z.number(), roleName: z.string() }),
+        body: z.object({ organizationId: z.number(), roleName: z.enum(ASSIGNABLE_ROLE_NAMES) }),
       },
+      preHandler: memberControlGuard,
     },
     async (req) => {
       const { id } = req.params as { id: number };
@@ -82,21 +92,33 @@ export async function userRoutes(app: FastifyInstance) {
     {
       schema: {
         tags: [...TAG],
-        summary: '사용자 일괄 조직 변경',
+        summary: '사용자 일괄 조직/직분 변경 (단일 트랜잭션)',
+        security: [{ bearerAuth: [] }],
         body: z.object({
-          data: z.array(
-            z.object({ id: z.number(), organizationId: z.number(), roleName: z.string() }),
-          ),
+          data: z
+            .array(
+              z.object({
+                id: z.number(),
+                organizationId: z.number(),
+                roleName: z.enum(ASSIGNABLE_ROLE_NAMES),
+              }),
+            )
+            .min(1),
         }),
       },
+      preHandler: memberControlGuard,
     },
     async (req) => {
       const { data } = req.body as {
         data: { id: number; organizationId: number; roleName: string }[];
       };
-      for (const item of data) {
-        await changeOrganization(item.id, item.organizationId, item.roleName);
-      }
+      await changeOrganizations(
+        data.map((item) => ({
+          userId: item.id,
+          organizationId: item.organizationId,
+          roleName: item.roleName,
+        })),
+      );
       return { message: 'success' };
     },
   );
@@ -108,9 +130,11 @@ export async function userRoutes(app: FastifyInstance) {
     {
       schema: {
         tags: [...TAG],
-        summary: 'ID로 사용자 조회',
+        summary: 'ID로 사용자 조회 (현재 회기 소속/직분 포함)',
+        security: [{ bearerAuth: [] }],
         params: z.object({ id: z.coerce.number() }),
       },
+      preHandler: [app.authenticate],
     },
     async (req) => {
       const { id } = req.params as { id: number };
@@ -132,6 +156,7 @@ export async function userRoutes(app: FastifyInstance) {
             nameSuffix: z.string().optional(),
             birthDate: z.string().optional(),
             phoneNumber: z.string(),
+            isNewMember: z.boolean().optional(),
           }),
           organizationId: z.number(),
         }),
@@ -145,6 +170,7 @@ export async function userRoutes(app: FastifyInstance) {
           nameSuffix?: string;
           birthDate?: string;
           phoneNumber: string;
+          isNewMember?: boolean;
         };
         organizationId: number;
       };
@@ -154,6 +180,7 @@ export async function userRoutes(app: FastifyInstance) {
         nameSuffix: userData.nameSuffix,
         birthDate: userData.birthDate ? new Date(userData.birthDate) : null,
         phoneNumber: userData.phoneNumber,
+        isNewMember: userData.isNewMember,
         organizationId,
       });
       return reply.status(201).send(data);
@@ -210,6 +237,7 @@ export async function userRoutes(app: FastifyInstance) {
       schema: {
         tags: [...TAG],
         summary: '사용자 목록 조회 (필터/페이지네이션 지원)',
+        security: [{ bearerAuth: [] }],
         querystring: z.object({
           search: z.string().optional(),
           department: z.string().optional(),
@@ -219,6 +247,7 @@ export async function userRoutes(app: FastifyInstance) {
           limit: z.coerce.number().optional(),
         }),
       },
+      preHandler: [app.authenticate],
     },
     async (req) => {
       const { search, department, group, team, page, limit } = req.query as {

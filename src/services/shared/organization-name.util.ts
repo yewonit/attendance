@@ -1,4 +1,5 @@
 /** 조직명 파싱/빌드 유틸리티 — 조직명 컨벤션: "N국_OOO그룹_OOO순" */
+import { escapeLike } from './sql.util';
 
 export interface ParsedOrganization {
   department: string | null;
@@ -29,19 +30,21 @@ export function getOrganizationNamePattern(gook?: string, group?: string, soon?:
 }
 
 /**
- * 필터 조건으로 LIKE 패턴을 생성합니다.
- * @example buildOrganizationNamePattern("1국", "김민수그룹") → "1국_김민수그룹"
+ * 필터 조건으로 LIKE 패턴을 생성합니다. (입력값과 구분자 `_`는 이스케이프, 지정하지 않은 중간 단계는 `%`)
+ * @example buildOrganizationNamePattern("1국", "김민수그룹") → "1국\\_김민수그룹"
+ * @example buildOrganizationNamePattern("1국", undefined, "이용걸순") → "1국\\_%\\_이용걸순"
  */
 export function buildOrganizationNamePattern(
   department?: string,
   group?: string,
   team?: string,
 ): string | null {
-  if (!department && !group && !team) return null;
+  const segments = [department, group, team];
+  const lastIndex = segments.map((s) => !!s).lastIndexOf(true);
+  if (lastIndex === -1) return null;
 
-  let pattern = '';
-  if (department) pattern = department;
-  if (group) pattern = pattern ? `${pattern}_${group}` : `%_${group}`;
-  if (team) pattern = pattern ? `${pattern}_${team}` : `%_%_${team}`;
-  return pattern;
+  return segments
+    .slice(0, lastIndex + 1)
+    .map((s) => (s ? escapeLike(s) : '%'))
+    .join('\\_');
 }

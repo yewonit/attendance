@@ -5,6 +5,7 @@
  */
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
+import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
 import { ZodError } from 'zod';
 import { AppError } from '../utils/errors';
 import { sanitize } from './request-logger';
@@ -25,6 +26,19 @@ async function errorHandlerPlugin(app: FastifyInstance): Promise<void> {
         error: {
           code: error.code,
           message: error.message,
+        },
+      });
+    }
+
+    // 라우트 schema(params/querystring/body) 검증 실패 — fastify-type-provider-zod가 ZodError 대신 validation 배열로 전달
+    if (hasZodFastifySchemaValidationErrors(error)) {
+      request.log.warn(errorContext, 'Validation error');
+      return reply.status(400).send({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: '입력값이 올바르지 않습니다.',
+          details: error.validation.map((v) => ({ path: v.instancePath, message: v.message })),
         },
       });
     }

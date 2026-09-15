@@ -10,7 +10,26 @@ import { hashPassword } from '../../utils/password';
 import { getCurrentSeasonId } from '../season/season.service';
 import { ROLE_IDS } from '../shared/constants';
 import { getRecentSunday } from '../shared/date.util';
+import { parseOrganizationName } from '../shared/organization-name.util';
+import { pickHighestRole } from '../shared/role.util';
 import { formatPhoneNumber, validateEmail, validatePassword } from '../shared/validation.util';
+
+/** API 응답에 노출해도 되는 사용자 컬럼 (password 제외) */
+const publicUserColumns = {
+  id: users.id,
+  name: users.name,
+  nameSuffix: users.nameSuffix,
+  email: users.email,
+  gender: users.gender,
+  birthDate: users.birthDate,
+  phoneNumber: users.phoneNumber,
+  isNewMember: users.isNewMember,
+  isLongTermAbsentee: users.isLongTermAbsentee,
+  isDeleted: users.isDeleted,
+  registrationDate: users.registrationDate,
+  createdAt: users.createdAt,
+  updatedAt: users.updatedAt,
+};
 
 // ── 생성 ──
 
@@ -21,6 +40,8 @@ interface CreateUserInput {
   birthDate?: Date | null;
   phoneNumber: string;
   organizationId: number;
+  /** 새가족 여부 (기본값: true) */
+  isNewMember?: boolean;
 }
 
 /** 단일 사용자를 생성하고 기본 역할(순원)을 부여합니다. */
@@ -47,7 +68,7 @@ export async function createUser(input: CreateUserInput) {
       birthDate: input.birthDate ?? null,
       phoneNumber: phone,
       registrationDate: getRecentSunday() as unknown as Date,
-      isNewMember: true,
+      isNewMember: input.isNewMember ?? true,
     });
 
     const userId = result.insertId;
@@ -113,16 +134,42 @@ export async function createUsers(inputList: BatchUserInput[]) {
 
 // ── 조회 ──
 
-/** ID로 사용자를 조회합니다. */
+/**
+ * ID로 사용자를 조회합니다. (password 제외)
+ * 현재 회기 소속/직분은 우선순위가 가장 높은 역할 기준으로 affiliation, role에 담습니다.
+ */
 export async function findUserById(id: number) {
-  const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  const [user] = await db.select(publicUserColumns).from(users).where(eq(users.id, id)).limit(1);
   if (!user) throw new NotFoundError('User', id);
-  return user;
+
+  const seasonId = await getCurrentSeasonId();
+  const roleRows = await db
+    .select({ roleName: roles.name, roleLevel: roles.level, orgName: organizations.name })
+    .from(userRoles)
+    .innerJoin(roles, and(eq(userRoles.roleId, roles.id), eq(roles.isDeleted, false)))
+    .innerJoin(
+      organizations,
+      and(
+        eq(userRoles.organizationId, organizations.id),
+        eq(organizations.seasonId, seasonId),
+        eq(organizations.isDeleted, false),
+      ),
+    )
+    .where(eq(userRoles.userId, id));
+
+  const primaryRole = pickHighestRole(roleRows);
+
+  return {
+    ...user,
+    birthYear: user.birthDate ? new Date(user.birthDate).getFullYear().toString().slice(-2) : null,
+    affiliation: primaryRole ? parseOrganizationName(primaryRole.orgName) : null,
+    role: primaryRole?.roleName ?? null,
+  };
 }
 
-/** 전체 사용자를 조회합니다. */
+/** 전체 사용자를 조회합니다. (password 제외) */
 export async function findAllUsers() {
-  return db.select().from(users);
+  return db.select(publicUserColumns).from(users);
 }
 
 /** 이름으로 사용자를 검색하고 역할/조직 정보를 포함합니다. (N+1 방지) */
