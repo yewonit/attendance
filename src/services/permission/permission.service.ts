@@ -35,3 +35,20 @@ export async function getUserPermissionCodes(userId: number): Promise<string[]> 
   const codes = new Set(rows.map((r) => r.code));
   return Array.from(codes);
 }
+
+/** 이메일로 사용자를 찾아 권한 코드를 조회합니다. 사용자가 없거나 삭제된 경우 빈 배열을 반환합니다. */
+export async function getUserPermissionCodesByEmail(email: string): Promise<string[]> {
+  const [user] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+  if (!user) return [];
+
+  try {
+    return await getUserPermissionCodes(user.id);
+  } catch (error) {
+    if (error instanceof NotFoundError) return [];
+    throw error;
+  }
+}

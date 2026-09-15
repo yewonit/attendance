@@ -34,6 +34,14 @@ export const ATTENDANCE_STATUS = {
 /** 기본 역할명 */
 export const DEFAULT_ROLE_NAME = '순원';
 
+/** 구성원 관리 > 소속 변경에서 부여/변경할 수 있는 직분 */
+export const ASSIGNABLE_ROLE_NAMES = ['그룹장', '순장', '부순장', '순원'] as const;
+
+/** 권한 코드 (permission.code) */
+export const PERMISSION_CODES = {
+  MEMBER_MANAGEMENT_CONTROL: 'MEMBER_MANAGEMENT_CONTROL',
+} as const;
+
 /** 새가족 기간 (28일) */
 export const NEW_MEMBER_DURATION_DAYS = 28;
 
