@@ -42,6 +42,14 @@ export function daysAgo(days: number): Date {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 }
 
+/** 기준일로부터 N개월 전 같은 날짜(00:00)를 반환합니다. 해당 월에 같은 날짜가 없으면 말일로 맞춥니다. */
+export function monthsAgo(months: number, base: Date = new Date()): Date {
+  const target = new Date(base.getFullYear(), base.getMonth() - months, 1);
+  const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+  target.setDate(Math.min(base.getDate(), lastDay));
+  return target;
+}
+
 /** 주어진 년도 12월 첫 일요일을 반환합니다. */
 export function getFirstSundayOfDecember(year: number): Date {
   const dec1 = new Date(year, 11, 1);

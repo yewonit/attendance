@@ -11,6 +11,8 @@ vi.mock('../../src/services/attendance/attendance.service', () => ({
   recentSundayAttendanceToExcel: vi.fn().mockResolvedValue(Buffer.from('xlsx-data')),
   getRecentWednesdayAttendance: vi.fn().mockResolvedValue([]),
   recentWednesdayAttendanceToExcel: vi.fn().mockResolvedValue(Buffer.from('xlsx-data')),
+  getRecentAttendanceRate: vi.fn().mockResolvedValue([]),
+  recentAttendanceRateToExcel: vi.fn().mockResolvedValue(Buffer.from('xlsx-data')),
 }));
 
 vi.mock('../../src/services/auth/auth.service', () => ({ verifyWithToken: vi.fn() }));
@@ -88,6 +90,26 @@ describe('Attendance Routes', () => {
       expect(res.statusCode).toBe(200);
       expect(res.headers['content-type']).toContain('spreadsheetml');
       expect(res.headers['content-disposition']).toContain('recent_wednesday_attendance.xlsx');
+    });
+  });
+
+  describe('GET /api/attendances/rate/recent/excel', () => {
+    it('months 개월치 출석률 엑셀 파일(xlsx)을 반환한다', async () => {
+      const res = await app.inject({ method: 'GET', url: '/api/attendances/rate/recent/excel?months=6' });
+      expect(res.statusCode).toBe(200);
+      expect(res.headers['content-type']).toContain('spreadsheetml');
+      expect(res.headers['content-disposition']).toContain('recent_6months_attendance_rate.xlsx');
+    });
+
+    it('months를 생략하면 3개월로 조회한다', async () => {
+      const res = await app.inject({ method: 'GET', url: '/api/attendances/rate/recent/excel' });
+      expect(res.statusCode).toBe(200);
+      expect(res.headers['content-disposition']).toContain('recent_3months_attendance_rate.xlsx');
+    });
+
+    it('months가 1~12 범위를 벗어나면 400을 반환한다', async () => {
+      const res = await app.inject({ method: 'GET', url: '/api/attendances/rate/recent/excel?months=13' });
+      expect(res.statusCode).toBe(400);
     });
   });
 });

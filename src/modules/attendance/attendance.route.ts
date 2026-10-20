@@ -120,4 +120,29 @@ export async function attendanceRoutes(app: FastifyInstance) {
         .send(buffer);
     },
   );
+
+  app.get(
+    '/rate/recent/excel',
+    {
+      schema: {
+        tags: [...TAG],
+        summary: '최근 N개월 예배별 출석률 엑셀 다운로드',
+        querystring: z.object({ months: z.coerce.number().int().min(1).max(12).default(3) }),
+        produces: [XLSX_CONTENT_TYPE],
+      },
+    },
+    async (req, reply) => {
+      const { months } = req.query as { months: number };
+      const rates = await attendanceService.getRecentAttendanceRate(months);
+      const buffer = await attendanceService.recentAttendanceRateToExcel(rates);
+
+      return reply
+        .header('Content-Type', XLSX_CONTENT_TYPE)
+        .header(
+          'Content-Disposition',
+          `attachment; filename=recent_${months}months_attendance_rate.xlsx`,
+        )
+        .send(buffer);
+    },
+  );
 }
