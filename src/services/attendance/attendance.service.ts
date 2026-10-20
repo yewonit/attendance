@@ -7,6 +7,10 @@ export {
   getRecentWednesdayAttendance,
   recentWednesdayAttendanceToExcel,
 } from './modules/recent-wednesday';
+export {
+  getRecentAttendanceRate,
+  recentAttendanceRateToExcel,
+} from './modules/recent-attendance-rate';
 export { getWeeklyAttendanceAggregation } from './modules/weekly-aggregation';
 export { getWeeklyAttendanceGraph } from './modules/weekly-graph';
 export { getContinuousMembers } from './modules/continuous-members';

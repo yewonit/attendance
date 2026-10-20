@@ -58,6 +58,7 @@ const API_MANIFEST: readonly string[] = [
   'GET /api/attendances/trend',
   'GET /api/attendances/sunday/recent/excel',
   'GET /api/attendances/wednesday/recent/excel',
+  'GET /api/attendances/rate/recent/excel',
   // Seasons
   'POST /api/seasons',
   'GET /api/seasons/next',
