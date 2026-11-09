@@ -6,6 +6,7 @@ import { createOrganizationAndUserRole } from '../../services/season/modules/cre
 import { deleteBeforeCreateOrganization } from '../../services/season/modules/delete-before-create';
 import { validateNewSeasonData } from '../../services/season/modules/validate';
 import { getAllNationsOrgList, getNextOrganization } from '../../services/season/season.service';
+import { PERMISSION_CODES } from '../../services/shared/constants';
 
 const TAG = ['Seasons'] as const;
 
@@ -16,6 +17,7 @@ export async function seasonRoutes(app: FastifyInstance) {
       schema: {
         tags: [...TAG],
         summary: '새 회기 데이터 일괄 생성',
+        security: [{ bearerAuth: [] }],
         body: z.object({
           data: z.array(
             z.object({
@@ -31,6 +33,11 @@ export async function seasonRoutes(app: FastifyInstance) {
           ),
         }),
       },
+      // 다음 회기 조직/직분을 통째로 재생성하므로 소속/직분 변경 권한을 요구합니다.
+      preHandler: [
+        app.authenticate,
+        app.requirePermission(PERMISSION_CODES.MEMBER_MANAGEMENT_CONTROL),
+      ],
     },
     async (req, reply) => {
       const { data } = req.body as { data: Parameters<typeof validateNewSeasonData>[0] };

@@ -10,6 +10,7 @@ import { users } from '../../../db/schema/user';
 import { userAttendanceAggregates } from '../../../db/schema/user-attendance-aggregate';
 import { userRoles } from '../../../db/schema/user-role';
 import { BadRequestError } from '../../../utils/errors';
+import { getKstYear } from '../../shared/date.util';
 import type { SeasonDataItem } from './validate';
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -155,19 +156,15 @@ async function resolveAndAssignRole(
         );
     }
     if (!user && item.birthDate) {
-      const targetDate = item.birthDate;
-      const byBirth = candidates.filter((u) => {
-        if (!u.birthDate) return false;
-        const bd =
-          u.birthDate instanceof Date
-            ? u.birthDate.toISOString().slice(0, 10)
-            : String(u.birthDate);
-        return bd === targetDate;
-      });
+      // 엑셀의 기수는 연도만 의미하므로(validate에서 YYYY-01-01로 변환) 연도끼리 비교합니다.
+      const targetYear = Number(item.birthDate.slice(0, 4));
+      const byBirth = candidates.filter(
+        (u) => u.birthDate !== null && getKstYear(new Date(u.birthDate)) === targetYear,
+      );
       if (byBirth.length === 1) user = byBirth[0];
       else if (byBirth.length > 1)
         throw new BadRequestError(
-          `${item.name} (생년월일: ${item.birthDate}) 한 명으로 특정이 불가능합니다.`,
+          `${item.name} (기수: ${item.birthDate.slice(2, 4)}) 한 명으로 특정이 불가능합니다.`,
         );
     }
     if (!user && item.nameSuffix) {

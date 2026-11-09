@@ -75,3 +75,14 @@ export function getFirstWednesdayAfterLastSundayOfNovember(year: number): Date {
   firstWed.setHours(21, 20, 0, 0);
   return firstWed;
 }
+
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+/**
+ * 한국 시간(KST) 기준 연도를 반환합니다. 서버 프로세스의 TZ 설정과 무관합니다.
+ * DB 커넥션이 timezone '+09:00'이라 DATE 1996-01-01은 UTC 1995-12-31T15:00Z로 읽히므로,
+ * toISOString()이나 (UTC 서버의) getFullYear() 대신 이 함수를 사용해야 합니다.
+ */
+export function getKstYear(date: Date): number {
+  return new Date(date.getTime() + KST_OFFSET_MS).getUTCFullYear();
+}
