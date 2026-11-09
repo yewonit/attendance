@@ -18,7 +18,7 @@ vi.mock('../../src/services/user/user-filter.service', () => ({ getMembersWithFi
 vi.mock('../../src/services/permission/permission.service', () => ({ getUserPermissionCodes: vi.fn() }));
 vi.mock('../../src/services/organization/organization.service', () => ({ findOrganizations: vi.fn(), findOrganizationById: vi.fn(), createOrganization: vi.fn(), updateOrganization: vi.fn(), deleteOrganization: vi.fn(), getOrganizationMembers: vi.fn(), getMembersWithRoles: vi.fn(), getAllOrganizationMemberCounts: vi.fn(), getFilterOptions: vi.fn() }));
 vi.mock('../../src/services/attendance/attendance.service', () => ({ getWeeklyAttendanceAggregation: vi.fn(), getWeeklyAttendanceGraph: vi.fn(), getContinuousMembers: vi.fn(), getYoungAdultAttendanceTrend: vi.fn(), getRecentSundayAttendance: vi.fn(), recentSundayAttendanceToExcel: vi.fn(), getRecentWednesdayAttendance: vi.fn(), recentWednesdayAttendanceToExcel: vi.fn() }));
-vi.mock('../../src/services/season/season.service', () => ({ getNextOrganization: vi.fn(), getAllNationsOrgList: vi.fn(), getCurrentSeasonId: vi.fn(), getCurrentSeasonMembers: vi.fn() }));
+vi.mock('../../src/services/season/season.service', () => ({ getNextOrganization: vi.fn(), getAllNationsOrgList: vi.fn(), getCurrentSeasonId: vi.fn(), getCurrentSeasonMembers: vi.fn(), getRematchCandidates: vi.fn() }));
 vi.mock('../../src/services/season/modules/create-new-season', () => ({ createNewSeason: vi.fn() }));
 vi.mock('../../src/services/season/modules/sync-season-organizations', () => ({ syncSeasonOrganizations: vi.fn() }));
 vi.mock('../../src/services/season/modules/validate', () => ({ validateNewSeasonData: vi.fn().mockImplementation((d: unknown) => d) }));

@@ -3,11 +3,13 @@ import type { FastifyInstance } from 'fastify';
 import { buildTestApp } from '../helpers/build-test-app';
 import { getUserPermissionCodesByEmail } from '../../src/services/permission/permission.service';
 import { validateNewSeasonData } from '../../src/services/season/modules/validate';
+import { getRematchCandidates } from '../../src/services/season/season.service';
 
 vi.mock('../../src/services/season/season.service', () => ({
   getNextOrganization: vi.fn().mockResolvedValue([{ name: '테스트', organization: '1국_김그룹_이순' }]),
   getAllNationsOrgList: vi.fn().mockResolvedValue([{ id: 1, name: '237국_순1' }]),
   getCurrentSeasonId: vi.fn().mockResolvedValue(1),
+  getRematchCandidates: vi.fn().mockResolvedValue([{ userId: 1, name: '테스트', nameSuffix: 'A', phoneNumber: '01012345678', birthYear: '96', organizations: [{ gook: '1국', group: '김그룹', soon: '이순', role: '순원' }] }]),
   getCurrentSeasonMembers: vi.fn().mockResolvedValue([{ userId: 1, name: '테스트', nameSuffix: 'A', phoneNumber: '01012345678', birthYear: '96', gook: '1국', group: '김그룹', soon: '이순', role: '순원' }]),
 }));
 vi.mock('../../src/services/season/modules/create-new-season', () => ({ createNewSeason: vi.fn().mockResolvedValue(2) }));
@@ -90,6 +92,31 @@ describe('Season Routes', () => {
     it('MEMBER_MANAGEMENT_CONTROL 권한이 없으면 403을 반환한다', async () => {
       vi.mocked(getUserPermissionCodesByEmail).mockResolvedValueOnce([]);
       const res = await app.inject({ method: 'GET', url: '/api/seasons/current/members', headers: AUTH_HEADERS });
+      expect(res.statusCode).toBe(403);
+    });
+  });
+
+  describe('GET /api/seasons/rematch-candidates', () => {
+    it('같은 이름의 사용자와 현재 소속을 {data}로 반환한다', async () => {
+      const res = await app.inject({ method: 'GET', url: `/api/seasons/rematch-candidates?name=${encodeURIComponent('테스트')}`, headers: AUTH_HEADERS });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data[0]).toMatchObject({ userId: 1, organizations: [{ gook: '1국', group: '김그룹', soon: '이순' }] });
+      expect(getRematchCandidates).toHaveBeenLastCalledWith('테스트');
+    });
+
+    it('이름이 비어 있으면 400을 반환한다', async () => {
+      const res = await app.inject({ method: 'GET', url: '/api/seasons/rematch-candidates?name=%20', headers: AUTH_HEADERS });
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('토큰이 없으면 401을 반환한다', async () => {
+      const res = await app.inject({ method: 'GET', url: '/api/seasons/rematch-candidates?name=a' });
+      expect(res.statusCode).toBe(401);
+    });
+
+    it('MEMBER_MANAGEMENT_CONTROL 권한이 없으면 403을 반환한다', async () => {
+      vi.mocked(getUserPermissionCodesByEmail).mockResolvedValueOnce([]);
+      const res = await app.inject({ method: 'GET', url: '/api/seasons/rematch-candidates?name=a', headers: AUTH_HEADERS });
       expect(res.statusCode).toBe(403);
     });
   });

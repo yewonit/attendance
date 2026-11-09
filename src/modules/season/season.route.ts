@@ -8,6 +8,7 @@ import {
   getAllNationsOrgList,
   getCurrentSeasonMembers,
   getNextOrganization,
+  getRematchCandidates,
 } from '../../services/season/season.service';
 import { PERMISSION_CODES } from '../../services/shared/constants';
 
@@ -72,6 +73,27 @@ export async function seasonRoutes(app: FastifyInstance) {
     },
     async () => {
       const data = await getCurrentSeasonMembers();
+      return { data };
+    },
+  );
+
+  app.get(
+    '/rematch-candidates',
+    {
+      schema: {
+        tags: [...TAG],
+        summary: '재매칭 후보 조회 — 같은 이름의 사용자와 현재 회기 소속(국/그룹/순)',
+        security: [{ bearerAuth: [] }],
+        querystring: z.object({ name: z.string().trim().min(1) }),
+      },
+      preHandler: [
+        app.authenticate,
+        app.requirePermission(PERMISSION_CODES.MEMBER_MANAGEMENT_CONTROL),
+      ],
+    },
+    async (req) => {
+      const { name } = req.query as { name: string };
+      const data = await getRematchCandidates(name);
       return { data };
     },
   );

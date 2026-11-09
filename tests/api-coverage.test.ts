@@ -62,6 +62,7 @@ const API_MANIFEST: readonly string[] = [
   // Seasons
   'POST /api/seasons',
   'GET /api/seasons/current/members',
+  'GET /api/seasons/rematch-candidates',
   'GET /api/seasons/next',
   'GET /api/seasons/all-nations',
   // Cron
