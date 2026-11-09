@@ -7,6 +7,8 @@ import { seasons } from '../../db/schema/season';
 import { users } from '../../db/schema/user';
 import { userRoles } from '../../db/schema/user-role';
 import { NotFoundError } from '../../utils/errors';
+import { getKstYear } from '../shared/date.util';
+import { parseOrganizationName } from '../shared/organization-name.util';
 
 /** 현재 날짜 기준 활성 시즌 ID를 반환합니다. */
 export async function getCurrentSeasonId(): Promise<number> {
@@ -174,6 +176,51 @@ export async function getNextOrganization(
   return results;
 }
 
+/**
+ * 현재 회기 구성원을 소속(국/그룹/순)과 함께 조회합니다.
+ * 회기 변경 엑셀의 행을 기존 인원과 재매칭할 때 사용합니다. 직분이 여러 개인 사용자는 여러 행으로 반환됩니다.
+ */
+export async function getCurrentSeasonMembers(): Promise<CurrentSeasonMember[]> {
+  const seasonId = await getCurrentSeasonId();
+  const rows = await db
+    .select({
+      userId: users.id,
+      name: users.name,
+      nameSuffix: users.nameSuffix,
+      phoneNumber: users.phoneNumber,
+      birthDate: users.birthDate,
+      orgName: organizations.name,
+      roleName: roles.name,
+    })
+    .from(userRoles)
+    .innerJoin(users, and(eq(userRoles.userId, users.id), eq(users.isDeleted, false)))
+    .innerJoin(
+      organizations,
+      and(
+        eq(userRoles.organizationId, organizations.id),
+        eq(organizations.seasonId, seasonId),
+        eq(organizations.isDeleted, false),
+      ),
+    )
+    .innerJoin(roles, eq(userRoles.roleId, roles.id))
+    .orderBy(organizations.name, users.name);
+
+  return rows.map((r) => {
+    const org = parseOrganizationName(r.orgName);
+    return {
+      userId: r.userId,
+      name: r.name,
+      nameSuffix: r.nameSuffix,
+      phoneNumber: r.phoneNumber,
+      birthYear: r.birthDate ? String(getKstYear(new Date(r.birthDate))).slice(-2) : null,
+      gook: org.department,
+      group: org.group,
+      soon: org.team,
+      role: r.roleName,
+    };
+  });
+}
+
 /** 237국/올네이션스국 조직 목록을 조회합니다. */
 export async function getAllNationsOrgList() {
   const seasonId = await getCurrentSeasonId();
@@ -203,4 +250,17 @@ export interface NextOrgResult {
   role: string;
   organization: string;
   organizationPeople: NextOrgPerson[];
+}
+
+export interface CurrentSeasonMember {
+  userId: number;
+  name: string;
+  nameSuffix: string | null;
+  phoneNumber: string;
+  /** 기수 (KST 기준 연도 두 자리) */
+  birthYear: string | null;
+  gook: string | null;
+  group: string | null;
+  soon: string | null;
+  role: string;
 }
