@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDate, monthsAgo } from '../../src/services/shared/date.util';
+import { formatDate, getKstYear, monthsAgo } from '../../src/services/shared/date.util';
 import { buildOrganizationNamePattern } from '../../src/services/shared/organization-name.util';
 import { pickHighestRole } from '../../src/services/shared/role.util';
 import { escapeLike } from '../../src/services/shared/sql.util';
@@ -56,5 +56,15 @@ describe('monthsAgo', () => {
   it('해당 월에 같은 날짜가 없으면 말일로 맞춘다', () => {
     expect(formatDate(monthsAgo(1, new Date(2026, 2, 31)))).toBe('2026-02-28');
     expect(formatDate(monthsAgo(1, new Date(2024, 2, 31)))).toBe('2024-02-29');
+  });
+});
+
+describe('getKstYear', () => {
+  it('KST 1월 1일 00:00(UTC 전년도 12-31 15:00)을 해당 연도로 반환한다', () => {
+    expect(getKstYear(new Date('1996-01-01T00:00:00+09:00'))).toBe(1996);
+  });
+
+  it('KST 12월 31일 23:59는 그 해 연도를 반환한다', () => {
+    expect(getKstYear(new Date('1995-12-31T23:59:59+09:00'))).toBe(1995);
   });
 });

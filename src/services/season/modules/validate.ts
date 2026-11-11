@@ -8,6 +8,8 @@ import { BadRequestError } from '../../../utils/errors';
 import { DEFAULT_ROLE_NAME } from '../../shared/constants';
 
 export interface SeasonDataItem {
+  /** 프론트에서 매칭/재매칭으로 확정한 사용자 id (있으면 이름 기반 탐색 없이 사용) */
+  userId?: number;
   gook: string;
   group: string;
   soon: string;
@@ -67,7 +69,8 @@ function validateSoon(data: SeasonDataItem[]) {
 }
 
 const PHONE_REGEX = /^[\d-]+$/;
-const INVISIBLE_CHARS = /(\u200B|\u200C|\u200D|\uFEFF|\u00A0)/g;
+// 제로폭 문자, NBSP, 방향 제어 문자(엑셀에서 복사한 번호에 자주 섞이는 U+202D/U+202C 등)
+const INVISIBLE_CHARS = /[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF\u00A0]/g;
 
 function validatePhone(data: SeasonDataItem[]) {
   for (const [i, item] of data.entries()) {

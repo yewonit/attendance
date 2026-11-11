@@ -21,10 +21,9 @@ vi.mock('../../src/services/user/user-filter.service', () => ({ getMembersWithFi
 vi.mock('../../src/services/permission/permission.service', () => ({ getUserPermissionCodes: vi.fn() }));
 vi.mock('../../src/services/activity/activity.service', () => ({ getActivityTemplates: vi.fn(), getAllOrganizationActivities: vi.fn(), getActivityDetails: vi.fn(), recordActivityAndAttendance: vi.fn(), updateActivityAndAttendance: vi.fn(), deleteActivityAndAttendance: vi.fn() }));
 vi.mock('../../src/services/attendance/attendance.service', () => ({ getWeeklyAttendanceAggregation: vi.fn(), getWeeklyAttendanceGraph: vi.fn(), getContinuousMembers: vi.fn(), getYoungAdultAttendanceTrend: vi.fn(), getRecentSundayAttendance: vi.fn(), recentSundayAttendanceToExcel: vi.fn(), getRecentWednesdayAttendance: vi.fn(), recentWednesdayAttendanceToExcel: vi.fn() }));
-vi.mock('../../src/services/season/season.service', () => ({ getNextOrganization: vi.fn(), getAllNationsOrgList: vi.fn(), getCurrentSeasonId: vi.fn() }));
+vi.mock('../../src/services/season/season.service', () => ({ getNextOrganization: vi.fn(), getAllNationsOrgList: vi.fn(), getCurrentSeasonId: vi.fn(), getCurrentSeasonMembers: vi.fn(), getRematchCandidates: vi.fn() }));
 vi.mock('../../src/services/season/modules/create-new-season', () => ({ createNewSeason: vi.fn() }));
-vi.mock('../../src/services/season/modules/create-organization-and-user-role', () => ({ createOrganizationAndUserRole: vi.fn() }));
-vi.mock('../../src/services/season/modules/delete-before-create', () => ({ deleteBeforeCreateOrganization: vi.fn() }));
+vi.mock('../../src/services/season/modules/sync-season-organizations', () => ({ syncSeasonOrganizations: vi.fn() }));
 vi.mock('../../src/services/season/modules/validate', () => ({ validateNewSeasonData: vi.fn().mockImplementation((d: unknown) => d) }));
 vi.mock('../../src/services/user/user-cron.service', () => ({ resetExpiredNewMembers: vi.fn(), updateLongTermAbsenteeStatus: vi.fn() }));
 vi.mock('../../src/db', () => ({ db: { transaction: vi.fn() }, pool: { execute: vi.fn() } }));

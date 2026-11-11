@@ -1,31 +1,38 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { buildTestApp } from '../helpers/build-test-app';
+import { getUserPermissionCodesByEmail } from '../../src/services/permission/permission.service';
+import { validateNewSeasonData } from '../../src/services/season/modules/validate';
+import { getRematchCandidates } from '../../src/services/season/season.service';
 
 vi.mock('../../src/services/season/season.service', () => ({
   getNextOrganization: vi.fn().mockResolvedValue([{ name: '테스트', organization: '1국_김그룹_이순' }]),
   getAllNationsOrgList: vi.fn().mockResolvedValue([{ id: 1, name: '237국_순1' }]),
   getCurrentSeasonId: vi.fn().mockResolvedValue(1),
+  getRematchCandidates: vi.fn().mockResolvedValue([{ userId: 1, name: '테스트', nameSuffix: 'A', phoneNumber: '01012345678', birthYear: '96', organizations: [{ gook: '1국', group: '김그룹', soon: '이순', role: '순원' }] }]),
+  getCurrentSeasonMembers: vi.fn().mockResolvedValue([{ userId: 1, name: '테스트', nameSuffix: 'A', phoneNumber: '01012345678', birthYear: '96', gook: '1국', group: '김그룹', soon: '이순', role: '순원' }]),
 }));
 vi.mock('../../src/services/season/modules/create-new-season', () => ({ createNewSeason: vi.fn().mockResolvedValue(2) }));
 vi.mock('../../src/services/season/modules/validate', () => ({ validateNewSeasonData: vi.fn().mockImplementation((d: unknown) => d) }));
-vi.mock('../../src/services/season/modules/delete-before-create', () => ({ deleteBeforeCreateOrganization: vi.fn().mockResolvedValue(undefined) }));
-vi.mock('../../src/services/season/modules/create-organization-and-user-role', () => ({ createOrganizationAndUserRole: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('../../src/services/season/modules/sync-season-organizations', () => ({ syncSeasonOrganizations: vi.fn().mockResolvedValue({ organizations: { reused: 4, created: 0, deleted: 0 }, userRoles: { kept: 1, updated: 0, created: 0, deleted: 0 } }) }));
 vi.mock('../../src/services/user/user-cron.service', () => ({
   resetExpiredNewMembers: vi.fn().mockResolvedValue(undefined),
   updateLongTermAbsenteeStatus: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock('../../src/services/auth/auth.service', () => ({ verifyWithToken: vi.fn() }));
+vi.mock('../../src/services/auth/auth.service', () => ({ verifyWithToken: vi.fn().mockResolvedValue({ email: 'test@test.com', name: '테스트' }) }));
 vi.mock('../../src/services/user/user-role.service', () => ({ getUserRolesOfCurrentSeason: vi.fn(), getAccessibleOrganizations: vi.fn(), changeOrganization: vi.fn(), UserRoleInfo: {} }));
 vi.mock('../../src/services/user/user.service', () => ({ setEmailAndPassword: vi.fn(), emailDuplicationCheck: vi.fn(), checkUserNameExists: vi.fn(), checkUserPhoneNumber: vi.fn(), findUserById: vi.fn(), findAllUsers: vi.fn(), searchMembersByName: vi.fn(), createUser: vi.fn(), createUsers: vi.fn(), updateUser: vi.fn(), deleteUser: vi.fn() }));
 vi.mock('../../src/services/user/user-filter.service', () => ({ getMembersWithFilters: vi.fn(), getAllNewMembers: vi.fn() }));
-vi.mock('../../src/services/permission/permission.service', () => ({ getUserPermissionCodes: vi.fn() }));
+vi.mock('../../src/services/permission/permission.service', () => ({ getUserPermissionCodes: vi.fn(), getUserPermissionCodesByEmail: vi.fn().mockResolvedValue(['MEMBER_MANAGEMENT_CONTROL']) }));
 vi.mock('../../src/services/organization/organization.service', () => ({ findOrganizations: vi.fn(), findOrganizationById: vi.fn(), createOrganization: vi.fn(), updateOrganization: vi.fn(), deleteOrganization: vi.fn(), getOrganizationMembers: vi.fn(), getMembersWithRoles: vi.fn(), getAllOrganizationMemberCounts: vi.fn(), getFilterOptions: vi.fn() }));
 vi.mock('../../src/services/activity/activity.service', () => ({ getActivityTemplates: vi.fn(), getAllOrganizationActivities: vi.fn(), getActivityDetails: vi.fn(), recordActivityAndAttendance: vi.fn(), updateActivityAndAttendance: vi.fn(), deleteActivityAndAttendance: vi.fn() }));
 vi.mock('../../src/services/attendance/attendance.service', () => ({ getWeeklyAttendanceAggregation: vi.fn(), getWeeklyAttendanceGraph: vi.fn(), getContinuousMembers: vi.fn(), getYoungAdultAttendanceTrend: vi.fn(), getRecentSundayAttendance: vi.fn(), recentSundayAttendanceToExcel: vi.fn(), getRecentWednesdayAttendance: vi.fn(), recentWednesdayAttendanceToExcel: vi.fn() }));
 vi.mock('../../src/db', () => ({ db: { transaction: vi.fn().mockImplementation(async (fn: Function) => fn({})) }, pool: { execute: vi.fn() } }));
 vi.mock('../../src/utils/password', () => ({ hashPassword: vi.fn(), verifyPassword: vi.fn() }));
+
+const AUTH_HEADERS = { authorization: 'Bearer faketoken' };
+const SEASON_PAYLOAD = { data: [{ gook: '1국', group: '김그룹', soon: '이순', name: '테스트' }] };
 
 let app: FastifyInstance;
 beforeAll(async () => { app = await buildTestApp(); });
@@ -34,13 +41,83 @@ afterAll(async () => { await app.close(); });
 describe('Season Routes', () => {
   describe('POST /api/seasons', () => {
     it('회기 데이터 생성 후 201 {data: success}를 반환한다', async () => {
-      const res = await app.inject({
-        method: 'POST',
-        url: '/api/seasons',
-        payload: { data: [{ gook: '1국', group: '김그룹', soon: '이순', name: '테스트' }] },
-      });
+      const res = await app.inject({ method: 'POST', url: '/api/seasons', headers: AUTH_HEADERS, payload: SEASON_PAYLOAD });
       expect(res.statusCode).toBe(201);
-      expect(res.json()).toEqual({ data: 'success' });
+      expect(res.json()).toEqual({ data: 'success', summary: { organizations: { reused: 4, created: 0, deleted: 0 }, userRoles: { kept: 1, updated: 0, created: 0, deleted: 0 } } });
+    });
+
+    it('매칭으로 확정된 userId를 서비스로 전달한다', async () => {
+      const member = { userId: 42, gook: '1국', group: '김그룹', soon: '이순', name: '테스트' };
+      const res = await app.inject({ method: 'POST', url: '/api/seasons', headers: AUTH_HEADERS, payload: { data: [member] } });
+      expect(res.statusCode).toBe(201);
+      expect(validateNewSeasonData).toHaveBeenLastCalledWith([member]);
+    });
+
+    it('userId가 양의 정수가 아니면 400을 반환한다', async () => {
+      const res = await app.inject({ method: 'POST', url: '/api/seasons', headers: AUTH_HEADERS, payload: { data: [{ userId: '42', gook: '1국', group: '김그룹', soon: '이순', name: '테스트' }] } });
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('nameSuffix/phoneNumber/birthDate(camelCase) 필드를 서비스로 전달한다', async () => {
+      const member = { gook: '1국', group: '김그룹', soon: '이순', name: '테스트', nameSuffix: 'A', phoneNumber: '01012345678', role: '순원', birthDate: '96' };
+      const res = await app.inject({ method: 'POST', url: '/api/seasons', headers: AUTH_HEADERS, payload: { data: [member] } });
+      expect(res.statusCode).toBe(201);
+      expect(validateNewSeasonData).toHaveBeenLastCalledWith([member]);
+    });
+
+    it('토큰이 없으면 401을 반환한다', async () => {
+      const res = await app.inject({ method: 'POST', url: '/api/seasons', payload: SEASON_PAYLOAD });
+      expect(res.statusCode).toBe(401);
+    });
+
+    it('MEMBER_MANAGEMENT_CONTROL 권한이 없으면 403을 반환한다', async () => {
+      vi.mocked(getUserPermissionCodesByEmail).mockResolvedValueOnce([]);
+      const res = await app.inject({ method: 'POST', url: '/api/seasons', headers: AUTH_HEADERS, payload: SEASON_PAYLOAD });
+      expect(res.statusCode).toBe(403);
+    });
+  });
+
+  describe('GET /api/seasons/current/members', () => {
+    it('현재 회기 구성원을 {data}로 반환한다', async () => {
+      const res = await app.inject({ method: 'GET', url: '/api/seasons/current/members', headers: AUTH_HEADERS });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data[0]).toMatchObject({ userId: 1, gook: '1국', group: '김그룹', soon: '이순' });
+    });
+
+    it('토큰이 없으면 401을 반환한다', async () => {
+      const res = await app.inject({ method: 'GET', url: '/api/seasons/current/members' });
+      expect(res.statusCode).toBe(401);
+    });
+
+    it('MEMBER_MANAGEMENT_CONTROL 권한이 없으면 403을 반환한다', async () => {
+      vi.mocked(getUserPermissionCodesByEmail).mockResolvedValueOnce([]);
+      const res = await app.inject({ method: 'GET', url: '/api/seasons/current/members', headers: AUTH_HEADERS });
+      expect(res.statusCode).toBe(403);
+    });
+  });
+
+  describe('GET /api/seasons/rematch-candidates', () => {
+    it('같은 이름의 사용자와 현재 소속을 {data}로 반환한다', async () => {
+      const res = await app.inject({ method: 'GET', url: `/api/seasons/rematch-candidates?name=${encodeURIComponent('테스트')}`, headers: AUTH_HEADERS });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().data[0]).toMatchObject({ userId: 1, organizations: [{ gook: '1국', group: '김그룹', soon: '이순' }] });
+      expect(getRematchCandidates).toHaveBeenLastCalledWith('테스트');
+    });
+
+    it('이름이 비어 있으면 400을 반환한다', async () => {
+      const res = await app.inject({ method: 'GET', url: '/api/seasons/rematch-candidates?name=%20', headers: AUTH_HEADERS });
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('토큰이 없으면 401을 반환한다', async () => {
+      const res = await app.inject({ method: 'GET', url: '/api/seasons/rematch-candidates?name=a' });
+      expect(res.statusCode).toBe(401);
+    });
+
+    it('MEMBER_MANAGEMENT_CONTROL 권한이 없으면 403을 반환한다', async () => {
+      vi.mocked(getUserPermissionCodesByEmail).mockResolvedValueOnce([]);
+      const res = await app.inject({ method: 'GET', url: '/api/seasons/rematch-candidates?name=a', headers: AUTH_HEADERS });
+      expect(res.statusCode).toBe(403);
     });
   });
 
