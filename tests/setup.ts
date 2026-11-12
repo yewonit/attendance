@@ -5,3 +5,4 @@ process.env.LOCAL_DB_USER = 'root';
 process.env.LOCAL_DB_PASSWORD = '';
 process.env.LOCAL_DB_NAME = 'attendance_test';
 process.env.PORT = '0';
+process.env.LOCAL_JWT_SECRET = 'test-only-jwt-secret-0123456789abcdef';
