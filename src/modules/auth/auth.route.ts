@@ -23,7 +23,7 @@ export async function authRoutes(app: FastifyInstance) {
     {
       schema: {
         tags: [...TAG],
-        summary: '이메일/비밀번호 최초 등록',
+        summary: '이메일/비밀번호 최초 등록 (이메일 인증 필요)',
         body: z.object({ id: z.number(), email: z.string(), password: z.string() }),
       },
     },
@@ -32,7 +32,10 @@ export async function authRoutes(app: FastifyInstance) {
       if (!id || !email || !password) {
         throw new BadRequestError(`필수 값이 누락되었습니다. id: ${id}, email: ${email}`);
       }
+      // 본인 이메일임을 /auth/verify로 확인한 경우에만 등록을 허용한다
+      await authService.assertEmailVerified(email);
       await setEmailAndPassword(id, email, password);
+      await authService.clearEmailVerification(email);
       return { message: 'success' };
     },
   );
@@ -57,7 +60,7 @@ export async function authRoutes(app: FastifyInstance) {
       if (!isValid) throw new UnauthorizedError('패스워드가 일치하지 않습니다.');
 
       const [tokens, roles, permissions] = await Promise.all([
-        authService.loginWithEmailAndPassword(email, user.name),
+        authService.loginWithEmailAndPassword(user.email ?? email, user.name),
         getUserRolesOfCurrentSeason(user.id),
         permissionService.getUserPermissionCodes(user.id),
       ]);
@@ -165,7 +168,7 @@ export async function authRoutes(app: FastifyInstance) {
     {
       schema: {
         tags: [...TAG],
-        summary: '비밀번호 재설정',
+        summary: '비밀번호 재설정 (계정 이메일 인증 필요, 기존 세션 만료)',
         body: z.object({ id: z.number(), password: z.string() }),
       },
     },
