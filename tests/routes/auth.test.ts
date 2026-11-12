@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { buildTestApp } from '../helpers/build-test-app';
+import * as authService from '../../src/services/auth/auth.service';
+import { setEmailAndPassword } from '../../src/services/user/user.service';
+import { ForbiddenError } from '../../src/utils/errors';
 
 vi.mock('../../src/services/auth/auth.service', () => ({
   loginWithEmailAndPassword: vi.fn().mockResolvedValue({ accessToken: 'at', refreshToken: 'rt' }),
@@ -9,6 +12,8 @@ vi.mock('../../src/services/auth/auth.service', () => ({
   sendVerifyEmail: vi.fn().mockResolvedValue(undefined),
   verifyEmailCode: vi.fn().mockResolvedValue(true),
   resetPassword: vi.fn().mockResolvedValue(undefined),
+  assertEmailVerified: vi.fn().mockResolvedValue(undefined),
+  clearEmailVerification: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../../src/services/permission/permission.service', () => ({
@@ -56,6 +61,15 @@ describe('Auth Routes', () => {
     it('id, email, password로 등록한다', async () => {
       const res = await app.inject({ method: 'POST', url: '/auth/register', payload: { id: 1, email: 'a@b.com', password: 'Pass1!' } });
       expect(res.statusCode).toBe(200);
+      expect(authService.clearEmailVerification).toHaveBeenCalledWith('a@b.com');
+    });
+
+    it('이메일 인증을 하지 않았으면 403을 반환하고 등록하지 않는다', async () => {
+      vi.mocked(setEmailAndPassword).mockClear();
+      vi.mocked(authService.assertEmailVerified).mockRejectedValueOnce(new ForbiddenError('이메일 인증이 필요합니다.'));
+      const res = await app.inject({ method: 'POST', url: '/auth/register', payload: { id: 1, email: 'a@b.com', password: 'Pass1!' } });
+      expect(res.statusCode).toBe(403);
+      expect(setEmailAndPassword).not.toHaveBeenCalled();
     });
   });
 

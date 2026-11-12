@@ -25,6 +25,9 @@ npm install
 
 # 환경변수 파일 (.env) 생성
 # LOCAL_DB_HOST, LOCAL_DB_USER, LOCAL_DB_PASSWORD, LOCAL_DB_NAME, PORT 설정 필요
+# 인증: LOCAL_JWT_SECRET(32자 이상), LOCAL_REDIS_HOST(기본 localhost), REDIS_PORT(기본 6379)
+#       인증 코드 메일 발송 시 SENDER_EMAIL, SENDER_SECRET(Gmail 앱 비밀번호)
+#       dev/운영은 DEVELOPMENT_JWT_SECRET, PRODUCTION_JWT_SECRET, REDIS_HOST 사용
 
 # 개발 서버 (hot-reload)
 npm run dev
@@ -62,6 +65,7 @@ src/
 │   └── swagger.ts             # Swagger/Scalar 설정
 ├── db/
 │   ├── index.ts               # DB 연결 (mysql2 pool + Drizzle)
+│   ├── redis.ts               # Redis 연결 (인증 토큰·이메일 인증 상태)
 │   └── schema/                # Drizzle ORM 테이블 스키마
 ├── modules/                   # 라우트 (도메인별)
 │   ├── health/
@@ -78,7 +82,7 @@ src/
 │   └── request-logger.ts      # 요청 로깅 + 민감 필드 마스킹
 ├── services/                  # 비즈니스 로직 (도메인별)
 │   ├── shared/                # 공통 상수, 유틸
-│   ├── auth/
+│   ├── auth/                  # JWT 발급·검증, 이메일 인증 (구 account 서비스 통합)
 │   ├── user/
 │   ├── activity/
 │   ├── organization/
@@ -86,7 +90,7 @@ src/
 │   ├── permission/
 │   └── season/
 ├── enums/                     # 활동 템플릿 등 열거형
-└── utils/                     # 에러 클래스, 암호화, HTTP 요청
+└── utils/                     # 에러 클래스, 암호화
 tests/
 ├── setup.ts                   # 테스트 환경 설정
 ├── api-coverage.test.ts       # API 커버리지 검증

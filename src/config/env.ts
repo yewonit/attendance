@@ -32,8 +32,18 @@ const envSchema = z
     PRODUCTION_DB_PASSWORD: z.string().optional(),
     PRODUCTION_DB_NAME: z.string().optional(),
 
-    AUTH_SERVER_HOST: z.string().optional(),
-    AUTH_SERVER_PORT: z.coerce.number().optional(),
+    // 인증 — JWT 서명 키는 환경별로 분리해 dev 토큰이 운영에서 통하지 않게 한다
+    LOCAL_JWT_SECRET: z.string().optional(),
+    DEVELOPMENT_JWT_SECRET: z.string().optional(),
+    PRODUCTION_JWT_SECRET: z.string().optional(),
+
+    REDIS_HOST: z.string().optional(),
+    REDIS_PORT: z.coerce.number().default(6379),
+    LOCAL_REDIS_HOST: z.string().default('localhost'),
+
+    // 인증 코드 메일 발송 계정 (Gmail 앱 비밀번호)
+    SENDER_EMAIL: z.string().optional(),
+    SENDER_SECRET: z.string().optional(),
   })
   .transform((raw) => {
     const envMap = {
@@ -59,6 +69,12 @@ const envSchema = z
 
     const db = envMap[raw.NODE_ENV];
 
+    const jwtSecretMap = {
+      local: raw.LOCAL_JWT_SECRET,
+      development: raw.DEVELOPMENT_JWT_SECRET,
+      production: raw.PRODUCTION_JWT_SECRET,
+    } as const;
+
     return {
       nodeEnv: raw.NODE_ENV,
       port: raw.PORT,
@@ -68,9 +84,16 @@ const envSchema = z
         password: db.password ?? '',
         name: db.name ?? 'attendance',
       },
-      authServer: {
-        host: raw.AUTH_SERVER_HOST,
-        port: raw.AUTH_SERVER_PORT,
+      auth: {
+        jwtSecret: jwtSecretMap[raw.NODE_ENV],
+      },
+      redis: {
+        host: raw.NODE_ENV === 'local' ? raw.LOCAL_REDIS_HOST : (raw.REDIS_HOST ?? 'localhost'),
+        port: raw.REDIS_PORT,
+      },
+      mail: {
+        sender: raw.SENDER_EMAIL,
+        secret: raw.SENDER_SECRET,
       },
     };
   });
